@@ -1,0 +1,1524 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BRD Automation • Intake Tracker (Calls + Transcripts + Gist → BRD / CR)</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e5e7eb;
+      --border2:#f1f5f9;
+      --shadow: 0 18px 42px rgba(2,6,23,.10);
+      --r:18px;
+
+      --primary:#2563eb;
+      --success:#16a34a;
+      --warning:#f59e0b;
+      --danger:#ef4444;
+      --indigo:#4f46e5;
+      --slate:#334155;
+      --pink:#db2777;
+      --teal:#0d9488;
+
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --focus: 0 0 0 4px rgba(37,99,235,.14);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:var(--font); background:var(--bg); color:var(--text)}
+    a{color:inherit; text-decoration:none}
+    button,input,select,textarea{font-family:inherit}
+    textarea{resize:vertical}
+
+    /* Topbar */
+    .topbar{position:sticky; top:0; z-index:30; background:#fff; border-bottom:1px solid var(--border2)}
+    .topbar-inner{
+      max-width:1640px; margin:0 auto; padding:12px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{width:40px; height:40px; border-radius:16px; background:linear-gradient(135deg,#111827,#7c3aed); box-shadow:0 14px 26px rgba(124,58,237,.20)}
+    .brand h1{margin:0; font-size:15px; letter-spacing:-.2px}
+    .brand .sub{margin:4px 0 0; font-size:12.5px; color:var(--muted)}
+    .actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:12.5px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .pill b{color:var(--text)}
+    .kbd{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:2px 6px;
+      border:1px solid var(--border);
+      border-bottom-width:2px;
+      border-radius:8px;
+      color:var(--muted);
+      background:#fff;
+    }
+
+    /* Layout */
+    .wrap{max-width:1640px; margin:0 auto; padding:16px}
+    .layout{display:grid; grid-template-columns: 420px 1fr; gap:14px; align-items:start}
+
+    .card{border:1px solid var(--border); border-radius:var(--r); background:#fff; box-shadow:var(--shadow); overflow:hidden}
+    .card-head{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px
+    }
+    .card-head h2,.card-head h3{margin:0; font-size:14px; letter-spacing:-.2px}
+    .card-head p{margin:6px 0 0; font-size:12.5px; color:var(--muted); line-height:1.35}
+    .card-body{padding:14px}
+    .hr{height:1px; background:var(--border2); margin:12px 0}
+
+    /* Controls */
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:9px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:850;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow); border-color:#d1d5db}
+    .btn:active{transform:translateY(0)}
+    .btn:focus{outline:none; box-shadow:var(--shadow), var(--focus)}
+    .btn.small{padding:7px 10px; border-radius:10px; font-size:13px}
+    .btn.block{width:100%}
+    .btn.primary{background:linear-gradient(135deg,var(--primary),#60a5fa); color:#fff; border-color:transparent}
+    .btn.success{background:linear-gradient(135deg,var(--success),#22c55e); color:#fff; border-color:transparent}
+    .btn.warn{background:linear-gradient(135deg,var(--warning),#fbbf24); color:#111827; border-color:transparent}
+    .btn.danger{background:linear-gradient(135deg,var(--danger),#fb7185); color:#fff; border-color:transparent}
+    .btn.ai{background:linear-gradient(135deg,var(--pink),#f472b6); color:#fff; border-color:transparent}
+    .btn.neutral{background:linear-gradient(135deg,var(--slate),#64748b); color:#fff; border-color:transparent}
+    .btn.export{background:linear-gradient(135deg,var(--indigo),#7c3aed); color:#fff; border-color:transparent}
+    .btn.teal{background:linear-gradient(135deg,var(--teal),#2dd4bf); color:#062a24; border-color:transparent}
+
+    /* Form */
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .span-12{grid-column:span 12}
+    .span-6{grid-column:span 6}
+    .span-4{grid-column:span 4}
+    .span-8{grid-column:span 8}
+
+    label{font-size:12px; color:var(--muted); font-weight:900}
+    input[type="text"], input[type="date"], input[type="time"], textarea, select{
+      width:100%;
+      border:1px solid var(--border);
+      padding:10px 12px;
+      border-radius:12px;
+      outline:none;
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+    }
+    input:focus, select:focus, textarea:focus{box-shadow:var(--focus); border-color:rgba(37,99,235,.45)}
+    textarea{min-height:110px}
+    .field{display:flex; flex-direction:column; gap:6px}
+    .help{font-size:12.5px; color:var(--muted); line-height:1.35}
+    .row{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+
+    /* Left navigation lists */
+    .list{display:flex; flex-direction:column; gap:10px}
+    .record{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+    .record:hover{transform:translateY(-1px); box-shadow:var(--shadow); border-color:#d1d5db}
+    .record.active{border-color:rgba(37,99,235,.45); box-shadow:var(--shadow), var(--focus)}
+    .rec-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .rec-title{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+    .rec-title b{font-size:13.5px}
+    .meta{font-size:12.5px; color:var(--muted)}
+    .mono{font-family:var(--mono)}
+
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:12px;
+      font-weight:900;
+      color:var(--muted);
+    }
+    .chip.blue{border-color:rgba(37,99,235,.24); background:rgba(37,99,235,.06); color:#1d4ed8}
+    .chip.green{border-color:rgba(22,163,74,.22); background:rgba(22,163,74,.06); color:#166534}
+    .chip.amber{border-color:rgba(245,158,11,.24); background:rgba(245,158,11,.06); color:#92400e}
+    .chip.red{border-color:rgba(239,68,68,.22); background:rgba(239,68,68,.06); color:#b91c1c}
+    .chip.pink{border-color:rgba(219,39,119,.22); background:rgba(219,39,119,.06); color:#9d174d}
+    .chip.teal{border-color:rgba(13,148,136,.22); background:rgba(13,148,136,.06); color:#0f766e}
+
+    /* Right: Tabs */
+    .tabs{display:flex; gap:8px; flex-wrap:wrap}
+    .tab{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:8px 10px;
+      border-radius:12px;
+      font-weight:900;
+      font-size:13px;
+      cursor:pointer;
+      color:var(--muted);
+    }
+    .tab.active{border-color:rgba(37,99,235,.45); color:var(--text); box-shadow:var(--focus)}
+    .panel{display:none}
+    .panel.active{display:block}
+
+    /* Threads / Calls */
+    .thread{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .thread-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .thread-head b{font-size:13.5px}
+    .thread-actions{display:flex; gap:8px; flex-wrap:wrap}
+    .smallnote{
+      border:1px dashed #d1d5db;
+      background:#f8fafc;
+      border-radius:14px;
+      padding:10px;
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.35;
+      white-space:pre-wrap;
+    }
+    .kv{
+      display:grid;
+      grid-template-columns: 170px 1fr;
+      gap:8px 12px;
+      align-items:start;
+    }
+    .k{font-size:12px; color:var(--muted); font-weight:900}
+    .v{font-size:13px; color:var(--text)}
+    .badge{
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--muted);
+      background:#fff;
+      white-space:nowrap;
+    }
+
+    /* Table (traceability) */
+    .table{
+      width:100%;
+      border-collapse:collapse;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .table th,.table td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--border2);
+      text-align:left;
+      vertical-align:top;
+      font-size:13px;
+    }
+    .table th{background:#f8fafc; color:var(--muted); font-weight:900}
+    .table tr:last-child td{border-bottom:none}
+
+    /* Modal */
+    .backdrop{
+      position:fixed; inset:0; z-index:60;
+      background: rgba(2,6,23,.45);
+      display:none;
+      align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .modal{
+      width:min(1240px, 100%);
+      max-height:92vh;
+      overflow:auto;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:0 25px 70px rgba(2,6,23,.25);
+    }
+    .modal-head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:center; justify-content:space-between; gap:10px
+    }
+    .modal-head h3{margin:0; font-size:14px}
+    .modal-body{padding:14px}
+
+    /* Page Switcher */
+    .page-switcher{
+      padding:8px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      color:var(--text);
+      font-size:13px;
+      font-family:var(--font);
+      cursor:pointer;
+      font-weight:700;
+    }
+    .page-switcher:hover{border-color:#d1d5db; background:#f8fafc}
+
+    @media (max-width:1280px){
+      .layout{grid-template-columns:1fr}
+      .span-8,.span-6,.span-4{grid-column:span 12}
+      .kv{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>Intake Tracker: Conversations → Transcript → Gist → BRD / Change Request</h1>
+          <div class="sub">Track multiple “threads” (calls/docs) per request until BRD/CR is finalized, with iterations + traceability</div>
+        </div>
+      </div>
+      <select class="page-switcher" id="pageSwitcher">
+        <option value="Admin.html">Admin</option>
+        <option value="BA.html">BA Workspace</option>
+        <option value="Compliance.html">Compliance</option>
+        <option value="In Take 1.html" selected>Intake Tracker</option>
+        <option value="Infosec.html">InfoSec</option>
+        <option value="IT.html">IT</option>
+        <option value="Risk.html">Risk</option>
+        <option value="SME.html">SME</option>
+        <option value="User Management 1.html">User Management</option>
+      </select>
+      <div class="actions">
+        <span class="pill"><b>Shortcut:</b> <span class="kbd">Ctrl</span> <span class="kbd">Enter</span> save note</span>
+        <button class="btn small ai" id="btnBuildGist">✨ Build Gist</button>
+        <button class="btn small export" id="btnExport">Export</button>
+        <button class="btn small neutral" id="btnReset">Reset</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="layout">
+      <!-- LEFT: Requests (BRD / CR) -->
+      <aside class="card">
+        <div class="card-head">
+          <div>
+            <h2>Requests</h2>
+            <p>Create a new BRD request or a Change Request. Each request contains multiple conversation threads (calls/docs) and iterations.</p>
+          </div>
+          <span class="chip blue" id="kReq">0</span>
+        </div>
+        <div class="card-body">
+          <div class="grid">
+            <div class="field span-12">
+              <label>Request type</label>
+              <select id="fReqType">
+                <option value="BRD">BRD (New)</option>
+                <option value="CR">Change Request</option>
+              </select>
+            </div>
+
+            <div class="field span-12">
+              <label>Request title *</label>
+              <input id="fReqTitle" type="text" placeholder="e.g., Digital MSME Renewal Journey / e.g., CR: Add OTP based disbursal confirmation"/>
+            </div>
+
+            <div class="field span-12">
+              <label>Business sponsor / owner</label>
+              <input id="fOwner" type="text" placeholder="e.g., Retail Lending Head"/>
+            </div>
+
+            <div class="field span-6">
+              <label>Tenant</label>
+              <select id="fTenant">
+                <option value="BANK">BANK</option>
+                <option value="NBFC">NBFC</option>
+                <option value="BOTH">BOTH</option>
+              </select>
+            </div>
+
+            <div class="field span-6">
+              <label>Priority</label>
+              <select id="fPriority">
+                <option value="P2">P2</option>
+                <option value="P1">P1</option>
+                <option value="P0">P0</option>
+              </select>
+            </div>
+
+            <div class="field span-12">
+              <label>Initial business brief (high-level) *</label>
+              <textarea id="fBrief" placeholder="Paste the initial high-level requirement / brief from stakeholders..."></textarea>
+              <div class="help" style="margin-top:6px">This becomes version 0 input. Calls/docs will refine it over time.</div>
+            </div>
+
+            <div class="field span-12">
+              <div class="row" style="justify-content:flex-end; gap:10px">
+                <button class="btn success" id="btnCreateReq">+ Create Request</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="field span-12">
+            <label>Search</label>
+            <input id="q" type="text" placeholder="Search by title / owner / id..."/>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="list" id="reqList"></div>
+        </div>
+      </aside>
+
+      <!-- RIGHT: Request details -->
+      <main class="card">
+        <div class="card-head">
+          <div>
+            <h2 id="reqTitle">Select a request</h2>
+            <p id="reqSub">Create or select a request to manage calls, transcripts, notes and gist.</p>
+          </div>
+          <div class="row" style="gap:10px">
+            <span class="chip green" id="kThreads">Threads: 0</span>
+            <span class="chip pink" id="kNotes">Notes: 0</span>
+            <span class="chip teal" id="kAttrs">Attributes: 0</span>
+            <button class="btn small teal" id="btnNewThread">+ New Thread</button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Tabs -->
+          <div class="row" style="align-items:flex-end">
+            <div class="tabs">
+              <button class="tab active" data-tab="tabThreads">Threads & Calls</button>
+              <button class="tab" data-tab="tabTranscripts">Transcripts & Gist</button>
+              <button class="tab" data-tab="tabAttrs">BRD/CR Attributes</button>
+              <button class="tab" data-tab="tabTrace">Traceability</button>
+            </div>
+            <div class="row" style="gap:10px">
+              <button class="btn small ai" id="btnAIExtract">✨ Extract to Attributes</button>
+              <button class="btn small export" id="btnExportReq">Export Request</button>
+              <button class="btn small danger" id="btnDeleteReq">Delete</button>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <!-- Panel: Threads -->
+          <section class="panel active" id="tabThreads">
+            <div class="grid">
+              <div class="field span-12">
+                <label>Request overview (editable)</label>
+                <textarea id="reqBriefEdit" placeholder="High-level brief..."></textarea>
+                <div class="help" style="margin-top:6px">Update as business refines scope. This is separate from call transcripts.</div>
+              </div>
+              <div class="field span-12">
+                <div class="row" style="justify-content:flex-end; gap:10px">
+                  <button class="btn primary" id="btnSaveOverview">Save Overview</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="row" style="justify-content:space-between; gap:10px">
+              <div class="help"><b>Threads</b> represent a call series or a document chain (e.g., “Call #1”, “Workshop”, “Email follow-ups”).</div>
+              <button class="btn small teal" id="btnNewThread2">+ Add Thread</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <div id="threadsWrap"></div>
+          </section>
+
+          <!-- Panel: Transcripts & Gist -->
+          <section class="panel" id="tabTranscripts">
+            <div class="grid">
+              <div class="span-12">
+                <div class="smallnote">
+<b>How to use:</b>
+1) Create one or more threads (calls/docs).
+2) Paste transcript text or notes per call.
+3) Click “Build Gist” to generate consolidated gist.
+4) Click “Extract to Attributes” to build BRD/CR fields (simulated AI).
+                </div>
+              </div>
+
+              <div class="field span-12">
+                <label>Consolidated Gist (editable)</label>
+                <textarea id="gist" placeholder="Click ✨ Build Gist to generate..."></textarea>
+                <div class="help" style="margin-top:6px">This gist is derived from all transcripts + notes across threads.</div>
+              </div>
+              <div class="field span-12">
+                <div class="row" style="justify-content:flex-end; gap:10px">
+                  <button class="btn ai" id="btnBuildGist2">✨ Build Gist</button>
+                  <button class="btn success" id="btnSaveGist">Save Gist</button>
+                  <button class="btn export" id="btnCopyGist">Copy</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel: Attributes -->
+          <section class="panel" id="tabAttrs">
+            <div class="grid">
+              <div class="span-12">
+                <div class="smallnote">
+<b>Attributes</b> are the structured BRD/CR sections that will be consumed by BA/SME/Risk/etc pages.
+This prototype extracts via rules; replace with your LLM later.
+                </div>
+              </div>
+
+              <div class="field span-6">
+                <label>Problem statement</label>
+                <textarea id="aProblem" placeholder="Auto-filled..."></textarea>
+              </div>
+              <div class="field span-6">
+                <label>Business objectives</label>
+                <textarea id="aObjectives" placeholder="Auto-filled..."></textarea>
+              </div>
+
+              <div class="field span-6">
+                <label>In-scope</label>
+                <textarea id="aScopeIn" placeholder="Auto-filled..."></textarea>
+              </div>
+              <div class="field span-6">
+                <label>Out-of-scope</label>
+                <textarea id="aScopeOut" placeholder="Auto-filled..."></textarea>
+              </div>
+
+              <div class="field span-6">
+                <label>Key Functional Requirements</label>
+                <textarea id="aFR" placeholder="Auto-filled..."></textarea>
+              </div>
+              <div class="field span-6">
+                <label>Non-functional requirements</label>
+                <textarea id="aNFR" placeholder="Auto-filled..."></textarea>
+              </div>
+
+              <div class="field span-6">
+                <label>Business rules / eligibility</label>
+                <textarea id="aRules" placeholder="Auto-filled..."></textarea>
+              </div>
+              <div class="field span-6">
+                <label>Assumptions & dependencies</label>
+                <textarea id="aDeps" placeholder="Auto-filled..."></textarea>
+              </div>
+
+              <div class="field span-6">
+                <label>Exceptions / edge cases</label>
+                <textarea id="aEdges" placeholder="Auto-filled..."></textarea>
+              </div>
+              <div class="field span-6">
+                <label>Risks & mitigations (initial)</label>
+                <textarea id="aRisks" placeholder="Auto-filled..."></textarea>
+              </div>
+
+              <div class="field span-6">
+                <label>Data requirements</label>
+                <textarea id="aData" placeholder="Auto-filled..."></textarea>
+              </div>
+              <div class="field span-6">
+                <label>Audit / reporting needs</label>
+                <textarea id="aAudit" placeholder="Auto-filled..."></textarea>
+              </div>
+
+              <div class="field span-12">
+                <label>Acceptance criteria</label>
+                <textarea id="aAC" placeholder="Auto-filled..."></textarea>
+              </div>
+
+              <div class="field span-12">
+                <div class="row" style="justify-content:flex-end; gap:10px">
+                  <button class="btn primary" id="btnSaveAttrs">Save Attributes</button>
+                  <button class="btn neutral" id="btnClearAttrs">Clear</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel: Traceability -->
+          <section class="panel" id="tabTrace">
+            <div class="smallnote">
+Traceability shows which thread/call snippets contributed to which attribute bucket (simulated).
+            </div>
+            <div class="hr"></div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width:160px">Attribute</th>
+                  <th>Contributing snippets</th>
+                  <th style="width:260px">From (thread/call)</th>
+                </tr>
+              </thead>
+              <tbody id="traceTable"></tbody>
+            </table>
+          </section>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL (view/edit thread item) -->
+  <div class="backdrop" id="modal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="mTitle">Thread item</h3>
+        <button class="btn small neutral" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid">
+          <div class="field span-12">
+            <label>Thread name</label>
+            <input id="mThreadName" type="text" placeholder="e.g., Call #1 / Workshop / Email follow-up"/>
+          </div>
+
+          <div class="field span-6">
+            <label>Item type</label>
+            <select id="mItemType">
+              <option value="Scheduled Call">Scheduled Call</option>
+              <option value="Completed Call">Completed Call</option>
+              <option value="Document">Document</option>
+              <option value="Email/Chat">Email/Chat</option>
+              <option value="Workshop Notes">Workshop Notes</option>
+            </select>
+          </div>
+
+          <div class="field span-3">
+            <label>Date</label>
+            <input id="mDate" type="date"/>
+          </div>
+
+          <div class="field span-3">
+            <label>Time (optional)</label>
+            <input id="mTime" type="time"/>
+          </div>
+
+          <div class="field span-12">
+            <label>Stakeholders (comma-separated)</label>
+            <input id="mStakeholders" type="text" placeholder="e.g., Business Owner, Ops, IT, Risk, Compliance"/>
+          </div>
+
+          <div class="field span-12">
+            <label>Source link / recording link (optional)</label>
+            <input id="mLink" type="text" placeholder="Paste recording URL or doc link (optional)"/>
+          </div>
+
+          <div class="field span-12">
+            <label>Transcript / Notes *</label>
+            <textarea id="mTranscript" placeholder="Paste transcript text or notes..."></textarea>
+            <div class="help" style="margin-top:6px">For scheduled calls, you may keep this empty until call completes.</div>
+          </div>
+
+          <div class="field span-12">
+            <label>Decisions / Actions (optional)</label>
+            <textarea id="mActions" placeholder="Capture decisions, action items, and owners..."></textarea>
+          </div>
+
+          <div class="field span-12">
+            <div class="row" style="justify-content:flex-end; gap:10px">
+              <button class="btn danger" id="mDelete">Delete</button>
+              <button class="btn ai" id="mSimTranscribe">✨ Simulate Transcribe</button>
+              <button class="btn success" id="mSave">Save</button>
+            </div>
+            <div class="help" style="margin-top:8px">“Simulate Transcribe” is a placeholder: it formats notes like a transcript.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /***************************
+     * Intake Tracker (offline functional)
+     * - Requests: BRD or CR
+     * - Each request has threads; each thread has multiple items (calls/docs/email)
+     * - Each item can store transcript/notes, decisions/actions, link, stakeholders
+     * - Build consolidated gist across all items
+     * - Extract structured attributes from gist+all transcripts (simulated rules)
+     * - Traceability: bucket snippets -> thread/item labels
+     ***************************/
+    const KEY = "brd_intake_tracker_v1";
+
+    const $ = (q)=>document.querySelector(q);
+    const $$ = (q)=>Array.from(document.querySelectorAll(q));
+    const safeParse = (s, fb)=>{ try{return JSON.parse(s);}catch{return fb;} };
+    const nowISO = ()=>new Date().toISOString();
+    const uid = (p="REQ") => `${p}-${Math.random().toString(16).slice(2,10)}-${Math.random().toString(16).slice(2,10)}`.toUpperCase();
+    const fmt = (ts)=>{ try{ return new Date(ts).toLocaleString(undefined,{year:"numeric",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"});}catch{return ts;} };
+    const escapeHtml = (s)=>String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+
+    function baseState(){
+      return { selectedReqId:null, requests:[] };
+    }
+
+    let state = read();
+
+    function read(){
+      const raw = localStorage.getItem(KEY);
+      return raw ? safeParse(raw, baseState()) : baseState();
+    }
+    function write(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+    // --- Simulated AI extraction buckets ---
+    const Buckets = [
+      {key:"problem",  title:"Problem",     match:["problem","pain","issue","manual","delay","friction","current","today","gap","challenge"]},
+      {key:"objectives", title:"Objectives",match:["objective","goal","increase","reduce","improve","faster","automate","digitize","target","kpi","success"]},
+      {key:"scopeIn",  title:"In-scope",    match:["in scope","include","must have","should have","scope","phase 1","p1","deliver"]},
+      {key:"scopeOut", title:"Out-of-scope",match:["out of scope","exclude","not required","later phase","phase 2","p2","future"]},
+      {key:"fr",       title:"FR",          match:["requirement","user should","system should","workflow","screen","journey","feature","integration","api"]},
+      {key:"nfr",      title:"NFR",         match:["sla","latency","performance","tps","availability","uptime","dr","bcp","security","encryption","audit","log","scalability"]},
+      {key:"rules",    title:"Rules",       match:["rule","eligibility","foir","dpd","vintage","limit","policy","calculation","scoring","threshold"]},
+      {key:"deps",     title:"Dependencies",match:["dependency","depends","upstream","downstream","third party","vendor","api","data source","uat","infra"]},
+      {key:"edges",    title:"Edge cases",  match:["exception","edge case","failure","reject","fallback","timeout","reversal","override","manual intervention"]},
+      {key:"risks",    title:"Risks",       match:["risk","fraud","abuse","misuse","mitigation","control","approval","maker checker","segregation"]},
+      {key:"data",     title:"Data",        match:["data","field","attribute","customer","party","bureau","statement","document","kyc","aadhaar","pan","gst","upload"]},
+      {key:"audit",    title:"Audit",       match:["audit","trace","history","version","who changed","approval trail","evidence","compliance"]},
+      {key:"ac",       title:"Acceptance",  match:["acceptance","done when","criteria","test","must pass","definition of done"]},
+    ];
+
+    function splitLines(text){
+      return (text||"")
+        .split(/\n+/)
+        .map(s=>s.trim())
+        .filter(Boolean)
+        .slice(0, 4000);
+    }
+
+    function bucketize(text){
+      const lines = splitLines(text);
+      const out = {};
+      Buckets.forEach(b=>out[b.key]=[]);
+      lines.forEach(line=>{
+        const l = line.toLowerCase();
+        let matched = false;
+        for(const b of Buckets){
+          if(b.match.some(m => l.includes(m))){
+            out[b.key].push(line);
+            matched = true;
+          }
+        }
+        if(!matched) out.fr.push(line);
+      });
+      return out;
+    }
+
+    function mergeAttr(current, incomingLines){
+      const set = new Set(splitLines(current || ""));
+      incomingLines.forEach(x=>set.add(x));
+      return Array.from(set).join("\n");
+    }
+
+    function getSelectedReq(){
+      return state.requests.find(r=>r.id===state.selectedReqId) || null;
+    }
+
+    function ensureSelected(){
+      const r = getSelectedReq();
+      if(!r){ alert("Select a request first."); return null; }
+      return r;
+    }
+
+    // --- Request CRUD ---
+    function createRequest(){
+      const type = $("#fReqType").value;
+      const title = ($("#fReqTitle").value||"").trim();
+      const owner = ($("#fOwner").value||"").trim();
+      const tenant = $("#fTenant").value;
+      const priority = $("#fPriority").value;
+      const brief = ($("#fBrief").value||"").trim();
+
+      if(!title){ alert("Request title is required."); $("#fReqTitle").focus(); return; }
+      if(!brief){ alert("Initial business brief is required."); $("#fBrief").focus(); return; }
+
+      const req = {
+        id: uid(type==="BRD" ? "BRD" : "CR"),
+        type, title, owner, tenant, priority,
+        status: "Intake",
+        createdAt: nowISO(),
+        updatedAt: nowISO(),
+        overview: brief,
+        // Threads: each thread has items (calls/docs)
+        threads: [],
+        gist: "",
+        attrs: {
+          problem:"", objectives:"", scopeIn:"", scopeOut:"",
+          fr:"", nfr:"", rules:"", deps:"",
+          edges:"", risks:"", data:"", audit:"", ac:""
+        }
+      };
+
+      // Seed a default thread with the initial brief as a "Document" item (version 0)
+      const tId = uid("TH");
+      req.threads.push({
+        id: tId,
+        name: "Initial Brief",
+        createdAt: nowISO(),
+        items: [{
+          id: uid("ITEM"),
+          type: "Document",
+          title: "High-level brief (v0)",
+          date: new Date().toISOString().slice(0,10),
+          time: "",
+          stakeholders: owner ? [owner] : [],
+          link: "",
+          transcript: brief,
+          actions: "",
+          status: "Captured",
+          createdAt: nowISO(),
+          updatedAt: nowISO()
+        }]
+      });
+
+      state.requests.unshift(req);
+      state.selectedReqId = req.id;
+      write();
+      clearCreateForm();
+      renderAll();
+    }
+
+    function clearCreateForm(){
+      $("#fReqTitle").value="";
+      $("#fOwner").value="";
+      $("#fTenant").value="BANK";
+      $("#fPriority").value="P2";
+      $("#fBrief").value="";
+    }
+
+    function deleteSelectedReq(){
+      const r = ensureSelected();
+      if(!r) return;
+      if(!confirm(`Delete request: ${r.title}? This cannot be undone.`)) return;
+      state.requests = state.requests.filter(x=>x.id!==r.id);
+      state.selectedReqId = state.requests[0]?.id || null;
+      write();
+      renderAll();
+    }
+
+    // --- Threads / Items ---
+    function newThread(){
+      const r = ensureSelected();
+      if(!r) return;
+      const name = prompt("Thread name (e.g., Call Series #1 / Workshop / Email follow-ups):", `Thread ${r.threads.length+1}`);
+      if(!name) return;
+      r.threads.unshift({ id: uid("TH"), name: name.trim(), createdAt: nowISO(), items: [] });
+      r.updatedAt = nowISO();
+      write();
+      renderAll();
+    }
+
+    function addItemToThread(threadId){
+      const r = ensureSelected();
+      if(!r) return;
+      const th = r.threads.find(t=>t.id===threadId);
+      if(!th) return;
+
+      const item = {
+        id: uid("ITEM"),
+        type: "Scheduled Call",
+        title: `Call ${th.items.length+1}`,
+        date: new Date().toISOString().slice(0,10),
+        time: "",
+        stakeholders: [],
+        link: "",
+        transcript: "",
+        actions: "",
+        status: "Scheduled",
+        createdAt: nowISO(),
+        updatedAt: nowISO()
+      };
+      th.items.unshift(item);
+      r.updatedAt = nowISO();
+      write();
+      openItemModal(threadId, item.id);
+      renderAll();
+    }
+
+    // --- Gist ---
+    function buildConsolidatedText(r){
+      // overview + all items transcripts + actions
+      const chunks = [];
+      chunks.push(`REQUEST OVERVIEW:\n${r.overview || ""}`.trim());
+      r.threads.forEach(t=>{
+        t.items.forEach(it=>{
+          const head = `[${t.name}] ${it.type} • ${it.title} • ${it.date || ""} ${it.time || ""}`.trim();
+          const who = it.stakeholders?.length ? `Stakeholders: ${it.stakeholders.join(", ")}` : "";
+          const link = it.link ? `Link: ${it.link}` : "";
+          const body = (it.transcript||"").trim();
+          const acts = (it.actions||"").trim();
+          const combined = [
+            head, who, link,
+            body ? `TRANSCRIPT/NOTES:\n${body}` : "",
+            acts ? `DECISIONS/ACTIONS:\n${acts}` : ""
+          ].filter(Boolean).join("\n");
+          if(combined) chunks.push(combined);
+        });
+      });
+      return chunks.join("\n\n---\n\n");
+    }
+
+    function makeGistFromText(r, text){
+      // A structured gist template, using extracted top lines from buckets
+      const bkt = bucketize(text);
+      const pick = (k, n)=> splitLines((bkt[k]||[]).join("\n")).slice(0,n).map(x=>`• ${x}`).join("\n");
+      const title = `${r.type} Gist — ${r.title}`;
+      return `${title}
+ID: ${r.id}  |  Tenant: ${r.tenant}  |  Priority: ${r.priority}  |  Owner: ${r.owner || "—"}
+Generated: ${new Date().toLocaleString()}
+
+1) Problem
+${pick("problem",6) || "• —"}
+
+2) Objectives
+${pick("objectives",6) || "• —"}
+
+3) Scope
+In-scope:
+${pick("scopeIn",8) || "• —"}
+Out-of-scope:
+${pick("scopeOut",6) || "• —"}
+
+4) Key Functional Requirements
+${pick("fr",10) || "• —"}
+
+5) Non-Functional Requirements
+${pick("nfr",8) || "• —"}
+
+6) Rules / Eligibility
+${pick("rules",8) || "• —"}
+
+7) Dependencies
+${pick("deps",6) || "• —"}
+
+8) Exceptions / Edge Cases
+${pick("edges",6) || "• —"}
+
+9) Risks & Controls (initial)
+${pick("risks",6) || "• —"}
+
+10) Data + Audit
+Data:
+${pick("data",6) || "• —"}
+Audit:
+${pick("audit",6) || "• —"}
+
+11) Acceptance Criteria
+${pick("ac",8) || "• —"}
+`;
+    }
+
+    function buildGist(){
+      const r = ensureSelected();
+      if(!r) return;
+      const text = buildConsolidatedText(r);
+      const gist = makeGistFromText(r, text);
+      r.gist = gist;
+      r.updatedAt = nowISO();
+      write();
+      $("#gist").value = gist;
+      renderKPIs();
+      alert("Gist built from all threads/items.");
+      // switch to gist tab
+      setTab("tabTranscripts");
+    }
+
+    function saveGist(){
+      const r = ensureSelected();
+      if(!r) return;
+      r.gist = ($("#gist").value||"").trim();
+      r.updatedAt = nowISO();
+      write();
+      alert("Gist saved.");
+    }
+
+    // --- Extract to attributes (simulated AI) ---
+    function extractToAttributes(){
+      const r = ensureSelected();
+      if(!r) return;
+
+      const text = buildConsolidatedText(r) + "\n\nGIST:\n" + ($("#gist").value||r.gist||"");
+      const bkt = bucketize(text);
+
+      for(const b of Buckets){
+        r.attrs[b.key] = mergeAttr(r.attrs[b.key], bkt[b.key] || []);
+      }
+
+      r.updatedAt = nowISO();
+      write();
+      renderAttrs();
+      renderTrace();
+      renderKPIs();
+      alert("Extracted to attributes (simulated).");
+      setTab("tabAttrs");
+    }
+
+    function saveAttrs(){
+      const r = ensureSelected();
+      if(!r) return;
+      r.attrs.problem = $("#aProblem").value.trim();
+      r.attrs.objectives = $("#aObjectives").value.trim();
+      r.attrs.scopeIn = $("#aScopeIn").value.trim();
+      r.attrs.scopeOut = $("#aScopeOut").value.trim();
+      r.attrs.fr = $("#aFR").value.trim();
+      r.attrs.nfr = $("#aNFR").value.trim();
+      r.attrs.rules = $("#aRules").value.trim();
+      r.attrs.deps = $("#aDeps").value.trim();
+      r.attrs.edges = $("#aEdges").value.trim();
+      r.attrs.risks = $("#aRisks").value.trim();
+      r.attrs.data = $("#aData").value.trim();
+      r.attrs.audit = $("#aAudit").value.trim();
+      r.attrs.ac = $("#aAC").value.trim();
+      r.updatedAt = nowISO();
+      write();
+      renderKPIs();
+      alert("Attributes saved.");
+    }
+
+    function clearAttrs(){
+      const r = ensureSelected();
+      if(!r) return;
+      if(!confirm("Clear attributes for this request?")) return;
+      r.attrs = {
+        problem:"", objectives:"", scopeIn:"", scopeOut:"",
+        fr:"", nfr:"", rules:"", deps:"",
+        edges:"", risks:"", data:"", audit:"", ac:""
+      };
+      r.updatedAt = nowISO();
+      write();
+      renderAttrs();
+      renderTrace();
+      renderKPIs();
+    }
+
+    // --- Overview save ---
+    function saveOverview(){
+      const r = ensureSelected();
+      if(!r) return;
+      r.overview = ($("#reqBriefEdit").value||"").trim();
+      r.updatedAt = nowISO();
+      write();
+      alert("Overview saved.");
+      renderReqList();
+      renderReqHeader();
+    }
+
+    // --- Traceability ---
+    function buildTrace(r){
+      // For each bucket, capture up to 6 snippet lines and show sources (thread/item)
+      const trace = {};
+      Buckets.forEach(b => trace[b.key] = {snips:new Map()}); // snip -> sources set
+
+      r.threads.forEach(t=>{
+        t.items.forEach(it=>{
+          const source = `${t.name} / ${it.title}`;
+          const combined = [it.transcript,it.actions].filter(Boolean).join("\n");
+          if(!combined.trim()) return;
+          const bkt = bucketize(combined);
+          for(const b of Buckets){
+            (bkt[b.key]||[]).slice(0,10).forEach(s=>{
+              if(!trace[b.key].snips.has(s)) trace[b.key].snips.set(s, new Set());
+              trace[b.key].snips.get(s).add(source);
+            });
+          }
+        });
+      });
+
+      return trace;
+    }
+
+    // --- Export ---
+    function downloadJson(name, obj){
+      const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function exportAll(){
+      const payload = { exportedAt: nowISO(), ...state };
+      downloadJson("INTAKE_TRACKER_EXPORT.json", payload);
+    }
+
+    function exportSelectedReq(){
+      const r = ensureSelected();
+      if(!r) return;
+      downloadJson(`${r.id}_EXPORT.json`, { exportedAt: nowISO(), request: r });
+    }
+
+    // --- Reset ---
+    function resetAll(){
+      if(!confirm("Reset all tracker data (localStorage)?")) return;
+      localStorage.removeItem(KEY);
+      state = baseState();
+      write();
+      renderAll();
+      alert("Reset done.");
+    }
+
+    // --- UI: Tabs ---
+    function setTab(id){
+      $$(".tab").forEach(t=>t.classList.toggle("active", t.dataset.tab===id));
+      $$(".panel").forEach(p=>p.classList.toggle("active", p.id===id));
+    }
+
+    // --- UI: render left list ---
+    function renderReqList(){
+      const q = ($("#q").value||"").trim().toLowerCase();
+      const list = $("#reqList");
+      let items = state.requests;
+
+      if(q){
+        items = items.filter(r =>
+          (r.title||"").toLowerCase().includes(q) ||
+          (r.owner||"").toLowerCase().includes(q) ||
+          (r.id||"").toLowerCase().includes(q)
+        );
+      }
+
+      $("#kReq").textContent = String(state.requests.length);
+
+      if(!items.length){
+        list.innerHTML = `<div class="smallnote">No requests found. Create a new BRD/CR on top.</div>`;
+        return;
+      }
+
+      list.innerHTML = items.map(r=>{
+        const active = r.id===state.selectedReqId ? "active" : "";
+        const tChip = r.type==="BRD" ? "blue" : "pink";
+        const st = r.status || "Intake";
+        const upd = r.updatedAt ? fmt(r.updatedAt) : "—";
+        const thCount = r.threads?.length || 0;
+        const itemCount = r.threads?.reduce((s,t)=>s+(t.items?.length||0),0) || 0;
+        return `
+          <div class="record ${active}" data-sel="${escapeHtml(r.id)}">
+            <div class="rec-top">
+              <div class="rec-title">
+                <span class="chip ${tChip}">${escapeHtml(r.type)}</span>
+                <b>${escapeHtml(r.title)}</b>
+              </div>
+              <div class="meta"><span class="mono">${escapeHtml(r.id)}</span></div>
+            </div>
+            <div class="row">
+              <span class="chip amber">${escapeHtml(r.priority)}</span>
+              <span class="chip teal">Threads: ${thCount}</span>
+              <span class="chip green">Items: ${itemCount}</span>
+            </div>
+            <div class="meta">Owner: ${escapeHtml(r.owner||"—")} • Updated: ${escapeHtml(upd)} • Status: ${escapeHtml(st)}</div>
+          </div>
+        `;
+      }).join("");
+
+      list.querySelectorAll("[data-sel]").forEach(el=>{
+        el.addEventListener("click", ()=>{
+          state.selectedReqId = el.getAttribute("data-sel");
+          write();
+          renderAll();
+        });
+      });
+    }
+
+    // --- UI: render header & KPIs ---
+    function renderReqHeader(){
+      const r = getSelectedReq();
+      if(!r){
+        $("#reqTitle").textContent = "Select a request";
+        $("#reqSub").textContent = "Create or select a request to manage calls, transcripts, notes and gist.";
+        $("#reqBriefEdit").value = "";
+        $("#gist").value = "";
+        clearAttrsUI();
+        $("#threadsWrap").innerHTML = `<div class="smallnote">No request selected.</div>`;
+        $("#traceTable").innerHTML = "";
+        $("#kThreads").textContent = "Threads: 0";
+        $("#kNotes").textContent = "Notes: 0";
+        $("#kAttrs").textContent = "Attributes: 0";
+        return;
+      }
+
+      $("#reqTitle").textContent = `${r.type}: ${r.title}`;
+      $("#reqSub").textContent = `${r.id} • Tenant: ${r.tenant} • Priority: ${r.priority} • Owner: ${r.owner || "—"} • Updated: ${fmt(r.updatedAt)}`;
+      $("#reqBriefEdit").value = r.overview || "";
+      $("#gist").value = r.gist || "";
+
+      renderKPIs();
+    }
+
+    function countNotes(r){
+      // notes = items with transcript/notes text (non-empty)
+      let c = 0;
+      r.threads.forEach(t=>{
+        t.items.forEach(it=>{
+          if((it.transcript||"").trim()) c++;
+        });
+      });
+      return c;
+    }
+
+    function renderKPIs(){
+      const r = getSelectedReq();
+      if(!r) return;
+      $("#kThreads").textContent = `Threads: ${r.threads.length}`;
+      $("#kNotes").textContent = `Notes: ${countNotes(r)}`;
+      const filled = Buckets.reduce((sum,b)=> sum + (splitLines(r.attrs[b.key]||"").length ? 1 : 0), 0);
+      $("#kAttrs").textContent = `Attributes: ${filled}/${Buckets.length}`;
+    }
+
+    // --- UI: render threads wrap ---
+    function renderThreads(){
+      const r = getSelectedReq();
+      const wrap = $("#threadsWrap");
+      if(!r){ wrap.innerHTML = `<div class="smallnote">No request selected.</div>`; return; }
+      if(!r.threads.length){ wrap.innerHTML = `<div class="smallnote">No threads yet. Add a thread.</div>`; return; }
+
+      wrap.innerHTML = r.threads.map(t=>{
+        const items = (t.items||[]);
+        const captured = items.filter(x=>(x.transcript||"").trim()).length;
+        return `
+          <div class="thread">
+            <div class="thread-head">
+              <div>
+                <b>${escapeHtml(t.name)}</b>
+                <div class="meta">Thread ID: <span class="mono">${escapeHtml(t.id)}</span> • Items: ${items.length} • Captured: ${captured}</div>
+              </div>
+              <div class="thread-actions">
+                <button class="btn small teal" data-additem="${escapeHtml(t.id)}">+ Add Item</button>
+                <button class="btn small" data-renameth="${escapeHtml(t.id)}">Rename</button>
+                <button class="btn small danger" data-delth="${escapeHtml(t.id)}">Delete</button>
+              </div>
+            </div>
+
+            ${items.length ? items.map(it=>{
+              const statusChip = it.status==="Scheduled" ? "amber" : ( (it.transcript||"").trim() ? "green" : "red");
+              const who = it.stakeholders?.length ? it.stakeholders.join(", ") : "—";
+              return `
+                <div class="record" style="cursor:default">
+                  <div class="rec-top">
+                    <div class="rec-title">
+                      <span class="chip ${statusChip}">${escapeHtml(it.type)}</span>
+                      <b>${escapeHtml(it.title)}</b>
+                      <span class="badge">${escapeHtml(it.date || "—")} ${escapeHtml(it.time || "")}</span>
+                    </div>
+                    <div class="meta"><span class="mono">${escapeHtml(it.id)}</span></div>
+                  </div>
+                  <div class="meta">Stakeholders: ${escapeHtml(who)} • Link: ${it.link ? `<a class="mono" href="${escapeHtml(it.link)}" target="_blank">${escapeHtml(it.link)}</a>` : "—"}</div>
+                  <div class="row" style="justify-content:flex-end; gap:8px">
+                    <button class="btn small" data-open="${escapeHtml(t.id)}" data-item="${escapeHtml(it.id)}">Open</button>
+                    <button class="btn small ai" data-transcribe="${escapeHtml(t.id)}" data-item="${escapeHtml(it.id)}">✨ Simulate Transcribe</button>
+                  </div>
+                </div>
+              `;
+            }).join("") : `<div class="smallnote">No items yet. Add a call/doc item.</div>`}
+          </div>
+        `;
+      }).join("");
+
+      // wire actions
+      wrap.querySelectorAll("[data-additem]").forEach(b=> b.addEventListener("click", ()=> addItemToThread(b.getAttribute("data-additem"))));
+      wrap.querySelectorAll("[data-renameth]").forEach(b=> b.addEventListener("click", ()=> renameThread(b.getAttribute("data-renameth"))));
+      wrap.querySelectorAll("[data-delth]").forEach(b=> b.addEventListener("click", ()=> deleteThread(b.getAttribute("data-delth"))));
+      wrap.querySelectorAll("[data-open]").forEach(b=> b.addEventListener("click", ()=> openItemModal(b.getAttribute("data-open"), b.getAttribute("data-item"))));
+      wrap.querySelectorAll("[data-transcribe]").forEach(b=> b.addEventListener("click", ()=> simulateTranscribe(b.getAttribute("data-transcribe"), b.getAttribute("data-item"))));
+    }
+
+    function renameThread(threadId){
+      const r = ensureSelected(); if(!r) return;
+      const th = r.threads.find(t=>t.id===threadId); if(!th) return;
+      const name = prompt("New thread name:", th.name);
+      if(!name) return;
+      th.name = name.trim();
+      r.updatedAt = nowISO();
+      write();
+      renderAll();
+    }
+
+    function deleteThread(threadId){
+      const r = ensureSelected(); if(!r) return;
+      const th = r.threads.find(t=>t.id===threadId); if(!th) return;
+      if(!confirm(`Delete thread "${th.name}"?`)) return;
+      r.threads = r.threads.filter(t=>t.id!==threadId);
+      r.updatedAt = nowISO();
+      write();
+      renderAll();
+    }
+
+    // --- Modal logic for items ---
+    let modalCtx = { threadId:null, itemId:null };
+
+    function openModal(){ $("#modal").style.display="flex"; }
+    function closeModal(){ $("#modal").style.display="none"; modalCtx={threadId:null,itemId:null}; }
+
+    function openItemModal(threadId, itemId){
+      const r = ensureSelected(); if(!r) return;
+      const th = r.threads.find(t=>t.id===threadId); if(!th) return;
+      const it = th.items.find(i=>i.id===itemId); if(!it) return;
+
+      modalCtx = { threadId, itemId };
+      $("#mTitle").textContent = `Edit Item • ${th.name} / ${it.title}`;
+
+      $("#mThreadName").value = th.name;
+      $("#mItemType").value = it.type;
+      $("#mDate").value = it.date || "";
+      $("#mTime").value = it.time || "";
+      $("#mStakeholders").value = (it.stakeholders || []).join(", ");
+      $("#mLink").value = it.link || "";
+      $("#mTranscript").value = it.transcript || "";
+      $("#mActions").value = it.actions || "";
+
+      openModal();
+    }
+
+    function saveModal(){
+      const r = ensureSelected(); if(!r) return;
+      const th = r.threads.find(t=>t.id===modalCtx.threadId); if(!th) return;
+      const it = th.items.find(i=>i.id===modalCtx.itemId); if(!it) return;
+
+      const newThreadName = ($("#mThreadName").value||"").trim() || th.name;
+      th.name = newThreadName;
+
+      it.type = $("#mItemType").value;
+      it.date = $("#mDate").value || "";
+      it.time = $("#mTime").value || "";
+      it.stakeholders = ($("#mStakeholders").value||"").split(",").map(s=>s.trim()).filter(Boolean);
+      it.link = ($("#mLink").value||"").trim();
+      it.transcript = ($("#mTranscript").value||"").trim();
+      it.actions = ($("#mActions").value||"").trim();
+      it.status = it.type==="Scheduled Call" ? "Scheduled" : (it.transcript ? "Captured" : it.status);
+      it.updatedAt = nowISO();
+
+      r.updatedAt = nowISO();
+      write();
+      closeModal();
+      renderAll();
+    }
+
+    function deleteModalItem(){
+      const r = ensureSelected(); if(!r) return;
+      const th = r.threads.find(t=>t.id===modalCtx.threadId); if(!th) return;
+      const it = th.items.find(i=>i.id===modalCtx.itemId); if(!it) return;
+
+      if(!confirm(`Delete item "${it.title}"?`)) return;
+      th.items = th.items.filter(x=>x.id!==it.id);
+      r.updatedAt = nowISO();
+      write();
+      closeModal();
+      renderAll();
+    }
+
+    function simulateTranscribe(threadId, itemId){
+      const r = ensureSelected(); if(!r) return;
+      const th = r.threads.find(t=>t.id===threadId); if(!th) return;
+      const it = th.items.find(i=>i.id===itemId); if(!it) return;
+
+      const txt = (it.transcript||"").trim();
+      if(!txt){
+        it.transcript = `Speaker A: We need to refine scope and confirm edge cases.\nSpeaker B: SLA should be under 2 minutes. Maker-checker audit trail required.\nSpeaker A: Eligibility rules based on DPD, vintage, and FOIR.\n\n(Replace this with actual transcript from STT pipeline.)`;
+      } else if(!txt.includes("Speaker")){
+        // lightly format as transcript
+        const lines = splitLines(txt).slice(0,40);
+        it.transcript = lines.map((l, idx)=> (idx%2===0 ? `Speaker A: ${l}` : `Speaker B: ${l}`)).join("\n");
+      }
+      it.type = "Completed Call";
+      it.status = "Captured";
+      it.updatedAt = nowISO();
+      r.updatedAt = nowISO();
+      write();
+      renderAll();
+      alert("Simulated transcription added/normalized.");
+    }
+
+    function modalSimTranscribe(){
+      // apply on currently open modal item
+      if(!modalCtx.threadId || !modalCtx.itemId) return;
+      const r = ensureSelected(); if(!r) return;
+      const th = r.threads.find(t=>t.id===modalCtx.threadId); if(!th) return;
+      const it = th.items.find(i=>i.id===modalCtx.itemId); if(!it) return;
+
+      // Use the modal textarea content as raw notes and convert to transcript-like
+      const raw = ($("#mTranscript").value||"").trim();
+      if(!raw){
+        $("#mTranscript").value = `Speaker A: Please walk through the current journey.\nSpeaker B: We want a digital process, with approvals and full audit.\nSpeaker A: Confirm business rules and exception handling.\n\n(Replace with real transcript.)`;
+      } else if(!raw.includes("Speaker")){
+        const lines = splitLines(raw).slice(0,60);
+        $("#mTranscript").value = lines.map((l, idx)=> (idx%2===0 ? `Speaker A: ${l}` : `Speaker B: ${l}`)).join("\n");
+      }
+      $("#mItemType").value = "Completed Call";
+    }
+
+    // --- Attributes UI ---
+    function clearAttrsUI(){
+      $("#aProblem").value="";
+      $("#aObjectives").value="";
+      $("#aScopeIn").value="";
+      $("#aScopeOut").value="";
+      $("#aFR").value="";
+      $("#aNFR").value="";
+      $("#aRules").value="";
+      $("#aDeps").value="";
+      $("#aEdges").value="";
+      $("#aRisks").value="";
+      $("#aData").value="";
+      $("#aAudit").value="";
+      $("#aAC").value="";
+    }
+
+    function renderAttrs(){
+      const r = getSelectedReq();
+      if(!r){ clearAttrsUI(); return; }
+      $("#aProblem").value = r.attrs.problem || "";
+      $("#aObjectives").value = r.attrs.objectives || "";
+      $("#aScopeIn").value = r.attrs.scopeIn || "";
+      $("#aScopeOut").value = r.attrs.scopeOut || "";
+      $("#aFR").value = r.attrs.fr || "";
+      $("#aNFR").value = r.attrs.nfr || "";
+      $("#aRules").value = r.attrs.rules || "";
+      $("#aDeps").value = r.attrs.deps || "";
+      $("#aEdges").value = r.attrs.edges || "";
+      $("#aRisks").value = r.attrs.risks || "";
+      $("#aData").value = r.attrs.data || "";
+      $("#aAudit").value = r.attrs.audit || "";
+      $("#aAC").value = r.attrs.ac || "";
+    }
+
+    function renderTrace(){
+      const r = getSelectedReq();
+      const tb = $("#traceTable");
+      if(!r){ tb.innerHTML=""; return; }
+
+      const trace = buildTrace(r);
+      tb.innerHTML = Buckets.map(b=>{
+        const entries = Array.from(trace[b.key].snips.entries()).slice(0,6); // [snip, sourcesSet]
+        const snipsHtml = entries.length
+          ? entries.map(([s])=> `<div class="mono" style="margin-bottom:6px">${escapeHtml(s)}</div>`).join("")
+          : `<span class="meta">—</span>`;
+
+        const srcHtml = entries.length
+          ? entries.map(([_,srcSet])=> `<div class="meta" style="margin-bottom:8px">${escapeHtml(Array.from(srcSet).slice(0,3).join(" • "))}${srcSet.size>3 ? " …" : ""}</div>`).join("")
+          : `<span class="meta">—</span>`;
+
+        return `
+          <tr>
+            <td><b>${escapeHtml(b.title)}</b></td>
+            <td>${snipsHtml}</td>
+            <td>${srcHtml}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    // --- Render all ---
+    function renderAll(){
+      renderReqList();
+      renderReqHeader();
+      renderThreads();
+      renderAttrs();
+      renderTrace();
+    }
+
+    // --- Wire events ---
+    function wire(){
+      // Create
+      $("#btnCreateReq").addEventListener("click", createRequest);
+      $("#q").addEventListener("input", renderReqList);
+
+      // Tabs
+      $$(".tab").forEach(t=>{
+        t.addEventListener("click", ()=> setTab(t.dataset.tab));
+      });
+
+      // Overview save
+      $("#btnSaveOverview").addEventListener("click", saveOverview);
+
+      // Thread create
+      $("#btnNewThread").addEventListener("click", newThread);
+      $("#btnNewThread2").addEventListener("click", newThread);
+
+      // Gist
+      $("#btnBuildGist").addEventListener("click", buildGist);
+      $("#btnBuildGist2").addEventListener("click", buildGist);
+      $("#btnSaveGist").addEventListener("click", saveGist);
+      $("#btnCopyGist").addEventListener("click", ()=>{
+        const txt = ($("#gist").value||"").trim();
+        navigator.clipboard?.writeText(txt).then(()=>alert("Copied."), ()=>alert("Copy failed."));
+      });
+
+      // Extract
+      $("#btnAIExtract").addEventListener("click", extractToAttributes);
+      $("#btnAIExtract").addEventListener("dblclick", extractToAttributes); // harmless
+
+      // Attr save/clear
+      $("#btnSaveAttrs").addEventListener("click", saveAttrs);
+      $("#btnClearAttrs").addEventListener("click", clearAttrs);
+
+      // Delete req
+      $("#btnDeleteReq").addEventListener("click", deleteSelectedReq);
+
+      // Export
+      $("#btnExport").addEventListener("click", exportAll);
+      $("#btnExportReq").addEventListener("click", exportSelectedReq);
+
+      // Reset
+      $("#btnReset").addEventListener("click", resetAll);
+
+      // Modal close
+      $("#modal").addEventListener("click",(e)=>{ if(e.target===$("#modal")) closeModal(); });
+      $$("#modal [data-close]").forEach(b=>b.addEventListener("click", closeModal));
+
+      // Modal buttons
+      $("#mSave").addEventListener("click", saveModal);
+      $("#mDelete").addEventListener("click", deleteModalItem);
+      $("#mSimTranscribe").addEventListener("click", modalSimTranscribe);
+
+      // Shortcut: Ctrl+Enter saves current gist in gist tab; otherwise saves overview
+      document.addEventListener("keydown",(e)=>{
+        if((e.ctrlKey || e.metaKey) && e.key==="Enter"){
+          const activePanel = $$(".panel").find(p=>p.classList.contains("active"))?.id;
+          if(activePanel==="tabTranscripts") saveGist();
+          else if(activePanel==="tabThreads") saveOverview();
+        }
+      });
+
+      // initial selection
+      if(!state.selectedReqId && state.requests[0]) state.selectedReqId = state.requests[0].id;
+      write();
+      renderAll();
+    }
+
+    wire();
+
+    // Page switcher
+    document.getElementById("pageSwitcher").addEventListener("change", (e)=>{
+      window.location.href = e.target.value;
+    });
+  </script>
+</body>
+</html>

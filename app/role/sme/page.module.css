@@ -1,0 +1,285 @@
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.backLink {
+  color: #0f766e;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.title {
+  margin: 8px 0;
+  font-size: 28px;
+  color: #0b1220;
+}
+
+.subtitle {
+  margin: 0;
+  color: #475569;
+}
+
+.ctaLink {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  background: #0f766e;
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.statCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.statCard h3 {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.statCard p {
+  margin: 8px 0 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cardHeader h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.badge {
+  background: #ecfeff;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cardBody {
+  padding: 16px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.formGrid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.formGrid input,
+.formGrid select,
+.formGrid textarea,
+.full textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.subCard {
+  margin-top: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.subCard h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.threadList {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: #334155;
+}
+
+.primaryBtn,
+.secondaryBtn,
+.approveBtn,
+.rejectBtn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.primaryBtn {
+  margin-top: 12px;
+  width: 100%;
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.secondaryBtn {
+  margin-top: 10px;
+  background: #e2e8f0;
+  color: #0b1220;
+}
+
+.reviewLayout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 12px;
+}
+
+.queueList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.queueItem {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 8px;
+  text-align: left;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.queueItem span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.activeQueue {
+  border-color: #0f766e;
+  background: #ecfeff;
+}
+
+.reviewPanel {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.reviewPanel h3 {
+  margin: 0;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.summaryGrid h4 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: #0f766e;
+}
+
+.summaryGrid p,
+.summaryGrid pre {
+  margin: 0;
+  padding: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.reviewActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.approveBtn {
+  background: #15803d;
+  color: #ffffff;
+}
+
+.rejectBtn {
+  background: #b91c1c;
+  color: #ffffff;
+}
+
+@media (max-width: 1100px) {
+  .layout,
+  .statsGrid,
+  .reviewLayout,
+  .summaryGrid,
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}

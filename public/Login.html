@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BRD Automation • Login</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e5e7eb;
+      --border2:#f1f5f9;
+      --shadow: 0 18px 40px rgba(2,6,23,.10);
+      --r:18px;
+
+      --primary:#2563eb;
+      --success:#16a34a;
+      --warning:#f59e0b;
+      --danger:#ef4444;
+      --indigo:#4f46e5;
+      --slate:#334155;
+      --pink:#db2777;
+      --teal:#0d9488;
+
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --focus: 0 0 0 4px rgba(37,99,235,.14);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:var(--font); background:var(--bg); color:var(--text);
+    }
+    a{color:inherit; text-decoration:none}
+    button,input,select{font-family:inherit}
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      background:#fff;
+      border-bottom:1px solid var(--border2);
+    }
+    .topbar-inner{
+      max-width:1220px; margin:0 auto; padding:14px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{
+      width:40px; height:40px; border-radius:16px;
+      background:linear-gradient(135deg,#111827,#7c3aed);
+      box-shadow:0 14px 26px rgba(124,58,237,.20);
+    }
+    .brand h1{margin:0; font-size:15px; letter-spacing:-.2px}
+    .brand .sub{margin:4px 0 0; font-size:12.5px; color:var(--muted)}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:12.5px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .pill b{color:var(--text)}
+    .wrap{
+      max-width:1220px; margin:0 auto; padding:18px 16px 34px;
+    }
+    .layout{
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap:14px;
+      align-items:stretch;
+    }
+    .card{
+      border:1px solid var(--border);
+      border-radius:var(--r);
+      background:#fff;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-head{
+      padding:16px 16px 12px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+    }
+    .card-head h2{margin:0; font-size:16px; letter-spacing:-.2px}
+    .card-head p{margin:6px 0 0; font-size:13px; color:var(--muted); line-height:1.35}
+    .card-body{padding:16px}
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .tile{
+      grid-column:span 6;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+    }
+    .tile h3{margin:0; font-size:13.5px}
+    .tile p{margin:6px 0 0; font-size:12.5px; color:var(--muted); line-height:1.4}
+    .tile.full{grid-column:span 12}
+    .hr{height:1px; background:var(--border2); margin:12px 0}
+
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:850;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      user-select:none;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      white-space:nowrap;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow); border-color:#d1d5db}
+    .btn:active{transform:translateY(0)}
+    .btn:focus{outline:none; box-shadow:var(--shadow), var(--focus)}
+    .btn.primary{background:linear-gradient(135deg,var(--primary),#60a5fa); color:#fff; border-color:transparent}
+    .btn.neutral{background:linear-gradient(135deg,var(--slate),#64748b); color:#fff; border-color:transparent}
+    .btn.success{background:linear-gradient(135deg,var(--success),#22c55e); color:#fff; border-color:transparent}
+    .btn.warn{background:linear-gradient(135deg,var(--warning),#fbbf24); color:#111827; border-color:transparent}
+    .btn.ai{background:linear-gradient(135deg,var(--pink),#f472b6); color:#fff; border-color:transparent}
+    .btn.small{padding:8px 10px; border-radius:12px; font-size:13px}
+    .btn.block{width:100%}
+
+    label{font-size:12px; color:var(--muted); font-weight:900}
+    .field{display:flex; flex-direction:column; gap:7px; margin-bottom:12px}
+    input,select{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px 12px;
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+      outline:none;
+    }
+    input:focus,select:focus{box-shadow:var(--focus); border-color:rgba(37,99,235,.45)}
+    .row{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap}
+    .hint{font-size:12.5px; color:var(--muted); line-height:1.35}
+    .mono{font-family:var(--mono)}
+
+    .banner{
+      border:1px solid rgba(37,99,235,.18);
+      background:rgba(37,99,235,.06);
+      color:#1d4ed8;
+      border-radius:14px;
+      padding:10px 12px;
+      font-size:12.5px;
+      line-height:1.35;
+      display:none;
+      margin-bottom:12px;
+    }
+    .banner.err{
+      border-color:rgba(239,68,68,.20);
+      background:rgba(239,68,68,.06);
+      color:#b91c1c;
+    }
+
+    .linkbar{display:flex; gap:10px; flex-wrap:wrap}
+    .link{
+      font-size:12.5px;
+      font-weight:900;
+      color:var(--primary);
+    }
+    .navlist{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:10px;
+    }
+    .navitem{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      background:#fff;
+    }
+    .navitem b{font-size:13px}
+    .navitem span{font-size:12px; color:var(--muted)}
+    .tag{
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--muted);
+      background:#fff;
+      white-space:nowrap;
+    }
+
+    /* Modal */
+    .backdrop{
+      position:fixed; inset:0; z-index:60;
+      background: rgba(2,6,23,.45);
+      display:none;
+      align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .modal{
+      width:min(820px, 100%);
+      max-height:90vh;
+      overflow:auto;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:0 25px 70px rgba(2,6,23,.25);
+    }
+    .modal-head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .modal-head h3{margin:0; font-size:14px}
+    .modal-body{padding:14px}
+    .note{
+      border:1px dashed #d1d5db;
+      background:#f8fafc;
+      border-radius:14px;
+      padding:10px;
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.35;
+      white-space:pre-wrap;
+    }
+
+    @media (max-width: 980px){
+      .layout{grid-template-columns:1fr}
+      .tile{grid-column:span 12}
+      .navlist{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>BRD Automation Portal</h1>
+          <div class="sub">Login routes to BA/SME/Risk/InfoSec/IT/Compliance/Admin pages (offline prototype)</div>
+        </div>
+      </div>
+      <div class="row" style="gap:10px">
+        <span class="pill"><b>Controls:</b> RBAC • SoD • Audit</span>
+        <button class="btn small neutral" id="helpBtn">Help</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="layout">
+      <!-- LEFT: LINKS / OVERVIEW -->
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h2>Quick navigation</h2>
+            <p>Open any workspace directly, or sign in to create a session and auto-route by role.</p>
+          </div>
+          <span class="pill"><b>Files:</b> local HTML</span>
+        </div>
+        <div class="card-body">
+          <div class="grid">
+            <div class="tile">
+              <div class="row">
+                <h3>BA Workspace</h3>
+                <span class="tag">BA.html</span>
+              </div>
+              <p>Draft BRD, versioning, AI suggestions, submission workflow.</p>
+              <div class="hr"></div>
+              <div class="row">
+                <a class="btn small" href="BA.html">Open BA</a>
+                <button class="btn small ai" data-pick="asha.ba@bank.com">Use asha.ba@bank.com</button>
+              </div>
+            </div>
+
+            <div class="tile">
+              <div class="row">
+                <h3>SME Workspace</h3>
+                <span class="tag">SME.html</span>
+              </div>
+              <p>Validate requirements, scope, edge cases, test impacts.</p>
+              <div class="hr"></div>
+              <div class="row">
+                <a class="btn small" href="SME.html">Open SME</a>
+                <button class="btn small ai" data-pick="rohit.sme@bank.com">Use rohit.sme@bank.com</button>
+              </div>
+            </div>
+
+            <div class="tile">
+              <div class="row">
+                <h3>Risk Workspace</h3>
+                <span class="tag">Risk.html</span>
+              </div>
+              <p>Risk assessment, mitigations, residual risk approval.</p>
+              <div class="hr"></div>
+              <div class="row">
+                <a class="btn small" href="Risk.html">Open Risk</a>
+                <button class="btn small ai" data-pick="nadia.risk@bank.com">Use nadia.risk@bank.com</button>
+              </div>
+            </div>
+
+            <div class="tile">
+              <div class="row">
+                <h3>Compliance Workspace</h3>
+                <span class="tag">Compliance.html</span>
+              </div>
+              <p>Regulatory mapping, obligations, evidence checklist.</p>
+              <div class="hr"></div>
+              <div class="row">
+                <a class="btn small" href="Compliance.html">Open Compliance</a>
+                <button class="btn small ai" data-pick="sanjay.compliance@nbfc.com">Use sanjay.compliance@nbfc.com</button>
+              </div>
+            </div>
+
+            <div class="tile">
+              <div class="row">
+                <h3>InfoSec Workspace</h3>
+                <span class="tag">Infosec.html</span>
+              </div>
+              <p>Data classification, threat model, controls, sign-off.</p>
+              <div class="hr"></div>
+              <div class="row">
+                <a class="btn small" href="Infosec.html">Open InfoSec</a>
+                <button class="btn small ai" data-pick="meera.infosec@bank.com">Use meera.infosec@bank.com</button>
+              </div>
+            </div>
+
+            <div class="tile">
+              <div class="row">
+                <h3>IT Workspace</h3>
+                <span class="tag">IT.html</span>
+              </div>
+              <p>Architecture/NFR review, DR/BCP, rollout readiness.</p>
+              <div class="hr"></div>
+              <div class="row">
+                <a class="btn small" href="IT.html">Open IT</a>
+                <button class="btn small ai" data-pick="ishaan.it@bank.com">Use ishaan.it@bank.com</button>
+              </div>
+            </div>
+
+            <div class="tile full">
+              <div class="row">
+                <h3>Admin & User Management</h3>
+                <span class="tag">Admin.html + User Management.html</span>
+              </div>
+              <p>Manage users, roles, permissions, approval policies, and tenant rules.</p>
+              <div class="hr"></div>
+              <div class="row" style="gap:10px">
+                <a class="btn small neutral" href="Admin.html">Open Admin Console</a>
+                <a class="btn small neutral" href="User Management.html">Open User Management</a>
+                <button class="btn small ai" data-pick="admin@org.com">Use admin@org.com</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="hint">
+            <b>Tip:</b> Keep this file in the same folder as the other HTML pages so the links resolve.
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: LOGIN -->
+      <aside class="card" aria-label="Login">
+        <div class="card-head">
+          <div>
+            <h2>Sign in</h2>
+            <p>Stores session in <span class="mono">localStorage</span> and routes you to the correct workspace page.</p>
+          </div>
+          <span class="pill"><b>Session:</b> local</span>
+        </div>
+        <div class="card-body">
+          <div class="banner" id="ok"></div>
+          <div class="banner err" id="err"></div>
+
+          <div class="field">
+            <label>Email</label>
+            <input id="email" type="email" placeholder="name@bank.com" autocomplete="username"/>
+          </div>
+
+          <div class="field">
+            <label>Mode</label>
+            <select id="mode">
+              <option value="normal" selected>Standard access (RBAC)</option>
+              <option value="readonly">Read-only (Auditor)</option>
+            </select>
+            <div class="hint" style="margin-top:6px">Read-only sends you to the BA page in view mode banner (simulated).</div>
+          </div>
+
+          <div class="field">
+            <label>Remember me</label>
+            <select id="remember">
+              <option value="yes" selected>Yes (default)</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+
+          <div class="hr"></div>
+
+          <button class="btn primary block" id="loginBtn">Sign in &amp; Open Workspace</button>
+
+          <div class="linkbar" style="margin-top:10px">
+            <a class="link" href="#" id="showSessionBtn">View session</a>
+            <a class="link" href="#" id="logoutBtn">Clear session</a>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="hint">
+            <b>Directory:</b>
+            <div class="mono" style="margin-top:8px; line-height:1.5">
+              asha.ba@bank.com (BA)<br/>
+              rohit.sme@bank.com (SME)<br/>
+              nadia.risk@bank.com (Risk)<br/>
+              sanjay.compliance@nbfc.com (Compliance)<br/>
+              meera.infosec@bank.com (InfoSec)<br/>
+              ishaan.it@bank.com (IT)<br/>
+              admin@org.com (Admin)
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- MODAL -->
+  <div class="backdrop" id="modal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modalTitle">Info</h3>
+        <button class="btn small neutral" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="note" id="modalBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SESSION_KEY = "brd_session_v1";
+
+    const Directory = [
+      { email:"asha.ba@bank.com", role:"BA", page:"BA.html", tenant:"BANK" },
+      { email:"rohit.sme@bank.com", role:"SME", page:"SME.html", tenant:"BANK" },
+      { email:"nadia.risk@bank.com", role:"Risk", page:"Risk.html", tenant:"BANK" },
+      { email:"sanjay.compliance@nbfc.com", role:"Compliance", page:"Compliance.html", tenant:"NBFC" },
+      { email:"meera.infosec@bank.com", role:"InfoSec", page:"Infosec.html", tenant:"BANK" },
+      { email:"ishaan.it@bank.com", role:"IT", page:"IT.html", tenant:"BANK" },
+      { email:"admin@org.com", role:"Admin", page:"Admin.html", tenant:"ORG" }
+    ];
+
+    const $ = (q)=>document.querySelector(q);
+    const safeParse = (s)=>{ try{return JSON.parse(s)}catch{return null} };
+
+    function showOk(msg){
+      $("#err").style.display="none";
+      $("#ok").textContent = msg;
+      $("#ok").style.display="block";
+    }
+    function showErr(msg){
+      $("#ok").style.display="none";
+      $("#err").textContent = msg;
+      $("#err").style.display="block";
+    }
+    function clearBanners(){
+      $("#ok").style.display="none";
+      $("#err").style.display="none";
+      $("#ok").textContent="";
+      $("#err").textContent="";
+    }
+
+    function openModal(title, body){
+      $("#modalTitle").textContent = title;
+      $("#modalBody").textContent = body;
+      $("#modal").style.display="flex";
+    }
+    function closeModal(){ $("#modal").style.display="none"; }
+
+    function findUser(email){
+      const e = (email||"").trim().toLowerCase();
+      return Directory.find(u=>u.email===e) || null;
+    }
+
+    function saveSession(sess){
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sess));
+    }
+
+    function clearSession(){
+      localStorage.removeItem(SESSION_KEY);
+    }
+
+    function doLogin(){
+      clearBanners();
+      const email = ($("#email").value||"").trim().toLowerCase();
+      const mode = $("#mode").value;
+      const remember = $("#remember").value;
+
+      if(!email || !email.includes("@")){
+        showErr("Enter a valid email (e.g., asha.ba@bank.com).");
+        $("#email").focus();
+        return;
+      }
+
+      const user = findUser(email);
+
+      if(mode==="readonly"){
+        // Auditor simulation: allow any email, route to BA page in "view mode"
+        const sess = {
+          at: new Date().toISOString(),
+          email,
+          role: "Auditor",
+          tenant: "N/A",
+          page: "BA.html",
+          mode: "readonly"
+        };
+        if(remember==="yes") saveSession(sess);
+        showOk(`Read-only mode: routing to ${sess.page} (Auditor)`);
+        setTimeout(()=>location.href = sess.page, 400);
+        return;
+      }
+
+      if(!user){
+        showErr("Email not found in directory. Use Read-only mode or add user in User Management.");
+        return;
+      }
+
+      const sess = {
+        at: new Date().toISOString(),
+        email: user.email,
+        role: user.role,
+        tenant: user.tenant,
+        page: user.page,
+        mode: "normal"
+      };
+      if(remember==="yes") saveSession(sess);
+
+      showOk(`Signed in as ${user.role} • Routing to ${user.page}`);
+      setTimeout(()=>location.href = user.page, 400);
+    }
+
+    function restoreIfAny(){
+      const sess = safeParse(localStorage.getItem(SESSION_KEY) || "");
+      if(sess?.email){
+        $("#email").value = sess.email;
+        $("#mode").value = sess.mode === "readonly" ? "readonly" : "normal";
+        $("#remember").value = "yes";
+        showOk(`Welcome back • ${sess.email} (${sess.role}) • Last: ${new Date(sess.at).toLocaleString()}`);
+      }
+    }
+
+    function wire(){
+      // modal wiring
+      $("#modal").addEventListener("click",(e)=>{ if(e.target===$("#modal")) closeModal(); });
+      document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click", closeModal));
+
+      // login
+      $("#loginBtn").addEventListener("click", doLogin);
+      $("#email").addEventListener("keydown",(e)=>{ if(e.key==="Enter") doLogin(); });
+
+      // quick pick buttons (from tiles)
+      document.querySelectorAll("[data-pick]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          $("#email").value = btn.getAttribute("data-pick");
+          $("#mode").value = "normal";
+          clearBanners();
+          $("#email").focus();
+        });
+      });
+
+      // session tools
+      $("#showSessionBtn").addEventListener("click",(e)=>{
+        e.preventDefault();
+        const sess = safeParse(localStorage.getItem(SESSION_KEY) || "");
+        openModal("Current session",
+          sess ? JSON.stringify(sess, null, 2) : "No session found in localStorage.");
+      });
+
+      $("#logoutBtn").addEventListener("click",(e)=>{
+        e.preventDefault();
+        clearSession();
+        clearBanners();
+        showOk("Session cleared.");
+      });
+
+      $("#helpBtn").addEventListener("click", ()=>{
+        openModal("How to use this Login page",
+`1) Keep Login.html in the same folder as BA.html, SME.html, Risk.html, Compliance.html, Infosec.html, IT.html, Admin.html, and User Management.html.
+2) Use one of the directory emails and click “Sign in”.
+3) You will be routed to the correct role workspace page.
+4) Read-only mode lets you explore even if email isn’t in the directory (routes to BA page).`);
+      });
+
+      restoreIfAny();
+    }
+
+    wire();
+  </script>
+</body>
+</html>

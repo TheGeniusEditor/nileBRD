@@ -1,0 +1,153 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.backLink {
+  text-decoration: none;
+  color: #0f766e;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.header h1 {
+  margin: 8px 0 6px;
+  font-size: 26px;
+}
+
+.header p {
+  margin: 0;
+  color: #64748b;
+}
+
+.sendBtn,
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.sendBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.doc {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.section h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: #0b1220;
+}
+
+.grid2,
+.grid3 {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.grid2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fieldCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.value {
+  font-size: 14px;
+  color: #0b1220;
+}
+
+.block {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+  background: #f8fafc;
+  margin-bottom: 10px;
+}
+
+.pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 14px;
+  font-family: inherit;
+  color: #0b1220;
+}
+
+.emptyCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 560px;
+}
+
+.emptyCard h1 {
+  margin: 0 0 8px;
+}
+
+.emptyCard p {
+  margin: 0 0 14px;
+  color: #64748b;
+}
+
+@media (max-width: 900px) {
+  .header {
+    flex-direction: column;
+  }
+
+  .grid2,
+  .grid3 {
+    grid-template-columns: 1fr;
+  }
+}

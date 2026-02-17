@@ -1,0 +1,1581 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BRD Portal • SME Workspace (rohit.sme@bank.com)</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --panel:#ffffff;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --border2:#f1f5f9;
+      --shadow: 0 10px 28px rgba(2,6,23,.08);
+      --radius:16px;
+
+      --primary:#2563eb;   /* approve */
+      --success:#16a34a;   /* accept */
+      --warning:#f59e0b;   /* request changes */
+      --danger:#ef4444;    /* reject */
+      --indigo:#4f46e5;    /* export */
+      --slate:#334155;     /* neutral */
+      --pink:#db2777;      /* AI */
+      --teal:#0d9488;      /* add */
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:var(--font); background:var(--bg); color:var(--text)}
+    a{color:inherit; text-decoration:none}
+
+    .topbar{position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--border)}
+    .topbar-inner{max-width:1400px; margin:0 auto; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px}
+    .brand{display:flex; align-items:center; gap:10px}
+    .logo{width:36px; height:36px; border-radius:14px; background:linear-gradient(135deg,var(--primary),#60a5fa); box-shadow:0 10px 20px rgba(37,99,235,.18)}
+    .brand h1{margin:0; font-size:15px; letter-spacing:-.2px}
+    .brand .sub{margin:4px 0 0; font-size:12px; color:var(--muted)}
+    .right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:13px}
+    .dot{width:8px; height:8px; border-radius:999px; background:#16a34a}
+    .kbd{font-family:var(--mono); font-size:12px; padding:2px 6px; border:1px solid var(--border); border-bottom-width:2px; border-radius:8px; color:var(--muted); background:#fff}
+
+    .wrap{max-width:1400px; margin:0 auto; padding:16px}
+    .layout{display:grid; grid-template-columns:330px 1fr; gap:14px; align-items:start}
+    .card{border:1px solid var(--border); border-radius:var(--radius); background:#fff; box-shadow:var(--shadow); overflow:hidden}
+    .card.noshadow{box-shadow:none}
+    .card-head{padding:14px 14px 10px; border-bottom:1px solid var(--border2); display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+    .card-head h3{margin:0; font-size:14px}
+    .card-head p{margin:6px 0 0; font-size:12.5px; color:var(--muted); line-height:1.35}
+    .card-body{padding:14px}
+    .hr{height:1px; background:var(--border2); margin:12px 0}
+
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:9px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:800;
+      display:inline-flex; align-items:center; gap:8px;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      user-select:none;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow); border-color:#d1d5db}
+    .btn:active{transform:translateY(0)}
+    .btn.small{padding:7px 10px; border-radius:10px; font-size:13px}
+    .btn.primary{background:linear-gradient(135deg,var(--primary),#60a5fa); color:#fff; border-color:transparent}
+    .btn.success{background:linear-gradient(135deg,var(--success),#22c55e); color:#fff; border-color:transparent}
+    .btn.warn{background:linear-gradient(135deg,var(--warning),#fbbf24); color:#111827; border-color:transparent}
+    .btn.danger{background:linear-gradient(135deg,var(--danger),#fb7185); color:#fff; border-color:transparent}
+    .btn.export{background:linear-gradient(135deg,var(--indigo),#7c3aed); color:#fff; border-color:transparent}
+    .btn.ai{background:linear-gradient(135deg,var(--pink),#f472b6); color:#fff; border-color:transparent}
+    .btn.add{background:linear-gradient(135deg,var(--teal),#22c55e); color:#fff; border-color:transparent}
+    .btn.neutral{background:linear-gradient(135deg,var(--slate),#64748b); color:#fff; border-color:transparent}
+
+    .nav{display:flex; flex-direction:column; gap:6px}
+    .nav a{
+      padding:10px 10px; border-radius:12px;
+      border:1px solid transparent; color:var(--muted);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      font-weight:900;
+    }
+    .nav a.active{background:rgba(37,99,235,.08); border-color:rgba(37,99,235,.20); color:var(--text)}
+    .nav a:hover{background:#f8fafc; border-color:var(--border); color:var(--text)}
+    .badge{font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); background:#fff}
+
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .span-12{grid-column:span 12}
+    .span-8{grid-column:span 8}
+    .span-6{grid-column:span 6}
+    .span-4{grid-column:span 4}
+
+    .title{font-size:20px; margin:0; letter-spacing:-.3px}
+    .subtext{margin:6px 0 0; font-size:13px; color:var(--muted)}
+    .mono{font-family:var(--mono)}
+    .note{border:1px dashed #d1d5db; background:#f8fafc; border-radius:12px; padding:10px; color:var(--muted); font-size:12.5px; line-height:1.35}
+
+    label{font-size:12px; color:var(--muted); font-weight:900}
+    input[type="text"], input[type="number"], textarea, select{
+      width:100%;
+      border:1px solid var(--border);
+      padding:10px 12px;
+      border-radius:12px;
+      outline:none;
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+    }
+    textarea{min-height:110px; resize:vertical}
+    .inputs{display:grid; grid-template-columns:repeat(12,1fr); gap:10px}
+    .field{grid-column:span 6; display:flex; flex-direction:column; gap:6px}
+    .field.full{grid-column:span 12}
+    .field.third{grid-column:span 4}
+    .help{font-size:12.5px; color:var(--muted); line-height:1.35}
+
+    .table{
+      width:100%;
+      border-collapse:collapse;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .table th,.table td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--border2);
+      text-align:left;
+      vertical-align:top;
+      font-size:13px;
+    }
+    .table th{background:#f8fafc; color:var(--muted); font-weight:900}
+    .table tr:last-child td{border-bottom:none}
+
+    .progress{width:100%; height:10px; border-radius:999px; border:1px solid var(--border); background:#f1f5f9; overflow:hidden}
+    .progress>span{display:block; height:100%; width:0%; background:linear-gradient(135deg,var(--primary),#60a5fa)}
+
+    /* Modal */
+    .backdrop{
+      position:fixed; inset:0; z-index:60;
+      background: rgba(2,6,23,.45);
+      display:none;
+      align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .modal{
+      width:min(1100px, 100%);
+      max-height:92vh;
+      overflow:auto;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:0 25px 70px rgba(2,6,23,.25);
+    }
+    .modal-head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:center; justify-content:space-between; gap:10px
+    }
+    .modal-head h3{margin:0; font-size:14px}
+    .modal-body{padding:14px}
+
+    /* Toast */
+    .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:80; display:flex; flex-direction:column; gap:10px}
+    .toast{
+      width:min(460px, calc(100vw - 32px));
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      padding:10px;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .ticon{width:26px; height:26px; border-radius:10px; background:rgba(37,99,235,.10); display:flex; align-items:center; justify-content:center; flex:0 0 auto}
+    .toast h4{margin:0; font-size:13px}
+    .toast p{margin:4px 0 0; font-size:12.5px; color:var(--muted)}
+
+    /* Page Switcher */
+    .page-switcher{
+      padding:8px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      color:var(--text);
+      font-size:13px;
+      font-family:var(--font);
+      cursor:pointer;
+      font-weight:700;
+    }
+    .page-switcher:hover{border-color:#d1d5db; background:#f8fafc}
+
+    @media (max-width:1100px){
+      .layout{grid-template-columns:1fr}
+      .span-8,.span-6,.span-4{grid-column:span 12}
+      .field,.field.third{grid-column:span 12}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>SME Workspace • BRD Automation</h1>
+          <div class="sub">Signed in as <span class="mono">rohit.sme@bank.com</span> • Role: Subject Matter Expert (SME)</div>
+        </div>
+      </div>
+      <select class="page-switcher" id="pageSwitcher">
+        <option value="Admin.html">Admin</option>
+        <option value="BA.html">BA Workspace</option>
+        <option value="Compliance.html">Compliance</option>
+        <option value="In Take 1.html">Intake Tracker</option>
+        <option value="Infosec.html">InfoSec</option>
+        <option value="IT.html">IT</option>
+        <option value="Risk.html">Risk</option>
+        <option value="SME.html" selected>SME</option>
+        <option value="User Management 1.html">User Management</option>
+      </select>
+      <div class="right">
+        <div class="pill"><span class="dot"></span><span id="activeBrdPill">No BRD selected</span></div>
+        <div class="pill"><span class="mono">Review Mode</span> <span class="kbd">ON</span></div>
+        <button class="btn small neutral" id="resetBtn" title="Clears local data">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="layout">
+      <!-- LEFT -->
+      <aside class="card">
+        <div class="card-head">
+          <div>
+            <h3>SME Navigation</h3>
+            <p>Review BRDs for business correctness, policy alignment, edge-cases, exceptions, and operational feasibility.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="nav" id="nav">
+            <a href="#" data-view="inbox" class="active">Review Inbox <span class="badge" id="inboxBadge">0</span></a>
+            <a href="#" data-view="overview">BRD Overview <span class="badge">Read</span></a>
+            <a href="#" data-view="req">Requirements Review <span class="badge">FR/NFR</span></a>
+            <a href="#" data-view="rules">Policy & Rules <span class="badge">Edge-cases</span></a>
+            <a href="#" data-view="ux">User Journeys <span class="badge">Flows</span></a>
+            <a href="#" data-view="data">Data & Integrations <span class="badge">Inputs</span></a>
+            <a href="#" data-view="comments">Comments & Decisions <span class="badge">Maker-Checker</span></a>
+            <a href="#" data-view="audit">Audit Trail <span class="badge">Evidence</span></a>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="note">
+            <b>SME review checklist:</b><br/>
+            • Is the objective measurable and realistic?<br/>
+            • Do flows cover exceptions (KYC fail, bureau down, partial docs)?<br/>
+            • Are rules and thresholds aligned to credit policy?<br/>
+            • Are roles and maker-checker clearly defined?<br/>
+            • Are operational controls and MIS present?
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
+            <button class="btn ai" id="aiReviewBtn">✨ AI Review</button>
+            <button class="btn export" id="exportReviewBtn">Export Review</button>
+          </div>
+          <div class="help" style="margin-top:8px">Export Review downloads SME comments + decision log as JSON.</div>
+        </div>
+      </aside>
+
+      <!-- RIGHT -->
+      <main class="grid">
+
+        <!-- INBOX -->
+        <section class="card span-12" id="view-inbox">
+          <div class="card-head">
+            <div>
+              <h3>Review Inbox</h3>
+              <p>BRDs submitted for review (status: <b>In Review</b>) or needing SME attention.</p>
+            </div>
+            <div class="right">
+              <div style="min-width:260px">
+                <label>Search</label>
+                <input id="searchInbox" type="text" placeholder="Search by ID/title/domain…" />
+              </div>
+              <div style="min-width:220px">
+                <label>Filter</label>
+                <select id="filterInbox">
+                  <option value="ALL">All</option>
+                  <option value="In Review">In Review</option>
+                  <option value="Changes Requested">Changes Requested</option>
+                  <option value="Approved">Approved</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>BRD</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                  <th>Completeness</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="inboxTable"></tbody>
+            </table>
+            <div class="help" style="margin-top:10px">
+              Tip: open a BRD and use “AI Review” to generate a gap list and suggested questions.
+            </div>
+          </div>
+        </section>
+
+        <!-- OVERVIEW -->
+        <section class="card span-12" id="view-overview" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>BRD Overview (Read + SME Notes)</h3>
+              <p>SME reads BA content and records structured feedback. Nothing is auto-edited by SME here; only comments/decisions.</p>
+            </div>
+            <div class="right">
+              <span class="badge">Status: <b id="statusText">—</b></span>
+              <button class="btn ai" id="aiAssistBtn">✨ AI Review</button>
+              <button class="btn export" id="exportBrdBtn">Export BRD JSON</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="grid">
+              <div class="span-12">
+                <h2 class="title" id="brdTitle">No BRD selected</h2>
+                <div class="subtext" id="brdMeta">—</div>
+              </div>
+              <div class="span-12">
+                <div class="progress"><span id="progressBar"></span></div>
+                <div class="help" id="progressText" style="margin-top:8px">—</div>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="grid">
+              <section class="card span-6 noshadow">
+                <div class="card-head">
+                  <div><h3>Objective</h3><p>SME checks clarity + realism.</p></div>
+                </div>
+                <div class="card-body">
+                  <div class="note" id="objBox">—</div>
+                  <div class="hr"></div>
+                  <label>SME observation</label>
+                  <textarea id="obsObjective" placeholder="What is missing/unclear? Any assumptions to correct?"></textarea>
+                </div>
+              </section>
+
+              <section class="card span-6 noshadow">
+                <div class="card-head">
+                  <div><h3>Scope</h3><p>Scope-in/out, personas, channels.</p></div>
+                </div>
+                <div class="card-body">
+                  <div class="note" id="scopeBox">—</div>
+                  <div class="hr"></div>
+                  <label>SME observation</label>
+                  <textarea id="obsScope" placeholder="Scope gaps, missing journeys, required exceptions…"></textarea>
+                </div>
+              </section>
+
+              <section class="card span-6 noshadow">
+                <div class="card-head">
+                  <div><h3>KPIs</h3><p>Ensure measurable and aligned.</p></div>
+                </div>
+                <div class="card-body">
+                  <div class="note" id="kpiBox">—</div>
+                  <div class="hr"></div>
+                  <label>SME observation</label>
+                  <textarea id="obsKpi" placeholder="Are targets realistic? suggest additional KPIs"></textarea>
+                </div>
+              </section>
+
+              <section class="card span-6 noshadow">
+                <div class="card-head">
+                  <div><h3>Process (As-Is → To-Be)</h3><p>Check operational reality.</p></div>
+                </div>
+                <div class="card-body">
+                  <div class="note" id="procBox">—</div>
+                  <div class="hr"></div>
+                  <label>SME observation</label>
+                  <textarea id="obsProcess" placeholder="Operational steps missing? Maker-checker? Training?"></textarea>
+                </div>
+              </section>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="grid">
+              <section class="card span-12 noshadow">
+                <div class="card-head">
+                  <div>
+                    <h3>SME Summary Notes</h3>
+                    <p>High-level recommendation, open questions, and constraints from business/product side.</p>
+                  </div>
+                  <div class="right">
+                    <button class="btn success" id="saveNotesBtn">Save Notes</button>
+                    <button class="btn add" id="addQuestionBtn">+ Add Question</button>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <label>Recommendation</label>
+                  <select id="smeReco">
+                    <option value="Needs Discussion">Needs Discussion</option>
+                    <option value="Proceed with Changes" selected>Proceed with Changes</option>
+                    <option value="Proceed">Proceed</option>
+                    <option value="Do Not Proceed">Do Not Proceed</option>
+                  </select>
+                  <div class="hr"></div>
+                  <label>SME Notes (overall)</label>
+                  <textarea id="smeNotes" placeholder="Summarize findings, key changes, policy alignment…"></textarea>
+
+                  <div class="hr"></div>
+                  <h3 style="margin:0; font-size:14px">Open Questions</h3>
+                  <div class="help">Questions are tracked as actionable items for BA.</div>
+                  <div id="questionList" class="help" style="margin-top:10px">No questions yet.</div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <!-- REQUIREMENTS REVIEW -->
+        <section class="card span-12" id="view-req" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Requirements Review (FR/NFR)</h3>
+              <p>SME can mark requirements as OK / Needs Change / Missing, and add suggestions.</p>
+            </div>
+            <div class="right">
+              <span class="badge" id="reqCount">0 reqs</span>
+              <button class="btn ai" id="aiReqBtn">✨ AI: Spot Missing FR</button>
+              <button class="btn add" id="addReqCommentBtn">+ Add Req Comment</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Req ID</th>
+                  <th>Type</th>
+                  <th>Category</th>
+                  <th>Statement</th>
+                  <th>SME Tag</th>
+                  <th>SME Comment</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="reqTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- POLICY & RULES -->
+        <section class="card span-12" id="view-rules" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Policy & Rules (SME)</h3>
+              <p>Capture credit/product rules, thresholds, and edge cases (business-led validation).</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addRuleBtn">+ Add Rule</button>
+              <button class="btn ai" id="aiRulesBtn">✨ AI: Suggest Edge Cases</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Rule ID</th>
+                  <th>Rule / Threshold</th>
+                  <th>Applies to</th>
+                  <th>Exceptions</th>
+                  <th>Evidence (policy ref)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ruleTable"></tbody>
+            </table>
+
+            <div class="note" style="margin-top:12px">
+              Examples: FOIR slabs, DSCR minimums, bureau score cutoffs, LTV limits, override caps, reasons, re-approvals.
+            </div>
+          </div>
+        </section>
+
+        <!-- USER JOURNEYS -->
+        <section class="card span-12" id="view-ux" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>User Journeys (Flows & Exceptions)</h3>
+              <p>SME validates real-world journeys and exception handling.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addJourneyBtn">+ Add Journey</button>
+              <button class="btn ai" id="aiJourneysBtn">✨ AI: Suggest Missing Flows</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Journey</th>
+                  <th>Steps</th>
+                  <th>Exception Scenarios</th>
+                  <th>SME Verdict</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="journeyTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- DATA & INTEGRATIONS -->
+        <section class="card span-12" id="view-data" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Data & Integrations (SME View)</h3>
+              <p>Validate required inputs/outputs from business POV (what is mandatory, what is optional, fallbacks).</p>
+            </div>
+            <div class="right">
+              <button class="btn ai" id="aiDataBtn">✨ AI: Data Gaps</button>
+              <button class="btn add" id="addDataGapBtn">+ Add Data Gap</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="grid">
+              <section class="card span-6 noshadow">
+                <div class="card-head"><div><h3>Inputs needed</h3><p>From BRD sources list.</p></div></div>
+                <div class="card-body">
+                  <div class="note" id="inputsBox">—</div>
+                </div>
+              </section>
+              <section class="card span-6 noshadow">
+                <div class="card-head"><div><h3>Outputs/Consumers</h3><p>Downstream usage.</p></div></div>
+                <div class="card-body">
+                  <div class="note" id="outputsBox">—</div>
+                </div>
+              </section>
+            </div>
+
+            <div class="hr"></div>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Gap ID</th>
+                  <th>Gap</th>
+                  <th>Impact</th>
+                  <th>Proposed Fix</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="gapTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- COMMENTS & DECISIONS -->
+        <section class="card span-12" id="view-comments" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Comments & Decisions</h3>
+              <p>Make SME decision: Approve / Request Changes / Reject. Adds approval log entry to BRD.</p>
+            </div>
+            <div class="right">
+              <button class="btn success" id="approveBtn">Approve (SME)</button>
+              <button class="btn warn" id="changesBtn">Request Changes</button>
+              <button class="btn danger" id="rejectBtn">Reject</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="inputs">
+              <div class="field full">
+                <label>Decision Notes (visible to BA + reviewers)</label>
+                <textarea id="decisionNotes" placeholder="Summarize SME decision rationale, mandatory fixes, and references."></textarea>
+                <div class="help">This will be appended to the approvals log for maker-checker.</div>
+              </div>
+              <div class="field third">
+                <label>Severity</label>
+                <select id="decisionSeverity">
+                  <option>Info</option>
+                  <option selected>Major</option>
+                  <option>Critical</option>
+                </select>
+              </div>
+              <div class="field third">
+                <label>Suggested due (hours)</label>
+                <input id="decisionDue" type="number" min="4" value="24" />
+              </div>
+              <div class="field third">
+                <label>Attach evidence ref</label>
+                <input id="decisionEvidence" type="text" placeholder="Policy doc ID / JIRA / Email ref" />
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <h3 style="margin:0; font-size:14px">Approvals log (read)</h3>
+            <table class="table" style="margin-top:10px">
+              <thead><tr><th>Stage</th><th>Decision</th><th>By</th><th>At</th><th>Notes</th></tr></thead>
+              <tbody id="apTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- AUDIT -->
+        <section class="card span-12" id="view-audit" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Audit Trail (read)</h3>
+              <p>Append-only events (prototype stored in localStorage).</p>
+            </div>
+            <div class="right">
+              <div style="min-width:280px">
+                <label>Search</label>
+                <input id="auditSearch" type="text" placeholder="Filter by action/user/id…" />
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead><tr><th>At</th><th>User</th><th>Action</th><th>Entity</th><th>ID</th><th>Meta</th></tr></thead>
+              <tbody id="auditTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div class="backdrop" id="aiModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>AI Review (offline mock for SME)</h3>
+        <button class="btn small neutral" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid" style="grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px">
+          <button class="btn ai" id="aiGapsBtn">Find Gaps</button>
+          <button class="btn ai" id="aiQuestionsBtn">Generate Questions</button>
+          <button class="btn ai" id="aiRisksBtn">Suggest Exceptions</button>
+        </div>
+        <div class="grid">
+          <section class="card span-6 noshadow">
+            <div class="card-head"><div><h3>Gaps</h3><p>Missing business items.</p></div></div>
+            <div class="card-body" id="aiGapsOut"><div class="note">Run “Find Gaps”.</div></div>
+          </section>
+          <section class="card span-6 noshadow">
+            <div class="card-head"><div><h3>Questions</h3><p>Ask BA/IT/Risk to clarify.</p></div></div>
+            <div class="card-body" id="aiQOut"><div class="note">Run “Generate Questions”.</div></div>
+          </section>
+          <section class="card span-12 noshadow">
+            <div class="card-head"><div><h3>Exception scenarios</h3><p>Business edge cases for flows.</p></div></div>
+            <div class="card-body" id="aiExOut"><div class="note">Run “Suggest Exceptions”.</div></div>
+          </section>
+        </div>
+        <div class="hr"></div>
+        <div class="note"><b>Production:</b> Replace mock AI with real model calls; store outputs as review evidence IDs.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="backdrop" id="commentModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Add Requirement Comment</h3>
+        <button class="btn small neutral" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <form id="commentForm" class="inputs">
+          <div class="field">
+            <label>Req ID</label>
+            <input id="cReqId" type="text" required placeholder="REQ-..." />
+          </div>
+          <div class="field">
+            <label>SME Tag</label>
+            <select id="cTag">
+              <option>OK</option>
+              <option selected>Needs Change</option>
+              <option>Missing</option>
+              <option>Clarify</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label>Comment</label>
+            <textarea id="cText" required placeholder="Explain issue and propose fix…"></textarea>
+          </div>
+          <div class="field full">
+            <button class="btn success" type="submit">Save Comment</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    /***********************
+     * SME Workspace (offline functional)
+     * - reads BRDs from shared localStorage store (same key as BA)
+     * - SME adds structured review notes + requirement comments
+     * - SME can approve/request changes/reject -> writes to approvals log
+     ***********************/
+    const SME_EMAIL = "rohit.sme@bank.com";
+    const Store = { KEY:"brd_ba_workspace_v1", SELECTED:"brd_ba_selected_v1" };
+    const Status = {
+      DRAFT:"Draft",
+      IN_REVIEW:"In Review",
+      CHANGES:"Changes Requested",
+      APPROVED:"Approved",
+      PUBLISHED:"Published",
+      ARCHIVED:"Archived"
+    };
+
+    const nowISO = () => new Date().toISOString();
+    const fmt = (ts) => {
+      try{
+        const d = new Date(ts);
+        return d.toLocaleString(undefined, {year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit"});
+      }catch{ return ts; }
+    };
+    const safeParse = (s, fb) => { try{return JSON.parse(s);}catch{return fb;} };
+    const escapeHtml = (s) => String(s ?? "")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    const uid = (prefix="ID") => `${prefix}-${Math.random().toString(16).slice(2,10)}-${Math.random().toString(16).slice(2,10)}`.toUpperCase();
+
+    function toast(title, msg){
+      const wrap = document.getElementById("toastWrap");
+      const el = document.createElement("div");
+      el.className="toast";
+      el.innerHTML = `<div class="ticon">✓</div><div><h4>${escapeHtml(title)}</h4><p>${escapeHtml(msg)}</p></div>`;
+      wrap.appendChild(el);
+      setTimeout(()=>{ el.style.opacity="0"; el.style.transform="translateY(6px)"; }, 2400);
+      setTimeout(()=> el.remove(), 3000);
+    }
+
+    function readDB(){
+      const raw = localStorage.getItem(Store.KEY);
+      return raw ? safeParse(raw, { brds:[], audit:[] }) : { brds:[], audit:[] };
+    }
+    function writeDB(db){ localStorage.setItem(Store.KEY, JSON.stringify(db)); }
+
+    function addAudit(action, entityId, meta={}){
+      const db = readDB();
+      db.audit.unshift({ at: nowISO(), by: SME_EMAIL, action, entity:"BRD", id: entityId, meta });
+      writeDB(db);
+    }
+
+    let db, selectedId;
+
+    const $ = (q) => document.querySelector(q);
+    const $$ = (q) => Array.from(document.querySelectorAll(q));
+
+    function getSelected(){
+      if(!selectedId) selectedId = localStorage.getItem(Store.SELECTED) || db.brds[0]?.id;
+      return db.brds.find(b=>b.id===selectedId) || db.brds[0];
+    }
+    function setSelected(id){
+      selectedId = id;
+      localStorage.setItem(Store.SELECTED, id);
+      renderAll();
+    }
+
+    function setActiveNav(view){
+      $$("#nav a").forEach(a=> a.classList.toggle("active", a.dataset.view===view));
+      const map = {
+        inbox:"#view-inbox",
+        overview:"#view-overview",
+        req:"#view-req",
+        rules:"#view-rules",
+        ux:"#view-ux",
+        data:"#view-data",
+        comments:"#view-comments",
+        audit:"#view-audit"
+      };
+      Object.values(map).forEach(sel => $(sel).style.display="none");
+      $(map[view]).style.display="block";
+    }
+
+    function openModal(id){ $(id).style.display="flex"; }
+    function closeModal(id){ $(id).style.display="none"; }
+    function wireModalClose(id){
+      const back = $(id);
+      back.addEventListener("click",(e)=>{ if(e.target===back) closeModal(id); });
+      back.querySelectorAll("[data-close]").forEach(b=> b.addEventListener("click", ()=> closeModal(id)));
+    }
+
+    // Same completeness logic as BA (copied lightly)
+    function completeness(brd){
+      let score=0, total=14;
+      const m = brd.master || {};
+      const d = brd.dataReg || {};
+      const n = brd.nfr || {};
+      if(m.title && m.title.length>6) score++;
+      if(m.objective && m.objective.length>50) score++;
+      if((m.kpis||[]).length>=2) score++;
+      if((m.scopeIn||[]).length>=3) score++;
+      if((m.scopeOut||[]).length>=1) score++;
+      if((m.personas||[]).length>=3) score++;
+      if((brd.requirements||[]).length>=5) score++;
+      if((brd.stakeholders||[]).length>=3) score++;
+      if((brd.interfaces||[]).length>=2) score++;
+      if((brd.risks||[]).length>=2) score++;
+      if((brd.workflow?.steps||[]).length>=5) score++;
+      if(d.regMap && d.regMap.length>=1) score++;
+      if(n.securityControls && n.securityControls.length>=3) score++;
+      if(d.mis && d.mis.length>=2) score++;
+      return Math.round((score/total)*100);
+    }
+
+    /***********************
+     * SME review storage on BRD
+     ***********************/
+    function ensureSmeBlock(brd){
+      brd.reviews = brd.reviews || {};
+      brd.reviews.sme = brd.reviews.sme || {
+        updatedAt: null,
+        reco: "Proceed with Changes",
+        notes: "",
+        observations: { objective:"", scope:"", kpi:"", process:"" },
+        questions: [],
+        reqComments: {},  // reqId -> {tag, comment, at}
+        rules: [],        // {id, rule, appliesTo, exceptions, evidence}
+        journeys: [],     // {id, name, steps, exceptions, verdict}
+        dataGaps: []      // {id, gap, impact, fix}
+      };
+      return brd.reviews.sme;
+    }
+
+    function saveSmeNotes(){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      sme.reco = $("#smeReco").value;
+      sme.notes = $("#smeNotes").value;
+      sme.observations.objective = $("#obsObjective").value;
+      sme.observations.scope = $("#obsScope").value;
+      sme.observations.kpi = $("#obsKpi").value;
+      sme.observations.process = $("#obsProcess").value;
+      sme.updatedAt = nowISO();
+
+      brd.updatedAt = nowISO();
+      writeDB(db);
+      addAudit("SME_SAVE_NOTES", brd.id, {reco:sme.reco});
+      toast("Saved","SME notes saved.");
+      renderAll();
+    }
+
+    function addQuestion(){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      const q = prompt("Enter SME question for BA/Team:");
+      if(!q) return;
+      const item = { id: uid("Q"), text:q.trim(), status:"Open", at: nowISO() };
+      sme.questions.unshift(item);
+      sme.updatedAt = nowISO();
+      brd.updatedAt = nowISO();
+      writeDB(db);
+      addAudit("SME_ADD_QUESTION", brd.id, {qid:item.id});
+      toast("Added","Question added.");
+      renderAll();
+    }
+
+    function markQuestionDone(qid){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      const q = sme.questions.find(x=>x.id===qid);
+      if(!q) return;
+      q.status = "Done";
+      sme.updatedAt = nowISO();
+      brd.updatedAt = nowISO();
+      writeDB(db);
+      addAudit("SME_QUESTION_DONE", brd.id, {qid});
+      toast("Done","Question marked done.");
+      renderAll();
+    }
+
+    function deleteQuestion(qid){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      sme.questions = sme.questions.filter(x=>x.id!==qid);
+      sme.updatedAt = nowISO();
+      brd.updatedAt = nowISO();
+      writeDB(db);
+      addAudit("SME_QUESTION_DELETE", brd.id, {qid});
+      toast("Deleted","Question removed.");
+      renderAll();
+    }
+
+    /***********************
+     * Approvals log writing
+     ***********************/
+    function appendApproval(brd, decision, notes){
+      brd.approvals = brd.approvals || [];
+      brd.approvals.unshift({
+        stage: "SME Review",
+        decision,
+        by: SME_EMAIL,
+        at: nowISO(),
+        notes
+      });
+      addAudit("SME_DECISION", brd.id, {decision});
+    }
+
+    function doDecision(kind){
+      const brd = getSelected(); if(!brd) return;
+
+      if(brd.status===Status.ARCHIVED){
+        toast("Not allowed","Archived BRD cannot be decided.");
+        return;
+      }
+      const notes = ($("#decisionNotes").value||"").trim();
+      const sev = $("#decisionSeverity").value;
+      const due = parseInt($("#decisionDue").value,10) || 24;
+      const ev = ($("#decisionEvidence").value||"").trim();
+
+      const sme = ensureSmeBlock(brd);
+      // auto-save SME notes snapshot at decision time
+      sme.updatedAt = nowISO();
+
+      const pack = [
+        `Severity: ${sev}`,
+        `Suggested due: ${due}h`,
+        ev ? `Evidence: ${ev}` : null,
+        notes ? `Notes: ${notes}` : "Notes: —"
+      ].filter(Boolean).join(" | ");
+
+      if(kind==="Approve"){
+        // SME approval doesn't necessarily make BRD globally Approved (other sign-offs still pending)
+        appendApproval(brd, "Approved", pack);
+        // If current status was In Review or Changes Requested, move to In Review (still) or keep; for demo we keep In Review but mark SME done
+        // Option: set to "In Review" remains until final approver
+        brd.status = Status.IN_REVIEW;
+        toast("Approved","SME approval recorded (BRD stays In Review for other sign-offs).");
+      } else if(kind==="Changes"){
+        appendApproval(brd, "Changes Requested", pack);
+        brd.status = Status.CHANGES;
+        toast("Changes","Changes requested recorded. BRD moved to Changes Requested.");
+      } else if(kind==="Reject"){
+        appendApproval(brd, "Rejected", pack);
+        brd.status = Status.CHANGES; // many orgs treat reject as changes loop; could be Archived. We keep CHANGES to continue.
+        toast("Rejected","SME rejection recorded. BRD moved to Changes Requested.");
+      }
+
+      brd.updatedAt = nowISO();
+      writeDB(db);
+      renderAll();
+      setActiveNav("comments");
+    }
+
+    /***********************
+     * Requirement comments
+     ***********************/
+    let editingComment = null;
+
+    function openReqCommentModal(reqId){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      editingComment = reqId || null;
+      $("#cReqId").value = reqId || "";
+      const existing = reqId ? sme.reqComments[reqId] : null;
+      $("#cTag").value = existing?.tag || "Needs Change";
+      $("#cText").value = existing?.comment || "";
+      openModal("#commentModal");
+    }
+
+    function saveReqComment(){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      const rid = ($("#cReqId").value||"").trim();
+      if(!rid){ toast("Missing","Req ID required."); return; }
+      const tag = $("#cTag").value;
+      const comment = ($("#cText").value||"").trim();
+      if(!comment){ toast("Missing","Comment required."); return; }
+      sme.reqComments[rid] = { tag, comment, at: nowISO(), by: SME_EMAIL };
+      sme.updatedAt = nowISO();
+      brd.updatedAt = nowISO();
+      writeDB(db);
+      addAudit("SME_REQ_COMMENT", brd.id, {reqId: rid, tag});
+      toast("Saved","Requirement comment saved.");
+      closeModal("#commentModal");
+      renderAll();
+    }
+
+    /***********************
+     * Policy rules / journeys / data gaps
+     ***********************/
+    function addRule(){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      const rule = prompt("Rule/threshold (e.g., FOIR <= 55% for salaried) ?");
+      if(!rule) return;
+      const applies = prompt("Applies to (segment/product/channel)?") || "";
+      const ex = prompt("Exceptions / overrides?") || "";
+      const ev = prompt("Evidence / policy reference?") || "";
+      const item = { id: uid("RULE"), rule, appliesTo: applies, exceptions: ex, evidence: ev, at: nowISO() };
+      sme.rules.unshift(item);
+      sme.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SME_ADD_RULE", brd.id, {rid:item.id});
+      toast("Added","Rule added.");
+      renderAll();
+    }
+    function delRule(rid){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      sme.rules = sme.rules.filter(x=>x.id!==rid);
+      sme.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SME_DEL_RULE", brd.id, {rid});
+      toast("Deleted","Rule removed.");
+      renderAll();
+    }
+
+    function addJourney(){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      const name = prompt("Journey name (e.g., DSA onboarding with partial documents)?");
+      if(!name) return;
+      const steps = prompt("Steps (short, comma-separated)?") || "";
+      const ex = prompt("Exception scenarios?") || "";
+      const verdict = prompt("SME verdict (OK/Needs Change/Missing)?") || "Needs Change";
+      const item = { id: uid("JNY"), name, steps, exceptions: ex, verdict, at: nowISO() };
+      sme.journeys.unshift(item);
+      sme.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SME_ADD_JOURNEY", brd.id, {jid:item.id});
+      toast("Added","Journey added.");
+      renderAll();
+    }
+    function delJourney(jid){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      sme.journeys = sme.journeys.filter(x=>x.id!==jid);
+      sme.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SME_DEL_JOURNEY", brd.id, {jid});
+      toast("Deleted","Journey removed.");
+      renderAll();
+    }
+
+    function addDataGap(){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      const gap = prompt("Data gap? (e.g., Need 'employment type' for FOIR slab selection)");
+      if(!gap) return;
+      const impact = prompt("Impact (Low/Medium/High)?") || "Medium";
+      const fix = prompt("Proposed fix / fallback?") || "";
+      const item = { id: uid("GAP"), gap, impact, fix, at: nowISO() };
+      sme.dataGaps.unshift(item);
+      sme.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SME_ADD_DATA_GAP", brd.id, {gid:item.id});
+      toast("Added","Data gap added.");
+      renderAll();
+    }
+    function delDataGap(gid){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      sme.dataGaps = sme.dataGaps.filter(x=>x.id!==gid);
+      sme.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SME_DEL_DATA_GAP", brd.id, {gid});
+      toast("Deleted","Data gap removed.");
+      renderAll();
+    }
+
+    /***********************
+     * AI mock (SME)
+     ***********************/
+    function aiGaps(brd){
+      const m = brd.master||{}, d = brd.dataReg||{};
+      const gaps=[];
+      if(!m.objective || m.objective.length<50) gaps.push("Objective is short; add drivers + quantifiable outcomes.");
+      if((m.kpis||[]).length<2) gaps.push("KPIs are insufficient; include conversion, TAT, exceptions, compliance metrics.");
+      if((m.scopeIn||[]).length<3) gaps.push("Scope-in lacks detail; list explicit capabilities and exclusions.");
+      if((brd.requirements||[]).length<6) gaps.push("Add more FRs (journeys + exceptions) and NFR baseline.");
+      if((d.sources||[]).length<3) gaps.push("Data sources list incomplete; add bureau, CKYC, DMS, AML, bank-statement.");
+      if(!gaps.length) gaps.push("No major gaps detected. Validate thresholds and operational SLAs.");
+      return gaps;
+    }
+    function aiQuestions(brd){
+      const qs=[];
+      qs.push("What are the exact FOIR/DSCR/LTV thresholds for each segment and product?");
+      qs.push("What exceptions allow overrides and what are override caps + reason codes?");
+      qs.push("Fallback plan when CKYC/bureau/AML services are down?");
+      qs.push("Who are maker/checker roles for policy override and disbursal readiness?");
+      qs.push("What MIS needs are mandatory for monthly audits and internal reviews?");
+      return qs;
+    }
+    function aiExceptions(brd){
+      const ex=[];
+      ex.push("KYC mismatch between CKYC and customer-declared data → manual verification flow");
+      ex.push("Bureau down or thin-file customer → alternate assessment + escalation");
+      ex.push("Bank statement parsing fails → manual upload + second-level validation");
+      ex.push("Policy override requested → maker-checker + higher authority for threshold breach");
+      ex.push("Document fraud suspected → hold + AML/FRM review path");
+      return ex;
+    }
+
+    function showAI(){
+      const brd = getSelected(); if(!brd){ toast("Select BRD","Open a BRD first."); return; }
+      openModal("#aiModal");
+
+      $("#aiGapsBtn").onclick = ()=>{
+        const gaps = aiGaps(brd);
+        $("#aiGapsOut").innerHTML = `<div class="note"><ul>${gaps.map(g=>`<li>${escapeHtml(g)}</li>`).join("")}</ul></div>`;
+        addAudit("AI_SME_GAPS", brd.id, {count:gaps.length});
+        toast("AI","Gaps generated.");
+      };
+      $("#aiQuestionsBtn").onclick = ()=>{
+        const qs = aiQuestions(brd);
+        $("#aiQOut").innerHTML = `<div class="note"><ol>${qs.map(q=>`<li>${escapeHtml(q)}</li>`).join("")}</ol></div>`;
+        addAudit("AI_SME_QUESTIONS", brd.id, {count:qs.length});
+        toast("AI","Questions generated.");
+      };
+      $("#aiRisksBtn").onclick = ()=>{
+        const ex = aiExceptions(brd);
+        $("#aiExOut").innerHTML = `<div class="note"><ul>${ex.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></div>`;
+        addAudit("AI_SME_EXCEPTIONS", brd.id, {count:ex.length});
+        toast("AI","Exception scenarios generated.");
+      };
+    }
+
+    /***********************
+     * Rendering
+     ***********************/
+    function renderInbox(){
+      const q = ($("#searchInbox").value||"").trim().toLowerCase();
+      const f = $("#filterInbox").value || "ALL";
+
+      // Inbox = BRDs where SME is a stakeholder OR all in review (prototype)
+      let items = db.brds || [];
+      items = items.filter(b => b.status !== Status.ARCHIVED);
+
+      if(f!=="ALL") items = items.filter(b => b.status === f);
+
+      if(q){
+        items = items.filter(b =>
+          (b.id||"").toLowerCase().includes(q) ||
+          (b.master?.title||"").toLowerCase().includes(q) ||
+          (b.master?.domain||"").toLowerCase().includes(q) ||
+          (b.master?.product||"").toLowerCase().includes(q)
+        );
+      }
+
+      // badge count: those in review
+      $("#inboxBadge").textContent = String(items.filter(b=>b.status===Status.IN_REVIEW).length);
+
+      $("#inboxTable").innerHTML = items.map(b=>{
+        const pc = completeness(b);
+        return `
+          <tr>
+            <td class="mono">${b.id}</td>
+            <td>
+              <div style="display:flex; flex-direction:column; gap:4px">
+                <a href="#" data-open="${b.id}" style="font-weight:900">${escapeHtml(b.master?.title||"(untitled)")}</a>
+                <div class="help">${escapeHtml(b.master?.domain||"—")} • ${escapeHtml(b.master?.product||"—")}</div>
+              </div>
+            </td>
+            <td>${escapeHtml(b.status)}</td>
+            <td>${fmt(b.updatedAt)}</td>
+            <td>
+              <div class="progress"><span style="width:${pc}%"></span></div>
+              <div class="help" style="margin-top:6px">${pc}%</div>
+            </td>
+            <td style="white-space:nowrap">
+              <button class="btn small primary" data-open="${b.id}">Open</button>
+              <button class="btn small" data-go="comments" data-open="${b.id}">Decide</button>
+            </td>
+          </tr>
+        `;
+      }).join("") || `<tr><td colspan="6" class="mono">No BRDs found.</td></tr>`;
+
+      $("#inboxTable").querySelectorAll("[data-open]").forEach(el=>{
+        el.addEventListener("click",(e)=>{
+          e.preventDefault();
+          const id = el.dataset.open;
+          const go = el.dataset.go || "overview";
+          setSelected(id);
+          setActiveNav(go);
+          renderAll();
+        });
+      });
+    }
+
+    function renderOverview(){
+      const brd = getSelected();
+      if(!brd){
+        $("#activeBrdPill").textContent = "No BRD selected";
+        $("#brdTitle").textContent = "No BRD selected";
+        $("#brdMeta").textContent = "Open a BRD from Inbox.";
+        return;
+      }
+      ensureSmeBlock(brd);
+      const sme = brd.reviews.sme;
+
+      $("#activeBrdPill").textContent = `${brd.master?.title || brd.id} • ${brd.status}`;
+      $("#statusText").textContent = brd.status;
+
+      $("#brdTitle").textContent = brd.master?.title || "(untitled)";
+      $("#brdMeta").innerHTML = `<span class="mono">${brd.id}</span> • Owner: <span class="mono">${brd.ownerEmail||"—"}</span> • Updated: ${fmt(brd.updatedAt)}`;
+
+      const pc = completeness(brd);
+      $("#progressBar").style.width = pc + "%";
+      $("#progressText").textContent = `${pc}% complete • SME notes updated: ${sme.updatedAt ? fmt(sme.updatedAt) : "—"}`;
+
+      // Boxes
+      $("#objBox").textContent = brd.master?.objective || "—";
+      $("#scopeBox").textContent =
+        `Scope-in:\n- ${(brd.master?.scopeIn||[]).join("\n- ") || "—"}\n\nScope-out:\n- ${(brd.master?.scopeOut||[]).join("\n- ") || "—"}\n\nPersonas: ${(brd.master?.personas||[]).join(", ") || "—"}\nChannels: ${(brd.master?.channels||[]).join(", ") || "—"}`;
+      $("#kpiBox").textContent = (brd.master?.kpis||[]).length ? (brd.master.kpis.map(x=>`- ${x}`).join("\n")) : "—";
+      $("#procBox").textContent = brd.master?.process || "—";
+
+      // SME fields
+      $("#smeReco").value = sme.reco || "Proceed with Changes";
+      $("#smeNotes").value = sme.notes || "";
+      $("#obsObjective").value = sme.observations.objective || "";
+      $("#obsScope").value = sme.observations.scope || "";
+      $("#obsKpi").value = sme.observations.kpi || "";
+      $("#obsProcess").value = sme.observations.process || "";
+
+      // Questions
+      renderQuestions(sme);
+    }
+
+    function renderQuestions(sme){
+      const list = sme.questions || [];
+      $("#questionList").innerHTML = list.length
+        ? `<ul style="margin:0; padding-left:18px">${list.map(q=>`
+            <li style="margin:6px 0">
+              <span style="font-weight:900">${escapeHtml(q.text)}</span>
+              <span class="badge" style="margin-left:8px">${escapeHtml(q.status)}</span>
+              <div class="help">Added: ${fmt(q.at)}</div>
+              <button class="btn small" data-done="${q.id}">Mark done</button>
+              <button class="btn small danger" data-del="${q.id}">Delete</button>
+            </li>
+          `).join("")}</ul>`
+        : "No questions yet.";
+
+      $("#questionList").querySelectorAll("[data-done]").forEach(b=> b.addEventListener("click",()=>markQuestionDone(b.dataset.done)));
+      $("#questionList").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>deleteQuestion(b.dataset.del)));
+    }
+
+    function renderReq(){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      const reqs = brd.requirements || [];
+      $("#reqCount").textContent = `${reqs.length} reqs`;
+
+      $("#reqTable").innerHTML = reqs.map(r=>{
+        const c = sme.reqComments[r.id];
+        const tag = c?.tag || "—";
+        const comment = c?.comment || "—";
+        return `
+          <tr>
+            <td class="mono">${r.id}</td>
+            <td>${escapeHtml(r.type||"—")}</td>
+            <td>${escapeHtml(r.category||"—")}</td>
+            <td>
+              <div style="font-weight:900">${escapeHtml(r.statement||"—")}</div>
+              <div class="help">Acceptance: ${escapeHtml(r.acceptance||"—")}</div>
+              <div class="help">Owner: ${escapeHtml(r.owner||"—")} • Priority: ${escapeHtml(r.priority||"—")}</div>
+            </td>
+            <td><span class="badge">${escapeHtml(tag)}</span></td>
+            <td>${escapeHtml(comment)}</td>
+            <td style="white-space:nowrap">
+              <button class="btn small primary" data-cmt="${r.id}">Comment</button>
+            </td>
+          </tr>
+        `;
+      }).join("") || `<tr><td colspan="7" class="mono">No requirements found.</td></tr>`;
+
+      $("#reqTable").querySelectorAll("[data-cmt]").forEach(b=>{
+        b.addEventListener("click", ()=> openReqCommentModal(b.dataset.cmt));
+      });
+    }
+
+    function renderRules(){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      $("#ruleTable").innerHTML = (sme.rules||[]).map(r=>`
+        <tr>
+          <td class="mono">${r.id}</td>
+          <td><b>${escapeHtml(r.rule)}</b></td>
+          <td>${escapeHtml(r.appliesTo||"—")}</td>
+          <td>${escapeHtml(r.exceptions||"—")}</td>
+          <td class="mono">${escapeHtml(r.evidence||"—")}</td>
+          <td style="white-space:nowrap">
+            <button class="btn small danger" data-del="${r.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No SME rules yet.</td></tr>`;
+
+      $("#ruleTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delRule(b.dataset.del)));
+    }
+
+    function renderJourneys(){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      $("#journeyTable").innerHTML = (sme.journeys||[]).map(j=>`
+        <tr>
+          <td><b>${escapeHtml(j.name)}</b><div class="help">Added: ${fmt(j.at)}</div></td>
+          <td>${escapeHtml(j.steps||"—")}</td>
+          <td>${escapeHtml(j.exceptions||"—")}</td>
+          <td><span class="badge">${escapeHtml(j.verdict||"—")}</span></td>
+          <td style="white-space:nowrap">
+            <button class="btn small danger" data-del="${j.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="mono">No journeys yet.</td></tr>`;
+
+      $("#journeyTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delJourney(b.dataset.del)));
+    }
+
+    function renderData(){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+
+      const inputs = (brd.dataReg?.sources||[]).length ? brd.dataReg.sources.map(x=>`• ${x}`).join("\n") : "—";
+      const outputs = (brd.dataReg?.consumers||[]).length ? brd.dataReg.consumers.map(x=>`• ${x}`).join("\n") : "—";
+      $("#inputsBox").textContent = inputs;
+      $("#outputsBox").textContent = outputs;
+
+      $("#gapTable").innerHTML = (sme.dataGaps||[]).map(g=>`
+        <tr>
+          <td class="mono">${g.id}</td>
+          <td><b>${escapeHtml(g.gap)}</b></td>
+          <td>${escapeHtml(g.impact||"—")}</td>
+          <td>${escapeHtml(g.fix||"—")}</td>
+          <td style="white-space:nowrap">
+            <button class="btn small danger" data-del="${g.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="mono">No data gaps recorded.</td></tr>`;
+
+      $("#gapTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delDataGap(b.dataset.del)));
+    }
+
+    function renderApprovals(){
+      const brd = getSelected(); if(!brd) return;
+      $("#apTable").innerHTML = (brd.approvals||[]).map(a=>`
+        <tr>
+          <td>${escapeHtml(a.stage)}</td>
+          <td>${escapeHtml(a.decision)}</td>
+          <td class="mono">${escapeHtml(a.by)}</td>
+          <td>${fmt(a.at)}</td>
+          <td>${escapeHtml(a.notes||"—")}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="mono">No approvals yet.</td></tr>`;
+    }
+
+    function renderAudit(){
+      const q = ($("#auditSearch").value||"").trim().toLowerCase();
+      let items = [...(db.audit||[])];
+      if(q){
+        items = items.filter(a =>
+          (a.action||"").toLowerCase().includes(q) ||
+          (a.by||"").toLowerCase().includes(q) ||
+          (a.id||"").toLowerCase().includes(q) ||
+          JSON.stringify(a.meta||{}).toLowerCase().includes(q)
+        );
+      }
+      $("#auditTable").innerHTML = items.slice(0,400).map(a=>`
+        <tr>
+          <td>${fmt(a.at)}</td>
+          <td class="mono">${escapeHtml(a.by)}</td>
+          <td>${escapeHtml(a.action)}</td>
+          <td>${escapeHtml(a.entity)}</td>
+          <td class="mono">${escapeHtml(a.id)}</td>
+          <td class="mono">${escapeHtml(JSON.stringify(a.meta||{}))}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No audit entries.</td></tr>`;
+    }
+
+    function renderAll(){
+      db = readDB();
+      const brd = getSelected();
+      if(brd){
+        $("#activeBrdPill").textContent = `${brd.master?.title || brd.id} • ${brd.status}`;
+      } else {
+        $("#activeBrdPill").textContent = "No BRD selected";
+      }
+      renderInbox();
+      renderOverview();
+      renderReq();
+      renderRules();
+      renderJourneys();
+      renderData();
+      renderApprovals();
+      renderAudit();
+    }
+
+    /***********************
+     * Export review
+     ***********************/
+    function exportReview(){
+      const brd = getSelected(); if(!brd) return;
+      const sme = ensureSmeBlock(brd);
+      const payload = {
+        brdId: brd.id,
+        brdTitle: brd.master?.title || "",
+        smeEmail: SME_EMAIL,
+        exportedAt: nowISO(),
+        review: sme,
+        approvals: brd.approvals || []
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${brd.id}_SME_REVIEW.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      addAudit("EXPORT_SME_REVIEW", brd.id, {});
+      toast("Exported","SME review JSON downloaded.");
+    }
+
+    function exportBrd(){
+      const brd = getSelected(); if(!brd) return;
+      const blob = new Blob([JSON.stringify(brd, null, 2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${brd.id}_BRD.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      addAudit("EXPORT_BRD_JSON_SME", brd.id, {});
+      toast("Exported","BRD JSON downloaded.");
+    }
+
+    /***********************
+     * Wire events
+     ***********************/
+    function wire(){
+      db = readDB();
+      selectedId = localStorage.getItem(Store.SELECTED) || db.brds[0]?.id;
+
+      $$("#nav a").forEach(a=>{
+        a.addEventListener("click",(e)=>{
+          e.preventDefault();
+          setActiveNav(a.dataset.view);
+          renderAll();
+        });
+      });
+
+      $("#searchInbox").addEventListener("input", renderInbox);
+      $("#filterInbox").addEventListener("change", renderInbox);
+
+      $("#aiReviewBtn").addEventListener("click", showAI);
+      $("#aiAssistBtn").addEventListener("click", showAI);
+
+      $("#saveNotesBtn").addEventListener("click", saveSmeNotes);
+      $("#addQuestionBtn").addEventListener("click", addQuestion);
+
+      $("#aiReqBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const sme = ensureSmeBlock(brd);
+        // Add a few default missing FR comments
+        const picks = (brd.requirements||[]).slice(0,3);
+        if(!picks.length){ toast("No reqs","No requirements to comment on."); return; }
+        picks.forEach(r=>{
+          sme.reqComments[r.id] = {
+            tag:"Clarify",
+            comment:"Please confirm business thresholds/exception handling for this requirement and add policy references.",
+            at: nowISO(),
+            by: SME_EMAIL
+          };
+        });
+        sme.updatedAt = nowISO();
+        brd.updatedAt = nowISO();
+        writeDB(db);
+        addAudit("AI_SME_SPOT_MISSING_FR", brd.id, {count:picks.length});
+        toast("AI","Added clarification comments to top requirements.");
+        renderAll();
+        setActiveNav("req");
+      });
+
+      $("#addReqCommentBtn").addEventListener("click", ()=>{
+        const rid = prompt("Enter Requirement ID to comment:");
+        if(!rid) return;
+        openReqCommentModal(rid.trim());
+      });
+
+      $("#commentForm").addEventListener("submit",(e)=>{
+        e.preventDefault();
+        saveReqComment();
+      });
+
+      $("#addRuleBtn").addEventListener("click", addRule);
+      $("#aiRulesBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const sme = ensureSmeBlock(brd);
+        const sug = [
+          {rule:"FOIR <= 55% for salaried; <= 45% for self-employed (segment-based)", appliesTo:"Retail/SME", exceptions:"Override up to +5% with maker-checker", evidence:"Credit Policy CP-RTL-2026 §3.2"},
+          {rule:"Minimum bureau score 700 (NTC allowed with alternate checks)", appliesTo:"Retail", exceptions:"NTC -> bank stmt + employer verification", evidence:"Credit Policy CP-RTL-2026 §2.1"},
+          {rule:"Override cap: max 2 overrides per RM per month", appliesTo:"Branch", exceptions:"Regional head approval", evidence:"Ops Control OC-OVR-001"}
+        ];
+        sug.forEach(x=> sme.rules.unshift({id:uid("RULE"), ...x, at: nowISO()}));
+        sme.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db);
+        addAudit("AI_SME_EDGE_CASES", brd.id, {count:sug.length});
+        toast("AI","Suggested rules/edge cases added.");
+        renderAll();
+        setActiveNav("rules");
+      });
+
+      $("#addJourneyBtn").addEventListener("click", addJourney);
+      $("#aiJourneysBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const sme = ensureSmeBlock(brd);
+        const sug = [
+          {name:"DSA onboarding with partial documents", steps:"Create lead, CKYC lookup, upload docs, bureau pull, eligibility, submit", exceptions:"Missing doc -> save as draft; bureau down -> queue retry", verdict:"Needs Change"},
+          {name:"Branch override request", steps:"Eligibility fails, request override, maker approves, checker validates, proceed", exceptions:"Override > cap -> escalate", verdict:"Clarify"},
+          {name:"KYC mismatch resolution", steps:"Detect mismatch, raise query, customer resubmits, re-run checks", exceptions:"Repeated mismatch -> reject", verdict:"OK"}
+        ];
+        sug.forEach(x=> sme.journeys.unshift({id:uid("JNY"), ...x, at: nowISO()}));
+        sme.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db);
+        addAudit("AI_SME_MISSING_FLOWS", brd.id, {count:sug.length});
+        toast("AI","Suggested journeys added.");
+        renderAll();
+        setActiveNav("ux");
+      });
+
+      $("#aiDataBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const sme = ensureSmeBlock(brd);
+        const sug = [
+          {gap:"Need employment type to select FOIR slab and eligibility rules", impact:"High", fix:"Make mandatory field; if missing -> manual verification task"},
+          {gap:"Need disbursement readiness checklist output to CBS/LMS", impact:"Medium", fix:"Add outbound event + nightly reconciliation report"}
+        ];
+        sug.forEach(x=> sme.dataGaps.unshift({id:uid("GAP"), ...x, at: nowISO()}));
+        sme.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db);
+        addAudit("AI_SME_DATA_GAPS", brd.id, {count:sug.length});
+        toast("AI","Data gaps added.");
+        renderAll();
+        setActiveNav("data");
+      });
+
+      $("#addDataGapBtn").addEventListener("click", addDataGap);
+
+      $("#approveBtn").addEventListener("click", ()=> doDecision("Approve"));
+      $("#changesBtn").addEventListener("click", ()=> doDecision("Changes"));
+      $("#rejectBtn").addEventListener("click", ()=> doDecision("Reject"));
+
+      $("#exportReviewBtn").addEventListener("click", exportReview);
+      $("#exportBrdBtn").addEventListener("click", exportBrd);
+      $("#exportBrdBtn").title = "Download BRD JSON locally";
+
+      $("#auditSearch").addEventListener("input", renderAudit);
+
+      $("#resetBtn").addEventListener("click", ()=>{
+        if(!confirm("Reset shared workspace data (localStorage)?")) return;
+        localStorage.removeItem(Store.KEY);
+        localStorage.removeItem(Store.SELECTED);
+        location.reload();
+      });
+
+      wireModalClose("#aiModal");
+      wireModalClose("#commentModal");
+
+      setActiveNav("inbox");
+      renderAll();
+    }
+
+    wire();
+
+    // Page switcher
+    document.getElementById("pageSwitcher").addEventListener("change", (e)=>{
+      window.location.href = e.target.value;
+    });
+  </script>
+</body>
+</html>

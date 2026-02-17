@@ -1,0 +1,1404 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BRD Portal • InfoSec Workspace (meera.infosec@bank.com)</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --border2:#f1f5f9;
+      --shadow: 0 10px 28px rgba(2,6,23,.08);
+      --r:16px;
+
+      --primary:#2563eb;   /* approve */
+      --success:#16a34a;   /* accept */
+      --warning:#f59e0b;   /* request updates */
+      --danger:#ef4444;    /* block */
+      --indigo:#4f46e5;    /* export */
+      --slate:#334155;     /* neutral */
+      --pink:#db2777;      /* AI */
+      --teal:#0d9488;      /* add */
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:var(--font); background:var(--bg); color:var(--text)}
+    a{color:inherit; text-decoration:none}
+
+    .topbar{position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--border)}
+    .topbar-inner{max-width:1480px; margin:0 auto; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px}
+    .brand{display:flex; align-items:center; gap:10px}
+    .logo{width:36px; height:36px; border-radius:14px; background:linear-gradient(135deg,#0ea5e9,#22c55e); box-shadow:0 10px 20px rgba(14,165,233,.18)}
+    .brand h1{margin:0; font-size:15px; letter-spacing:-.2px}
+    .brand .sub{margin:4px 0 0; font-size:12px; color:var(--muted)}
+    .right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:13px}
+    .dot{width:8px; height:8px; border-radius:999px; background:#16a34a}
+    .kbd{font-family:var(--mono); font-size:12px; padding:2px 6px; border:1px solid var(--border); border-bottom-width:2px; border-radius:8px; color:var(--muted); background:#fff}
+
+    .wrap{max-width:1480px; margin:0 auto; padding:16px}
+    .layout{display:grid; grid-template-columns:380px 1fr; gap:14px; align-items:start}
+    .card{border:1px solid var(--border); border-radius:var(--r); background:#fff; box-shadow:var(--shadow); overflow:hidden}
+    .card.noshadow{box-shadow:none}
+    .card-head{padding:14px 14px 10px; border-bottom:1px solid var(--border2); display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+    .card-head h3{margin:0; font-size:14px}
+    .card-head p{margin:6px 0 0; font-size:12.5px; color:var(--muted); line-height:1.35}
+    .card-body{padding:14px}
+    .hr{height:1px; background:var(--border2); margin:12px 0}
+
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:9px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:850;
+      display:inline-flex; align-items:center; gap:8px;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      user-select:none;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow); border-color:#d1d5db}
+    .btn:active{transform:translateY(0)}
+    .btn.small{padding:7px 10px; border-radius:10px; font-size:13px}
+    .btn.primary{background:linear-gradient(135deg,var(--primary),#60a5fa); color:#fff; border-color:transparent}
+    .btn.success{background:linear-gradient(135deg,var(--success),#22c55e); color:#fff; border-color:transparent}
+    .btn.warn{background:linear-gradient(135deg,var(--warning),#fbbf24); color:#111827; border-color:transparent}
+    .btn.danger{background:linear-gradient(135deg,var(--danger),#fb7185); color:#fff; border-color:transparent}
+    .btn.export{background:linear-gradient(135deg,var(--indigo),#7c3aed); color:#fff; border-color:transparent}
+    .btn.ai{background:linear-gradient(135deg,var(--pink),#f472b6); color:#fff; border-color:transparent}
+    .btn.add{background:linear-gradient(135deg,var(--teal),#22c55e); color:#fff; border-color:transparent}
+    .btn.neutral{background:linear-gradient(135deg,var(--slate),#64748b); color:#fff; border-color:transparent}
+
+    .nav{display:flex; flex-direction:column; gap:6px}
+    .nav a{
+      padding:10px 10px; border-radius:12px;
+      border:1px solid transparent; color:var(--muted);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      font-weight:900;
+    }
+    .nav a.active{background:rgba(14,165,233,.10); border-color:rgba(14,165,233,.22); color:var(--text)}
+    .nav a:hover{background:#f8fafc; border-color:var(--border); color:var(--text)}
+    .badge{font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); background:#fff}
+    .mono{font-family:var(--mono)}
+
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .span-12{grid-column:span 12}
+    .span-8{grid-column:span 8}
+    .span-6{grid-column:span 6}
+    .span-4{grid-column:span 4}
+    .title{font-size:20px; margin:0; letter-spacing:-.3px}
+    .subtext{margin:6px 0 0; font-size:13px; color:var(--muted)}
+
+    label{font-size:12px; color:var(--muted); font-weight:900}
+    input[type="text"], input[type="number"], textarea, select{
+      width:100%;
+      border:1px solid var(--border);
+      padding:10px 12px;
+      border-radius:12px;
+      outline:none;
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+    }
+    textarea{min-height:110px; resize:vertical}
+    .inputs{display:grid; grid-template-columns:repeat(12,1fr); gap:10px}
+    .field{grid-column:span 6; display:flex; flex-direction:column; gap:6px}
+    .field.full{grid-column:span 12}
+    .field.third{grid-column:span 4}
+    .help{font-size:12.5px; color:var(--muted); line-height:1.35}
+    .note{border:1px dashed #d1d5db; background:#f8fafc; border-radius:12px; padding:10px; color:var(--muted); font-size:12.5px; line-height:1.35; white-space:pre-wrap}
+
+    .table{
+      width:100%;
+      border-collapse:collapse;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .table th,.table td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--border2);
+      text-align:left;
+      vertical-align:top;
+      font-size:13px;
+    }
+    .table th{background:#f8fafc; color:var(--muted); font-weight:900}
+    .table tr:last-child td{border-bottom:none}
+
+    .chip{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:12px; font-weight:900; color:var(--muted)}
+    .chip.red{border-color:rgba(239,68,68,.25); background:rgba(239,68,68,.06); color:#b91c1c}
+    .chip.amber{border-color:rgba(245,158,11,.25); background:rgba(245,158,11,.07); color:#92400e}
+    .chip.green{border-color:rgba(22,163,74,.25); background:rgba(22,163,74,.07); color:#166534}
+
+    /* Modal */
+    .backdrop{
+      position:fixed; inset:0; z-index:60;
+      background: rgba(2,6,23,.45);
+      display:none;
+      align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .modal{
+      width:min(1220px, 100%);
+      max-height:92vh;
+      overflow:auto;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:0 25px 70px rgba(2,6,23,.25);
+    }
+    .modal-head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:center; justify-content:space-between; gap:10px
+    }
+    .modal-head h3{margin:0; font-size:14px}
+    .modal-body{padding:14px}
+
+    /* Toast */
+    .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:80; display:flex; flex-direction:column; gap:10px}
+    .toast{
+      width:min(460px, calc(100vw - 32px));
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      padding:10px;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .ticon{width:26px; height:26px; border-radius:10px; background:rgba(14,165,233,.12); display:flex; align-items:center; justify-content:center; flex:0 0 auto}
+    .toast h4{margin:0; font-size:13px}
+    .toast p{margin:4px 0 0; font-size:12.5px; color:var(--muted)}
+
+    /* Page Switcher */
+    .page-switcher{
+      padding:8px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      color:var(--text);
+      font-size:13px;
+      font-family:var(--font);
+      cursor:pointer;
+      font-weight:700;
+    }
+    .page-switcher:hover{border-color:#d1d5db; background:#f8fafc}
+
+    @media (max-width:1220px){
+      .layout{grid-template-columns:1fr}
+      .span-8,.span-6,.span-4{grid-column:span 12}
+      .field,.field.third{grid-column:span 12}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>InfoSec Workspace • BRD Automation</h1>
+          <div class="sub">Signed in as <span class="mono">meera.infosec@bank.com</span> • Role: InfoSec</div>
+        </div>
+      </div>
+      <select class="page-switcher" id="pageSwitcher">
+        <option value="Admin.html">Admin</option>
+        <option value="BA.html">BA Workspace</option>
+        <option value="Compliance.html">Compliance</option>
+        <option value="In Take 1.html">Intake Tracker</option>
+        <option value="Infosec.html" selected>InfoSec</option>
+        <option value="IT.html">IT</option>
+        <option value="Risk.html">Risk</option>
+        <option value="SME.html">SME</option>
+        <option value="User Management 1.html">User Management</option>
+      </select>
+      <div class="right">
+        <div class="pill"><span class="dot"></span><span id="activeBrdPill">No BRD selected</span></div>
+        <div class="pill"><span class="mono">Security Review</span> <span class="kbd">ON</span></div>
+        <button class="btn small neutral" id="resetBtn" title="Clears local data">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="layout">
+      <!-- LEFT -->
+      <aside class="card">
+        <div class="card-head">
+          <div>
+            <h3>InfoSec Navigation</h3>
+            <p>Threat model, data classification, encryption, access control, logging, secure SDLC, and security sign-off.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="nav" id="nav">
+            <a href="#" data-view="inbox" class="active">InfoSec Inbox <span class="badge" id="inboxBadge">0</span></a>
+            <a href="#" data-view="threat">Threat Model <span class="badge">STRIDE</span></a>
+            <a href="#" data-view="data">Data Classification <span class="badge">PII</span></a>
+            <a href="#" data-view="controls">Security Controls <span class="badge">Reqs</span></a>
+            <a href="#" data-view="sdlc">Secure SDLC <span class="badge">Checks</span></a>
+            <a href="#" data-view="vendors">Third-Party Risk <span class="badge">TPRM</span></a>
+            <a href="#" data-view="pentest">PenTest & VA <span class="badge">Evidence</span></a>
+            <a href="#" data-view="decision">InfoSec Decision <span class="badge">Sign-off</span></a>
+            <a href="#" data-view="audit">Audit Trail <span class="badge">Events</span></a>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="note">
+            <b>InfoSec checklist:</b><br/>
+            • Data classified (PII, PCI, financial) and minimized?<br/>
+            • Encryption at rest/in transit + key management defined?<br/>
+            • Authentication (MFA), authorization (RBAC/ABAC), SoD?<br/>
+            • Logging/monitoring in SIEM + immutable audit trail?<br/>
+            • Secure SDLC: SAST/DAST, secrets scanning, dependency checks?<br/>
+            • Pen-test scope + remediation plan + sign-off evidence?
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
+            <button class="btn ai" id="aiSecBtn">✨ AI Security Scan</button>
+            <button class="btn export" id="exportSecBtn">Export Security Pack</button>
+          </div>
+          <div class="help" style="margin-top:8px">Exports threat model + controls + SDLC checklist + decision log.</div>
+        </div>
+      </aside>
+
+      <!-- RIGHT -->
+      <main class="grid">
+        <!-- INBOX -->
+        <section class="card span-12" id="view-inbox">
+          <div class="card-head">
+            <div>
+              <h3>InfoSec Inbox</h3>
+              <p>BRDs awaiting security review.</p>
+            </div>
+            <div class="right">
+              <div style="min-width:260px">
+                <label>Search</label>
+                <input id="searchInbox" type="text" placeholder="Search by ID/title/domain…" />
+              </div>
+              <div style="min-width:220px">
+                <label>Filter</label>
+                <select id="filterInbox">
+                  <option value="ALL">All</option>
+                  <option value="In Review">In Review</option>
+                  <option value="Changes Requested">Changes Requested</option>
+                  <option value="Approved">Approved</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>BRD</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                  <th>Security Score</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="inboxTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- THREAT MODEL -->
+        <section class="card span-12" id="view-threat" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Threat Model (STRIDE)</h3>
+              <p>Capture assets, trust boundaries, threats, and mitigations. Assign owners and evidence.</p>
+            </div>
+            <div class="right">
+              <span class="badge">Status: <b id="statusText">—</b></span>
+              <button class="btn add" id="addThreatBtn">+ Add Threat</button>
+              <button class="btn ai" id="aiThreatBtn">✨ AI: Suggest Threats</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="grid">
+              <div class="span-12">
+                <h2 class="title" id="brdTitle">No BRD selected</h2>
+                <div class="subtext" id="brdMeta">—</div>
+              </div>
+              <div class="span-12">
+                <div class="help" id="scoreText">—</div>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Threat ID</th>
+                  <th>Asset/Component</th>
+                  <th>STRIDE</th>
+                  <th>Threat</th>
+                  <th>Impact</th>
+                  <th>Mitigation</th>
+                  <th>Owner</th>
+                  <th>Evidence</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="threatTable"></tbody>
+            </table>
+
+            <div class="note" style="margin-top:12px">
+              STRIDE: Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege.
+            </div>
+          </div>
+        </section>
+
+        <!-- DATA CLASSIFICATION -->
+        <section class="card span-12" id="view-data" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Data Classification</h3>
+              <p>Identify sensitive data types, storage, masking, and retention. Map to encryption and access controls.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addDataBtn">+ Add Data Item</button>
+              <button class="btn ai" id="aiDataBtn">✨ AI: Suggest Data Map</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Data ID</th>
+                  <th>Data Type</th>
+                  <th>Classification</th>
+                  <th>Where stored</th>
+                  <th>Encryption</th>
+                  <th>Masking</th>
+                  <th>Retention</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="dataTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- SECURITY CONTROLS -->
+        <section class="card span-12" id="view-controls" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Security Controls</h3>
+              <p>Define security requirements: auth, RBAC, MFA, session mgmt, rate limits, logging, secrets, encryption.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addCtrlBtn">+ Add Control</button>
+              <button class="btn ai" id="aiCtrlBtn">✨ AI: Suggest Controls</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Control ID</th>
+                  <th>Category</th>
+                  <th>Requirement</th>
+                  <th>Verification</th>
+                  <th>Owner</th>
+                  <th>Evidence</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ctrlTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- SECURE SDLC -->
+        <section class="card span-12" id="view-sdlc" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Secure SDLC Checklist</h3>
+              <p>Track security gates and completion status.</p>
+            </div>
+            <div class="right">
+              <button class="btn ai" id="aiSdlcBtn">✨ AI: Populate Checklist</button>
+              <button class="btn add" id="addSdlcBtn">+ Add Gate</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Gate ID</th>
+                  <th>Gate</th>
+                  <th>Owner</th>
+                  <th>Status</th>
+                  <th>Evidence</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="sdlcTable"></tbody>
+            </table>
+
+            <div class="note" style="margin-top:12px">
+              Typical gates: Threat model, SAST, DAST, dependency scan, secrets scan, IaC scan, code review, pen-test, change approvals.
+            </div>
+          </div>
+        </section>
+
+        <!-- VENDORS -->
+        <section class="card span-12" id="view-vendors" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Third-Party Risk (TPRM)</h3>
+              <p>Vendor data access, contracts, SOC2/ISO, SLA, breach notification, and exit plan.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addVendorBtn">+ Add Vendor Item</button>
+              <button class="btn ai" id="aiVendorBtn">✨ AI: Suggest TPRM</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>TPRM ID</th>
+                  <th>Vendor/Service</th>
+                  <th>Data Access</th>
+                  <th>Controls/Cert</th>
+                  <th>SLA</th>
+                  <th>Exit Plan</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="vendorTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- PEN TEST -->
+        <section class="card span-12" id="view-pentest" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>PenTest & Vulnerability Assessment</h3>
+              <p>Track scope, findings, remediation, and sign-off evidence.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addVaBtn">+ Add Finding</button>
+              <button class="btn ai" id="aiVaBtn">✨ AI: Suggest Evidence</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Finding ID</th>
+                  <th>Finding</th>
+                  <th>Severity</th>
+                  <th>Remediation</th>
+                  <th>Owner</th>
+                  <th>Due</th>
+                  <th>Status</th>
+                  <th>Evidence</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="vaTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- DECISION -->
+        <section class="card span-12" id="view-decision" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>InfoSec Decision (Sign-off)</h3>
+              <p>Approve / Request Fixes / Block. Adds InfoSec sign-off entry to approvals log.</p>
+            </div>
+            <div class="right">
+              <button class="btn success" id="approveBtn">Approve (InfoSec)</button>
+              <button class="btn warn" id="fixesBtn">Request Fixes</button>
+              <button class="btn danger" id="blockBtn">Block</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="inputs">
+              <div class="field full">
+                <label>Decision Notes (visible to BA + reviewers)</label>
+                <textarea id="decisionNotes" placeholder="Summarize security gaps and required controls/gates."></textarea>
+              </div>
+              <div class="field third">
+                <label>Security risk rating</label>
+                <select id="rating">
+                  <option value="Low">Low</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </select>
+              </div>
+              <div class="field third">
+                <label>Fixes due (days)</label>
+                <input id="dueDays" type="number" min="1" value="7"/>
+              </div>
+              <div class="field third">
+                <label>Evidence ref</label>
+                <input id="evidenceRef" type="text" placeholder="Ticket / security report / repo ref"/>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <h3 style="margin:0; font-size:14px">Approvals log (read)</h3>
+            <table class="table" style="margin-top:10px">
+              <thead><tr><th>Stage</th><th>Decision</th><th>By</th><th>At</th><th>Notes</th></tr></thead>
+              <tbody id="apTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- AUDIT -->
+        <section class="card span-12" id="view-audit" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Audit Trail (read)</h3>
+              <p>Append-only events (prototype stored in localStorage).</p>
+            </div>
+            <div class="right">
+              <div style="min-width:280px">
+                <label>Search</label>
+                <input id="auditSearch" type="text" placeholder="Filter by action/user/id…"/>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead><tr><th>At</th><th>User</th><th>Action</th><th>Entity</th><th>ID</th><th>Meta</th></tr></thead>
+              <tbody id="auditTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- AI MODAL -->
+  <div class="backdrop" id="aiModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>AI Security Scan (offline mock)</h3>
+        <button class="btn small neutral" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid" style="grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px">
+          <button class="btn ai" id="aiThreatRun">Suggest Threats</button>
+          <button class="btn ai" id="aiCtrlRun">Suggest Controls</button>
+          <button class="btn ai" id="aiSdlcRun">Populate SDLC</button>
+        </div>
+        <div class="grid">
+          <section class="card span-6 noshadow">
+            <div class="card-head"><div><h3>Threats</h3><p>STRIDE suggestions.</p></div></div>
+            <div class="card-body" id="aiThreatOut"><div class="note">Run “Suggest Threats”.</div></div>
+          </section>
+          <section class="card span-6 noshadow">
+            <div class="card-head"><div><h3>Controls</h3><p>Security requirements.</p></div></div>
+            <div class="card-body" id="aiCtrlOut"><div class="note">Run “Suggest Controls”.</div></div>
+          </section>
+          <section class="card span-12 noshadow">
+            <div class="card-head"><div><h3>Secure SDLC</h3><p>Security gates.</p></div></div>
+            <div class="card-body" id="aiSdlcOut"><div class="note">Run “Populate SDLC”.</div></div>
+          </section>
+        </div>
+        <div class="hr"></div>
+        <div class="note"><b>Production:</b> attach threat model diagram, pen-test report, and sign-off artifacts.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    /***********************
+     * InfoSec Workspace (offline functional)
+     * - reads shared BRDs from localStorage store
+     * - maintains InfoSec pack per BRD
+     * - records InfoSec decision to approvals log
+     ***********************/
+    const S_EMAIL = "meera.infosec@bank.com";
+    const Store = { KEY:"brd_ba_workspace_v1", SELECTED:"brd_ba_selected_v1" };
+    const Status = { DRAFT:"Draft", IN_REVIEW:"In Review", CHANGES:"Changes Requested", APPROVED:"Approved", PUBLISHED:"Published", ARCHIVED:"Archived" };
+
+    const nowISO = () => new Date().toISOString();
+    const fmt = (ts) => { try{ return new Date(ts).toLocaleString(undefined,{year:"numeric",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"}); }catch{ return ts; } };
+    const safeParse = (s, fb) => { try{return JSON.parse(s);}catch{return fb;} };
+    const escapeHtml = (s) => String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    const uid = (p="ID") => `${p}-${Math.random().toString(16).slice(2,10)}-${Math.random().toString(16).slice(2,10)}`.toUpperCase();
+
+    const $ = (q) => document.querySelector(q);
+    const $$ = (q) => Array.from(document.querySelectorAll(q));
+
+    function toast(title, msg){
+      const wrap = $("#toastWrap");
+      const el = document.createElement("div");
+      el.className="toast";
+      el.innerHTML = `<div class="ticon">✓</div><div><h4>${escapeHtml(title)}</h4><p>${escapeHtml(msg)}</p></div>`;
+      wrap.appendChild(el);
+      setTimeout(()=>{ el.style.opacity="0"; el.style.transform="translateY(6px)"; }, 2400);
+      setTimeout(()=> el.remove(), 3000);
+    }
+
+    function readDB(){
+      const raw = localStorage.getItem(Store.KEY);
+      return raw ? safeParse(raw, { brds:[], audit:[] }) : { brds:[], audit:[] };
+    }
+    function writeDB(db){ localStorage.setItem(Store.KEY, JSON.stringify(db)); }
+    function addAudit(action, entityId, meta={}){
+      const db = readDB();
+      db.audit.unshift({ at: nowISO(), by: S_EMAIL, action, entity:"BRD", id: entityId, meta });
+      writeDB(db);
+    }
+
+    let db, selectedId;
+
+    function getSelected(){
+      if(!selectedId) selectedId = localStorage.getItem(Store.SELECTED) || db.brds[0]?.id;
+      return db.brds.find(b=>b.id===selectedId) || db.brds[0];
+    }
+    function setSelected(id){
+      selectedId = id;
+      localStorage.setItem(Store.SELECTED, id);
+      renderAll();
+    }
+
+    function setActiveNav(view){
+      $$("#nav a").forEach(a=> a.classList.toggle("active", a.dataset.view===view));
+      const map = {
+        inbox:"#view-inbox",
+        threat:"#view-threat",
+        data:"#view-data",
+        controls:"#view-controls",
+        sdlc:"#view-sdlc",
+        vendors:"#view-vendors",
+        pentest:"#view-pentest",
+        decision:"#view-decision",
+        audit:"#view-audit"
+      };
+      Object.values(map).forEach(sel => $(sel).style.display="none");
+      $(map[view]).style.display="block";
+    }
+
+    function openModal(id){ $(id).style.display="flex"; }
+    function closeModal(id){ $(id).style.display="none"; }
+    function wireModalClose(id){
+      const back = $(id);
+      back.addEventListener("click",(e)=>{ if(e.target===back) closeModal(id); });
+      back.querySelectorAll("[data-close]").forEach(b=> b.addEventListener("click", ()=> closeModal(id)));
+    }
+
+    function ensurePack(brd){
+      brd.reviews = brd.reviews || {};
+      brd.reviews.infosec = brd.reviews.infosec || {
+        updatedAt:null,
+        threats:[], // {id,asset,stride,threat,impact,mitigation,owner,evidence}
+        data:[],    // {id,type,class,where,enc,mask,ret}
+        controls:[],// {id,cat,req,verify,owner,evidence}
+        sdlc:[],    // {id,gate,owner,status,evidence}
+        vendors:[], // {id,vendor,data,controls,sla,exit}
+        va:[]       // {id,finding,severity,remediation,owner,due,status,evidence}
+      };
+      return brd.reviews.infosec;
+    }
+
+    function secScore(pack){
+      // simple heuristic: threats + controls + SDLC completion
+      const t = pack.threats.length, c = pack.controls.length, g = pack.sdlc.length, v = pack.va.length, d = pack.data.length;
+      const done = pack.sdlc.filter(x=>x.status==="Done").length;
+      let score = 0;
+      score += Math.min(25, t*4);
+      score += Math.min(30, c*3);
+      score += Math.min(15, d*3);
+      score += Math.min(10, v*2);
+      score += g ? Math.round((done/g)*20) : 0;
+      return Math.max(0, Math.min(100, score));
+    }
+    function chip(score){
+      if(score>=75) return {cls:"green", label:"Strong"};
+      if(score>=45) return {cls:"amber", label:"Medium"};
+      return {cls:"red", label:"Weak"};
+    }
+
+    function appendApproval(brd, decision, notes){
+      brd.approvals = brd.approvals || [];
+      brd.approvals.unshift({ stage:"InfoSec Review", decision, by:S_EMAIL, at:nowISO(), notes });
+      addAudit("INFOSEC_DECISION", brd.id, {decision});
+    }
+
+    function doDecision(kind){
+      const brd = getSelected(); if(!brd) return;
+      const rating = $("#rating").value;
+      const due = parseInt($("#dueDays").value,10) || 7;
+      const evRef = ($("#evidenceRef").value||"").trim();
+      const notes = ($("#decisionNotes").value||"").trim();
+
+      const pack = ensurePack(brd);
+      pack.updatedAt = nowISO();
+
+      const packNotes = [
+        `Security rating: ${rating}`,
+        kind==="Fixes" ? `Fixes due: ${due} days` : null,
+        evRef ? `Evidence ref: ${evRef}` : null,
+        notes ? `Notes: ${notes}` : "Notes: —"
+      ].filter(Boolean).join(" | ");
+
+      if(kind==="Approve"){
+        appendApproval(brd, "Approved", packNotes);
+        brd.status = Status.IN_REVIEW;
+        toast("Approved","InfoSec approval recorded (BRD remains In Review for remaining sign-offs).");
+      } else if(kind==="Fixes"){
+        appendApproval(brd, "Fixes Requested", packNotes);
+        brd.status = Status.CHANGES;
+        toast("Fixes","Fixes requested. BRD moved to Changes Requested.");
+      } else if(kind==="Block"){
+        appendApproval(brd, "Blocked", packNotes);
+        brd.status = Status.CHANGES;
+        toast("Blocked","InfoSec blocked this BRD. BRD moved to Changes Requested.");
+      }
+
+      brd.updatedAt = nowISO();
+      writeDB(db);
+      renderAll();
+      setActiveNav("decision");
+    }
+
+    // CRUD (prompt-based)
+    function addThreat(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+
+      const asset = prompt("Asset/component (e.g., BRD Portal API, Document Store, Auth) ?"); if(!asset) return;
+      const stride = prompt("STRIDE (S/T/R/I/D/E) ?") || "I";
+      const threat = prompt("Threat (what can go wrong) ?"); if(!threat) return;
+      const impact = prompt("Impact (Low/Medium/High/Critical) ?") || "High";
+      const mitigation = prompt("Mitigation (control/requirement) ?") || "";
+      const owner = prompt("Owner (team) ?") || "InfoSec/IT";
+      const evidence = prompt("Evidence (design/controls/ticket) ?") || "";
+
+      pack.threats.unshift({id:uid("THR"), asset, stride, threat, impact, mitigation, owner, evidence, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SEC_ADD_THREAT", brd.id, {});
+      toast("Added","Threat added.");
+      renderAll();
+    }
+    function delThreat(id){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      pack.threats = pack.threats.filter(t=>t.id!==id);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SEC_DEL_THREAT", brd.id, {id});
+      toast("Deleted","Threat removed.");
+      renderAll();
+    }
+
+    function addData(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      const type = prompt("Data type (e.g., PAN, Aadhaar, bank account, logs) ?"); if(!type) return;
+      const cls = prompt("Classification (Public/Internal/Confidential/Restricted) ?") || "Confidential";
+      const where = prompt("Where stored (DB/DMS/Logs/S3) ?") || "DB + DMS";
+      const enc = prompt("Encryption (TLS, AES-256, KMS) ?") || "TLS + AES-256 (KMS)";
+      const mask = prompt("Masking (tokenization, partial mask) ?") || "Mask PAN/Aadhaar; tokenization for account";
+      const ret = prompt("Retention (e.g., 7 years) ?") || "7 years";
+      pack.data.unshift({id:uid("DATA"), type, cls, where, enc, mask, ret, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SEC_ADD_DATA", brd.id, {});
+      toast("Added","Data item added.");
+      renderAll();
+    }
+    function delData(id){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      pack.data = pack.data.filter(d=>d.id!==id);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SEC_DEL_DATA", brd.id, {id});
+      toast("Deleted","Data item removed.");
+      renderAll();
+    }
+
+    function addControl(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      const cat = prompt("Category (Auth/RBAC/Encryption/Logging/Network/AppSec/Secrets/DoS) ?") || "AppSec";
+      const req = prompt("Requirement (what must be implemented) ?"); if(!req) return;
+      const verify = prompt("Verification (test/evidence) ?") || "Security test + screenshots/logs";
+      const owner = prompt("Owner (team) ?") || "IT";
+      const evidence = prompt("Evidence ref (ticket/report) ?") || "";
+      pack.controls.unshift({id:uid("CTRL"), cat, req, verify, owner, evidence, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SEC_ADD_CONTROL", brd.id, {});
+      toast("Added","Control added.");
+      renderAll();
+    }
+    function delControl(id){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      pack.controls = pack.controls.filter(c=>c.id!==id);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SEC_DEL_CONTROL", brd.id, {id});
+      toast("Deleted","Control removed.");
+      renderAll();
+    }
+
+    function addSdlc(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      const gate = prompt("Security gate (e.g., SAST, DAST, PenTest) ?"); if(!gate) return;
+      const owner = prompt("Owner ?") || "DevSecOps";
+      const status = prompt("Status (Not Started/In Progress/Done) ?") || "Not Started";
+      const evidence = prompt("Evidence (report/ticket link) ?") || "";
+      pack.sdlc.unshift({id:uid("GATE"), gate, owner, status, evidence, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SEC_ADD_SDLC", brd.id, {});
+      toast("Added","SDLC gate added.");
+      renderAll();
+    }
+    function delSdlc(id){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      pack.sdlc = pack.sdlc.filter(g=>g.id!==id);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SEC_DEL_SDLC", brd.id, {id});
+      toast("Deleted","Gate removed.");
+      renderAll();
+    }
+
+    function addVendor(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      const vendor = prompt("Vendor/service (e.g., Bureau API, SMS provider) ?"); if(!vendor) return;
+      const data = prompt("Data access (what data shared)?") || "PII minimal";
+      const controls = prompt("Controls/Cert (SOC2/ISO/DPAs) ?") || "DPA + SOC2";
+      const sla = prompt("SLA (uptime/latency) ?") || "99.9%";
+      const exit = prompt("Exit plan (data deletion + migration) ?") || "Delete data within 30 days; migration plan";
+      pack.vendors.unshift({id:uid("TPRM"), vendor, data, controls, sla, exit, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SEC_ADD_VENDOR", brd.id, {});
+      toast("Added","TPRM item added.");
+      renderAll();
+    }
+    function delVendor(id){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      pack.vendors = pack.vendors.filter(v=>v.id!==id);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SEC_DEL_VENDOR", brd.id, {id});
+      toast("Deleted","TPRM item removed.");
+      renderAll();
+    }
+
+    function addFinding(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      const finding = prompt("Finding (e.g., SQLi in search endpoint) ?"); if(!finding) return;
+      const severity = prompt("Severity (Low/Medium/High/Critical) ?") || "High";
+      const remediation = prompt("Remediation?") || "Fix + retest";
+      const owner = prompt("Owner?") || "Engineering";
+      const due = prompt("Due date (YYYY-MM-DD) or blank") || "";
+      const status = prompt("Status (Open/In Progress/Done) ?") || "Open";
+      const evidence = prompt("Evidence (retest report) ?") || "";
+      pack.va.unshift({id:uid("FND"), finding, severity, remediation, owner, due, status, evidence, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SEC_ADD_FINDING", brd.id, {});
+      toast("Added","Finding added.");
+      renderAll();
+    }
+    function delFinding(id){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      pack.va = pack.va.filter(v=>v.id!==id);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("SEC_DEL_FINDING", brd.id, {id});
+      toast("Deleted","Finding removed.");
+      renderAll();
+    }
+
+    // AI suggestions (mock)
+    function aiThreats(){
+      return [
+        {asset:"BRD Portal Auth", stride:"S", threat:"Account takeover via weak MFA/session handling", impact:"High", mitigation:"Enforce MFA, short-lived tokens, device binding", owner:"InfoSec/IT", evidence:"Auth design + test"},
+        {asset:"Document Store", stride:"T", threat:"Tampering of BRD versions without trace", impact:"Critical", mitigation:"Immutable versions + signed hashes + append-only audit log", owner:"IT", evidence:"WORM/ledger design"},
+        {asset:"Audit Logs", stride:"R", threat:"Users deny actions; insufficient logging", impact:"High", mitigation:"Centralized SIEM + immutable logs with user/device context", owner:"SecOps", evidence:"SIEM integration"},
+        {asset:"PII Data", stride:"I", threat:"Unauthorized access / data leakage", impact:"Critical", mitigation:"RBAC/ABAC + encryption + masking + least privilege", owner:"InfoSec", evidence:"RBAC matrix"},
+        {asset:"APIs", stride:"D", threat:"DoS via high request rate", impact:"High", mitigation:"Rate limiting, WAF, circuit breakers", owner:"IT", evidence:"WAF policy"},
+        {asset:"Admin Console", stride:"E", threat:"Privilege escalation due to misconfigured roles", impact:"High", mitigation:"SoD + admin approval + periodic access review", owner:"InfoSec", evidence:"Access review report"}
+      ];
+    }
+    function aiControls(){
+      return [
+        {cat:"Auth", req:"MFA for privileged roles; step-up auth for sensitive actions (publish/delete/export)", verify:"MFA test evidence", owner:"IT", evidence:"Auth config"},
+        {cat:"RBAC/SoD", req:"Role-based access with segregation (BA cannot self-approve publish)", verify:"RBAC matrix + tests", owner:"InfoSec/IT", evidence:"RBAC document"},
+        {cat:"Encryption", req:"TLS 1.2+ in transit; AES-256 at rest with KMS-managed keys; key rotation", verify:"Config screenshots + KMS logs", owner:"IT", evidence:"KMS setup"},
+        {cat:"Logging", req:"Immutable audit log for all approvals, edits, exports; ship to SIEM", verify:"SIEM event proof", owner:"SecOps", evidence:"SIEM dashboard"},
+        {cat:"AppSec", req:"Input validation; OWASP top 10 mitigations; CSP headers; secure cookies", verify:"DAST report", owner:"Engineering", evidence:"DAST results"},
+        {cat:"Secrets", req:"No secrets in code; secrets stored in vault; rotation policy", verify:"Secrets scan report", owner:"DevSecOps", evidence:"Vault policy"},
+        {cat:"DoS", req:"Rate limits per user/IP; WAF; backpressure and timeouts", verify:"Load test + WAF rules", owner:"IT", evidence:"WAF policy"}
+      ];
+    }
+    function aiSdlc(){
+      return [
+        {gate:"Threat model completed and approved", owner:"InfoSec", status:"In Progress", evidence:"Threat model doc"},
+        {gate:"SAST scan passing (no High/Critical)", owner:"DevSecOps", status:"Not Started", evidence:"SAST report"},
+        {gate:"Dependency scan (SCA) passing", owner:"DevSecOps", status:"Not Started", evidence:"SCA report"},
+        {gate:"Secrets scanning enabled in CI", owner:"DevSecOps", status:"Not Started", evidence:"CI pipeline config"},
+        {gate:"DAST completed on staging", owner:"Security QA", status:"Not Started", evidence:"DAST report"},
+        {gate:"PenTest completed + retest", owner:"InfoSec", status:"Not Started", evidence:"PenTest report"},
+        {gate:"Change management approval (CAB) for go-live", owner:"IT", status:"Not Started", evidence:"CAB ticket"}
+      ];
+    }
+
+    function aiScan(){
+      const brd = getSelected(); if(!brd){ toast("Select BRD","Open a BRD first."); return; }
+      openModal("#aiModal");
+
+      $("#aiThreatRun").onclick = ()=>{
+        const pack = ensurePack(brd);
+        const sug = aiThreats();
+        sug.forEach(t=> pack.threats.unshift({id:uid("THR"), ...t, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_SEC_ADD_THREATS", brd.id, {count:sug.length});
+        $("#aiThreatOut").innerHTML = `<div class="note"><ul>${sug.map(t=>`<li><b>${escapeHtml(t.asset)}:</b> [${escapeHtml(t.stride)}] ${escapeHtml(t.threat)}</li>`).join("")}</ul></div>`;
+        toast("AI","Threats added.");
+        renderAll();
+      };
+
+      $("#aiCtrlRun").onclick = ()=>{
+        const pack = ensurePack(brd);
+        const sug = aiControls();
+        sug.forEach(c=> pack.controls.unshift({id:uid("CTRL"), ...c, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_SEC_ADD_CONTROLS", brd.id, {count:sug.length});
+        $("#aiCtrlOut").innerHTML = `<div class="note"><ul>${sug.map(c=>`<li><b>${escapeHtml(c.cat)}:</b> ${escapeHtml(c.req)}</li>`).join("")}</ul></div>`;
+        toast("AI","Controls added.");
+        renderAll();
+      };
+
+      $("#aiSdlcRun").onclick = ()=>{
+        const pack = ensurePack(brd);
+        const sug = aiSdlc();
+        sug.forEach(g=> pack.sdlc.unshift({id:uid("GATE"), ...g, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_SEC_ADD_SDLC", brd.id, {count:sug.length});
+        $("#aiSdlcOut").innerHTML = `<div class="note"><ul>${sug.map(g=>`<li><b>${escapeHtml(g.gate)}:</b> ${escapeHtml(g.status)}</li>`).join("")}</ul></div>`;
+        toast("AI","SDLC gates added.");
+        renderAll();
+      };
+    }
+
+    // Rendering
+    function renderInbox(){
+      const q = ($("#searchInbox").value||"").trim().toLowerCase();
+      const f = $("#filterInbox").value || "ALL";
+      let items = db.brds || [];
+      items = items.filter(b => b.status !== Status.ARCHIVED);
+
+      if(f!=="ALL") items = items.filter(b => b.status === f);
+
+      if(q){
+        items = items.filter(b =>
+          (b.id||"").toLowerCase().includes(q) ||
+          (b.master?.title||"").toLowerCase().includes(q) ||
+          (b.master?.domain||"").toLowerCase().includes(q) ||
+          (b.master?.product||"").toLowerCase().includes(q)
+        );
+      }
+
+      $("#inboxBadge").textContent = String(items.filter(b=>b.status===Status.IN_REVIEW).length);
+
+      $("#inboxTable").innerHTML = items.map(b=>{
+        const pack = ensurePack(b);
+        const sc = secScore(pack);
+        const c = chip(sc);
+        return `
+          <tr>
+            <td class="mono">${b.id}</td>
+            <td>
+              <div style="display:flex; flex-direction:column; gap:4px">
+                <a href="#" data-open="${b.id}" style="font-weight:900">${escapeHtml(b.master?.title||"(untitled)")}</a>
+                <div class="help">${escapeHtml(b.master?.domain||"—")} • ${escapeHtml(b.master?.product||"—")}</div>
+              </div>
+            </td>
+            <td>${escapeHtml(b.status)}</td>
+            <td>${fmt(b.updatedAt)}</td>
+            <td><span class="chip ${c.cls}">${c.label} • ${sc}/100</span></td>
+            <td style="white-space:nowrap">
+              <button class="btn small primary" data-open="${b.id}">Open</button>
+              <button class="btn small" data-go="decision" data-open="${b.id}">Decide</button>
+            </td>
+          </tr>
+        `;
+      }).join("") || `<tr><td colspan="6" class="mono">No BRDs found.</td></tr>`;
+
+      $("#inboxTable").querySelectorAll("[data-open]").forEach(el=>{
+        el.addEventListener("click",(e)=>{
+          e.preventDefault();
+          const id = el.dataset.open;
+          const go = el.dataset.go || "threat";
+          setSelected(id);
+          setActiveNav(go);
+          renderAll();
+        });
+      });
+    }
+
+    function renderHeader(){
+      const brd = getSelected();
+      if(!brd){
+        $("#activeBrdPill").textContent = "No BRD selected";
+        $("#brdTitle").textContent = "No BRD selected";
+        $("#brdMeta").textContent = "Open a BRD from Inbox.";
+        $("#statusText").textContent = "—";
+        $("#scoreText").textContent = "—";
+        return;
+      }
+      const pack = ensurePack(brd);
+      const sc = secScore(pack);
+      const c = chip(sc);
+
+      $("#activeBrdPill").textContent = `${brd.master?.title || brd.id} • ${brd.status}`;
+      $("#brdTitle").textContent = brd.master?.title || "(untitled)";
+      $("#brdMeta").innerHTML = `<span class="mono">${brd.id}</span> • Owner: <span class="mono">${brd.ownerEmail||"—"}</span> • Updated: ${fmt(brd.updatedAt)}`;
+      $("#statusText").textContent = brd.status;
+
+      $("#scoreText").innerHTML = `Security score: <b>${sc}/100</b> • ${c.label} • Threats: ${pack.threats.length} • Controls: ${pack.controls.length} • SDLC Gates: ${pack.sdlc.length} • Updated: ${pack.updatedAt ? fmt(pack.updatedAt) : "—"}`;
+    }
+
+    function renderThreats(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      $("#threatTable").innerHTML = pack.threats.map(t=>`
+        <tr>
+          <td class="mono">${t.id}</td>
+          <td>${escapeHtml(t.asset||"—")}</td>
+          <td class="mono">${escapeHtml(t.stride||"—")}</td>
+          <td><b>${escapeHtml(t.threat||"—")}</b></td>
+          <td>${escapeHtml(t.impact||"—")}</td>
+          <td>${escapeHtml(t.mitigation||"—")}</td>
+          <td>${escapeHtml(t.owner||"—")}</td>
+          <td class="mono">${escapeHtml(t.evidence||"—")}</td>
+          <td style="white-space:nowrap"><button class="btn small danger" data-del="${t.id}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="9" class="mono">No threats yet. Add or use AI scan.</td></tr>`;
+
+      $("#threatTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delThreat(b.dataset.del)));
+    }
+
+    function renderData(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      $("#dataTable").innerHTML = pack.data.map(d=>`
+        <tr>
+          <td class="mono">${d.id}</td>
+          <td><b>${escapeHtml(d.type||"—")}</b></td>
+          <td>${escapeHtml(d.cls||"—")}</td>
+          <td>${escapeHtml(d.where||"—")}</td>
+          <td>${escapeHtml(d.enc||"—")}</td>
+          <td>${escapeHtml(d.mask||"—")}</td>
+          <td>${escapeHtml(d.ret||"—")}</td>
+          <td style="white-space:nowrap"><button class="btn small danger" data-del="${d.id}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="8" class="mono">No data map yet.</td></tr>`;
+
+      $("#dataTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delData(b.dataset.del)));
+    }
+
+    function renderControls(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      $("#ctrlTable").innerHTML = pack.controls.map(c=>`
+        <tr>
+          <td class="mono">${c.id}</td>
+          <td>${escapeHtml(c.cat||"—")}</td>
+          <td><b>${escapeHtml(c.req||"—")}</b></td>
+          <td>${escapeHtml(c.verify||"—")}</td>
+          <td>${escapeHtml(c.owner||"—")}</td>
+          <td class="mono">${escapeHtml(c.evidence||"—")}</td>
+          <td style="white-space:nowrap"><button class="btn small danger" data-del="${c.id}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="7" class="mono">No controls yet.</td></tr>`;
+
+      $("#ctrlTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delControl(b.dataset.del)));
+    }
+
+    function renderSdlc(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      $("#sdlcTable").innerHTML = pack.sdlc.map(g=>`
+        <tr>
+          <td class="mono">${g.id}</td>
+          <td><b>${escapeHtml(g.gate||"—")}</b></td>
+          <td>${escapeHtml(g.owner||"—")}</td>
+          <td>${escapeHtml(g.status||"—")}</td>
+          <td class="mono">${escapeHtml(g.evidence||"—")}</td>
+          <td style="white-space:nowrap"><button class="btn small danger" data-del="${g.id}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No SDLC gates yet.</td></tr>`;
+
+      $("#sdlcTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delSdlc(b.dataset.del)));
+    }
+
+    function renderVendors(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      $("#vendorTable").innerHTML = pack.vendors.map(v=>`
+        <tr>
+          <td class="mono">${v.id}</td>
+          <td><b>${escapeHtml(v.vendor||"—")}</b></td>
+          <td>${escapeHtml(v.data||"—")}</td>
+          <td>${escapeHtml(v.controls||"—")}</td>
+          <td>${escapeHtml(v.sla||"—")}</td>
+          <td>${escapeHtml(v.exit||"—")}</td>
+          <td style="white-space:nowrap"><button class="btn small danger" data-del="${v.id}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="7" class="mono">No TPRM items yet.</td></tr>`;
+
+      $("#vendorTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delVendor(b.dataset.del)));
+    }
+
+    function renderVA(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      $("#vaTable").innerHTML = pack.va.map(v=>`
+        <tr>
+          <td class="mono">${v.id}</td>
+          <td><b>${escapeHtml(v.finding||"—")}</b></td>
+          <td>${escapeHtml(v.severity||"—")}</td>
+          <td>${escapeHtml(v.remediation||"—")}</td>
+          <td>${escapeHtml(v.owner||"—")}</td>
+          <td class="mono">${escapeHtml(v.due||"—")}</td>
+          <td>${escapeHtml(v.status||"—")}</td>
+          <td class="mono">${escapeHtml(v.evidence||"—")}</td>
+          <td style="white-space:nowrap"><button class="btn small danger" data-del="${v.id}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="9" class="mono">No findings yet.</td></tr>`;
+
+      $("#vaTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delFinding(b.dataset.del)));
+    }
+
+    function renderApprovals(){
+      const brd = getSelected(); if(!brd) return;
+      $("#apTable").innerHTML = (brd.approvals||[]).map(a=>`
+        <tr>
+          <td>${escapeHtml(a.stage)}</td>
+          <td>${escapeHtml(a.decision)}</td>
+          <td class="mono">${escapeHtml(a.by)}</td>
+          <td>${fmt(a.at)}</td>
+          <td>${escapeHtml(a.notes||"—")}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="mono">No approvals yet.</td></tr>`;
+    }
+
+    function renderAudit(){
+      const q = ($("#auditSearch").value||"").trim().toLowerCase();
+      let items = [...(db.audit||[])];
+      if(q){
+        items = items.filter(a =>
+          (a.action||"").toLowerCase().includes(q) ||
+          (a.by||"").toLowerCase().includes(q) ||
+          (a.id||"").toLowerCase().includes(q) ||
+          JSON.stringify(a.meta||{}).toLowerCase().includes(q)
+        );
+      }
+      $("#auditTable").innerHTML = items.slice(0,450).map(a=>`
+        <tr>
+          <td>${fmt(a.at)}</td>
+          <td class="mono">${escapeHtml(a.by)}</td>
+          <td>${escapeHtml(a.action)}</td>
+          <td>${escapeHtml(a.entity)}</td>
+          <td class="mono">${escapeHtml(a.id)}</td>
+          <td class="mono">${escapeHtml(JSON.stringify(a.meta||{}))}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No audit entries.</td></tr>`;
+    }
+
+    function exportSecPack(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      const payload = {
+        brdId: brd.id,
+        brdTitle: brd.master?.title || "",
+        infosecEmail: S_EMAIL,
+        exportedAt: nowISO(),
+        infosecPack: pack,
+        approvals: brd.approvals || []
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${brd.id}_INFOSEC_PACK.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      addAudit("EXPORT_INFOSEC_PACK", brd.id, {});
+      toast("Exported","Security pack downloaded.");
+    }
+
+    function renderAll(){
+      db = readDB();
+      renderInbox();
+      renderHeader();
+      renderThreats();
+      renderData();
+      renderControls();
+      renderSdlc();
+      renderVendors();
+      renderVA();
+      renderApprovals();
+      renderAudit();
+
+      const brd = getSelected();
+      if(brd) $("#activeBrdPill").textContent = `${brd.master?.title || brd.id} • ${brd.status}`;
+      else $("#activeBrdPill").textContent = "No BRD selected";
+    }
+
+    function wire(){
+      db = readDB();
+      selectedId = localStorage.getItem(Store.SELECTED) || db.brds[0]?.id;
+
+      $$("#nav a").forEach(a=>{
+        a.addEventListener("click",(e)=>{
+          e.preventDefault();
+          setActiveNav(a.dataset.view);
+          renderAll();
+        });
+      });
+
+      $("#searchInbox").addEventListener("input", renderInbox);
+      $("#filterInbox").addEventListener("change", renderInbox);
+
+      $("#addThreatBtn").addEventListener("click", addThreat);
+      $("#aiThreatBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensurePack(brd);
+        const sug = aiThreats();
+        sug.forEach(t=> pack.threats.unshift({id:uid("THR"), ...t, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_SEC_ADD_THREATS", brd.id, {count:sug.length});
+        toast("AI","Threats suggested & added.");
+        renderAll();
+      });
+
+      $("#addDataBtn").addEventListener("click", addData);
+      $("#aiDataBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensurePack(brd);
+        const sug = [
+          {type:"PAN", cls:"Restricted", where:"DB", enc:"TLS + AES-256 (KMS)", mask:"Mask PAN; show last 4", ret:"7 years"},
+          {type:"Aadhaar/VID", cls:"Restricted", where:"DMS (encrypted)", enc:"TLS + AES-256 (KMS)", mask:"Do not display; store token", ret:"7 years"},
+          {type:"Bank account", cls:"Restricted", where:"Token vault", enc:"TLS + AES-256 (KMS)", mask:"Tokenization", ret:"7 years"},
+          {type:"Audit logs", cls:"Confidential", where:"SIEM/log store", enc:"TLS + immutable storage", mask:"N/A", ret:"7 years"},
+          {type:"Bureau data", cls:"Restricted", where:"DB (encrypted)", enc:"TLS + AES-256 (KMS)", mask:"Mask sensitive fields", ret:"7 years"}
+        ];
+        sug.forEach(d=> pack.data.unshift({id:uid("DATA"), ...d, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_SEC_ADD_DATA", brd.id, {count:sug.length});
+        toast("AI","Data map added.");
+        renderAll();
+        setActiveNav("data");
+      });
+
+      $("#addCtrlBtn").addEventListener("click", addControl);
+      $("#aiCtrlBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensurePack(brd);
+        const sug = aiControls();
+        sug.forEach(c=> pack.controls.unshift({id:uid("CTRL"), ...c, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_SEC_ADD_CONTROLS", brd.id, {count:sug.length});
+        toast("AI","Controls added.");
+        renderAll();
+        setActiveNav("controls");
+      });
+
+      $("#aiSdlcBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensurePack(brd);
+        const sug = aiSdlc();
+        sug.forEach(g=> pack.sdlc.unshift({id:uid("GATE"), ...g, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_SEC_ADD_SDLC", brd.id, {count:sug.length});
+        toast("AI","SDLC checklist populated.");
+        renderAll();
+        setActiveNav("sdlc");
+      });
+      $("#addSdlcBtn").addEventListener("click", addSdlc);
+
+      $("#addVendorBtn").addEventListener("click", addVendor);
+      $("#aiVendorBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensurePack(brd);
+        const sug = [
+          {vendor:"Credit Bureau API", data:"PAN/DOB/name; bureau pulls", controls:"Contract + DPA + SOC2/ISO", sla:"99.9%", exit:"Delete cached data; switch provider"},
+          {vendor:"SMS/Email Gateway", data:"Phone/email + message content", controls:"DPA + encryption; minimal content", sla:"99.9%", exit:"Rotate provider + purge logs"}
+        ];
+        sug.forEach(v=> pack.vendors.unshift({id:uid("TPRM"), ...v, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_SEC_ADD_TPRM", brd.id, {count:sug.length});
+        toast("AI","TPRM items added.");
+        renderAll();
+        setActiveNav("vendors");
+      });
+
+      $("#addVaBtn").addEventListener("click", addFinding);
+      $("#aiVaBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensurePack(brd);
+        const sug = [
+          {finding:"PenTest report attached and findings remediated", severity:"High", remediation:"Fix + retest", owner:"Engineering", due:"", status:"Open", evidence:"PenTest report"},
+          {finding:"DAST completed on staging", severity:"Medium", remediation:"Resolve issues", owner:"Security QA", due:"", status:"Open", evidence:"DAST report"}
+        ];
+        sug.forEach(v=> pack.va.unshift({id:uid("FND"), ...v, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_SEC_ADD_VA", brd.id, {count:sug.length});
+        toast("AI","VA/PenTest evidence items added.");
+        renderAll();
+        setActiveNav("pentest");
+      });
+
+      $("#approveBtn").addEventListener("click", ()=> doDecision("Approve"));
+      $("#fixesBtn").addEventListener("click", ()=> doDecision("Fixes"));
+      $("#blockBtn").addEventListener("click", ()=> doDecision("Block"));
+
+      $("#aiSecBtn").addEventListener("click", aiScan);
+      $("#exportSecBtn").addEventListener("click", exportSecPack);
+
+      $("#auditSearch").addEventListener("input", renderAudit);
+
+      $("#resetBtn").addEventListener("click", ()=>{
+        if(!confirm("Reset shared workspace data (localStorage)?")) return;
+        localStorage.removeItem(Store.KEY);
+        localStorage.removeItem(Store.SELECTED);
+        location.reload();
+      });
+
+      wireModalClose("#aiModal");
+
+      setActiveNav("inbox");
+      renderAll();
+    }
+
+    wire();
+
+    // Page switcher
+    document.getElementById("pageSwitcher").addEventListener("change", (e)=>{
+      window.location.href = e.target.value;
+    });
+  </script>
+</body>
+</html>

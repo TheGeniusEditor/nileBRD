@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BRD Automation • User Management (Admin)</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --border2:#f1f5f9;
+      --shadow: 0 10px 28px rgba(2,6,23,.08);
+      --r:16px;
+
+      --primary:#2563eb;
+      --success:#16a34a;
+      --warning:#f59e0b;
+      --danger:#ef4444;
+      --indigo:#4f46e5;
+      --slate:#334155;
+      --pink:#db2777;
+      --teal:#0d9488;
+
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+      --focus: 0 0 0 4px rgba(37,99,235,.14);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:var(--font); background:var(--bg); color:var(--text)}
+    a{color:inherit; text-decoration:none}
+    button, input, select, textarea{font-family:inherit}
+
+    .topbar{position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--border)}
+    .topbar-inner{max-width:1560px; margin:0 auto; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px}
+    .brand{display:flex; align-items:center; gap:10px}
+    .logo{width:36px; height:36px; border-radius:14px; background:linear-gradient(135deg,#111827,#7c3aed); box-shadow:0 10px 20px rgba(124,58,237,.18)}
+    .brand h1{margin:0; font-size:15px; letter-spacing:-.2px}
+    .brand .sub{margin:4px 0 0; font-size:12px; color:var(--muted)}
+    .right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:13px}
+    .kbd{font-family:var(--mono); font-size:12px; padding:2px 6px; border:1px solid var(--border); border-bottom-width:2px; border-radius:8px; color:var(--muted); background:#fff}
+
+    .wrap{max-width:1560px; margin:0 auto; padding:16px}
+    .layout{display:grid; grid-template-columns:420px 1fr; gap:14px; align-items:start}
+
+    .card{border:1px solid var(--border); border-radius:var(--r); background:#fff; box-shadow:var(--shadow); overflow:hidden}
+    .card.noshadow{box-shadow:none}
+    .card-head{padding:14px 14px 10px; border-bottom:1px solid var(--border2); display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+    .card-head h3{margin:0; font-size:14px}
+    .card-head p{margin:6px 0 0; font-size:12.5px; color:var(--muted); line-height:1.35}
+    .card-body{padding:14px}
+    .hr{height:1px; background:var(--border2); margin:12px 0}
+
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:9px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:850;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow); border-color:#d1d5db}
+    .btn:active{transform:translateY(0)}
+    .btn.small{padding:7px 10px; border-radius:10px; font-size:13px}
+    .btn.primary{background:linear-gradient(135deg,var(--primary),#60a5fa); color:#fff; border-color:transparent}
+    .btn.success{background:linear-gradient(135deg,var(--success),#22c55e); color:#fff; border-color:transparent}
+    .btn.warn{background:linear-gradient(135deg,var(--warning),#fbbf24); color:#111827; border-color:transparent}
+    .btn.danger{background:linear-gradient(135deg,var(--danger),#fb7185); color:#fff; border-color:transparent}
+    .btn.export{background:linear-gradient(135deg,var(--indigo),#7c3aed); color:#fff; border-color:transparent}
+    .btn.ai{background:linear-gradient(135deg,var(--pink),#f472b6); color:#fff; border-color:transparent}
+    .btn.add{background:linear-gradient(135deg,var(--teal),#22c55e); color:#fff; border-color:transparent}
+    .btn.neutral{background:linear-gradient(135deg,var(--slate),#64748b); color:#fff; border-color:transparent}
+    .btn:focus{outline:none; box-shadow:var(--shadow), var(--focus)}
+
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .span-12{grid-column:span 12}
+    .span-8{grid-column:span 8}
+    .span-6{grid-column:span 6}
+    .span-4{grid-column:span 4}
+    .title{font-size:20px; margin:0; letter-spacing:-.3px}
+    .subtext{margin:6px 0 0; font-size:13px; color:var(--muted)}
+
+    label{font-size:12px; color:var(--muted); font-weight:900}
+    input[type="text"], input[type="email"], textarea, select{
+      width:100%;
+      border:1px solid var(--border);
+      padding:10px 12px;
+      border-radius:12px;
+      outline:none;
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+    }
+    input:focus, select:focus, textarea:focus{box-shadow:var(--focus); border-color:rgba(37,99,235,.45)}
+    textarea{min-height:110px; resize:vertical}
+    .inputs{display:grid; grid-template-columns:repeat(12,1fr); gap:10px}
+    .field{grid-column:span 6; display:flex; flex-direction:column; gap:6px}
+    .field.full{grid-column:span 12}
+    .field.third{grid-column:span 4}
+    .help{font-size:12.5px; color:var(--muted); line-height:1.35}
+    .note{border:1px dashed #d1d5db; background:#f8fafc; border-radius:12px; padding:10px; color:var(--muted); font-size:12.5px; line-height:1.35; white-space:pre-wrap}
+
+    .table{
+      width:100%;
+      border-collapse:collapse;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .table th,.table td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--border2);
+      text-align:left;
+      vertical-align:top;
+      font-size:13px;
+    }
+    .table th{background:#f8fafc; color:var(--muted); font-weight:900}
+    .table tr:last-child td{border-bottom:none}
+    .mono{font-family:var(--mono)}
+
+    .chip{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:12px; font-weight:900; color:var(--muted)}
+    .chip.red{border-color:rgba(239,68,68,.25); background:rgba(239,68,68,.06); color:#b91c1c}
+    .chip.amber{border-color:rgba(245,158,11,.25); background:rgba(245,158,11,.07); color:#92400e}
+    .chip.green{border-color:rgba(22,163,74,.25); background:rgba(22,163,74,.07); color:#166534}
+    .chip.blue{border-color:rgba(37,99,235,.25); background:rgba(37,99,235,.07); color:#1d4ed8}
+
+    /* Modal */
+    .backdrop{
+      position:fixed; inset:0; z-index:60;
+      background: rgba(2,6,23,.45);
+      display:none;
+      align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .modal{
+      width:min(1180px, 100%);
+      max-height:92vh;
+      overflow:auto;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:0 25px 70px rgba(2,6,23,.25);
+    }
+    .modal-head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:center; justify-content:space-between; gap:10px
+    }
+    .modal-head h3{margin:0; font-size:14px}
+    .modal-body{padding:14px}
+
+    /* Toast */
+    .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:80; display:flex; flex-direction:column; gap:10px}
+    .toast{
+      width:min(460px, calc(100vw - 32px));
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      padding:10px;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .ticon{width:26px; height:26px; border-radius:10px; background:rgba(124,58,237,.12); display:flex; align-items:center; justify-content:center; flex:0 0 auto}
+    .toast h4{margin:0; font-size:13px}
+    .toast p{margin:4px 0 0; font-size:12.5px; color:var(--muted)}
+
+    /* Page Switcher */
+    .page-switcher{
+      padding:8px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      color:var(--text);
+      font-size:13px;
+      font-family:var(--font);
+      cursor:pointer;
+      font-weight:700;
+    }
+    .page-switcher:hover{border-color:#d1d5db; background:#f8fafc}
+
+    .two-col{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .sod-list{display:flex; flex-direction:column; gap:8px}
+    .sod-item{border:1px solid var(--border); border-radius:14px; padding:10px; display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+    .sod-item b{font-size:13px}
+    .sod-item .desc{font-size:12.5px; color:var(--muted); margin-top:4px; line-height:1.35}
+
+    @media (max-width:1280px){
+      .layout{grid-template-columns:1fr}
+      .span-8,.span-6,.span-4{grid-column:span 12}
+      .field,.field.third{grid-column:span 12}
+      .two-col{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>User Management • BRD Automation</h1>
+          <div class="sub">Signed in as <span class="mono">admin@org.com</span> • Role: Admin</div>
+        </div>
+      </div>
+      <select class="page-switcher" id="pageSwitcher">
+        <option value="Admin.html" selected>Admin</option>
+        <option value="BA.html">BA Workspace</option>
+        <option value="Compliance.html">Compliance</option>
+        <option value="In Take 1.html">Intake Tracker</option>
+        <option value="Infosec.html">InfoSec</option>
+        <option value="IT.html">IT</option>
+        <option value="Risk.html">Risk</option>
+        <option value="SME.html">SME</option>
+        <option value="User Management 1.html">User Management</option>
+      </select>
+      <div class="right">
+        <div class="pill"><b>Tenant:</b> <span class="mono" id="tenantPill">—</span></div>
+        <button class="btn small add" id="addUserTopBtn">+ Add User</button>
+        <button class="btn small ai" id="aiSeedBtn">✨ Seed BFSI Users</button>
+        <button class="btn small export" id="exportBtn">Export Users</button>
+        <button class="btn small neutral" id="resetBtn">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="layout">
+      <!-- LEFT: Controls -->
+      <aside class="card">
+        <div class="card-head">
+          <div>
+            <h3>Directory Controls</h3>
+            <p>Create users, assign roles/tenants, manage status, set SoD rules, and review audit.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="inputs">
+            <div class="field third">
+              <label>Tenant filter</label>
+              <select id="tenantFilter"></select>
+            </div>
+            <div class="field third">
+              <label>Role filter</label>
+              <select id="roleFilter">
+                <option value="ALL">All</option>
+                <option>BA</option>
+                <option>SME</option>
+                <option>Risk</option>
+                <option>Compliance</option>
+                <option>InfoSec</option>
+                <option>IT</option>
+                <option>Admin</option>
+              </select>
+            </div>
+            <div class="field third">
+              <label>Status filter</label>
+              <select id="statusFilter">
+                <option value="ALL">All</option>
+                <option>Active</option>
+                <option>Disabled</option>
+                <option>Locked</option>
+              </select>
+            </div>
+
+            <div class="field full">
+              <label>Search</label>
+              <input id="searchBox" type="text" placeholder="Search email/name/department…"/>
+              <div class="help" style="margin-top:6px">Tip: Type “bank.com” or “NBFC” to filter quickly.</div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="two-col">
+            <button class="btn primary" id="bulkActivateBtn">Bulk Activate</button>
+            <button class="btn warn" id="bulkDisableBtn">Bulk Disable</button>
+            <button class="btn danger" id="bulkDeleteBtn">Bulk Delete</button>
+            <button class="btn export" id="bulkExportBtn">Export Selected</button>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="note">
+<b>Segregation of Duties (SoD):</b>
+• BA cannot be Final Approver for BRDs they created.
+• Admin can configure system but should not approve BRD content.
+• InfoSec + IT approvals required before go-live.
+• Compliance required when: NBFC tenant OR regulatory-impact flag in BRD.
+          </div>
+
+          <div class="hr"></div>
+
+          <button class="btn ai" id="openSodBtn">✨ Configure SoD Rules</button>
+          <div class="help" style="margin-top:8px">SoD rules are stored in localStorage for this prototype.</div>
+        </div>
+      </aside>
+
+      <!-- RIGHT: Main -->
+      <main class="grid">
+        <!-- KPIs -->
+        <section class="card span-12">
+          <div class="card-head">
+            <div>
+              <h3>Users</h3>
+              <p>Directory listing with role/tenant mapping and audit-ready changes.</p>
+            </div>
+            <div class="right">
+              <span class="chip blue" id="kTotal">Total: 0</span>
+              <span class="chip green" id="kActive">Active: 0</span>
+              <span class="chip amber" id="kDisabled">Disabled: 0</span>
+              <span class="chip red" id="kLocked">Locked: 0</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width:44px"><input type="checkbox" id="selectAll"/></th>
+                  <th>Email</th>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Tenant</th>
+                  <th>Dept</th>
+                  <th>Status</th>
+                  <th>Last login</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="userTable"></tbody>
+            </table>
+            <div class="help" style="margin-top:10px" id="tableHelp">—</div>
+          </div>
+        </section>
+
+        <!-- AUDIT -->
+        <section class="card span-12">
+          <div class="card-head">
+            <div>
+              <h3>Admin Audit Log</h3>
+              <p>Append-only events for user administration actions (stored locally in this prototype).</p>
+            </div>
+            <div class="right">
+              <div style="min-width:280px">
+                <label>Search audit</label>
+                <input id="auditSearch" type="text" placeholder="Filter action/email…"/>
+              </div>
+              <button class="btn small export" id="exportAuditBtn">Export Audit</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr><th>At</th><th>Admin</th><th>Action</th><th>User</th><th>Meta</th></tr>
+              </thead>
+              <tbody id="auditTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT USER MODAL -->
+  <div class="backdrop" id="userModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modalTitle">Add User</h3>
+        <button class="btn small neutral" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="inputs">
+          <div class="field">
+            <label>Email *</label>
+            <input id="mEmail" type="email" placeholder="name@bank.com"/>
+          </div>
+          <div class="field">
+            <label>Name *</label>
+            <input id="mName" type="text" placeholder="Full name"/>
+          </div>
+
+          <div class="field third">
+            <label>Role *</label>
+            <select id="mRole">
+              <option>BA</option>
+              <option>SME</option>
+              <option>Risk</option>
+              <option>Compliance</option>
+              <option>InfoSec</option>
+              <option>IT</option>
+              <option>Admin</option>
+            </select>
+          </div>
+          <div class="field third">
+            <label>Tenant *</label>
+            <select id="mTenant"></select>
+          </div>
+          <div class="field third">
+            <label>Status</label>
+            <select id="mStatus">
+              <option>Active</option>
+              <option>Disabled</option>
+              <option>Locked</option>
+            </select>
+          </div>
+
+          <div class="field third">
+            <label>Department</label>
+            <input id="mDept" type="text" placeholder="IT / Risk / Compliance"/>
+          </div>
+          <div class="field third">
+            <label>Title</label>
+            <input id="mTitle" type="text" placeholder="Manager / Analyst"/>
+          </div>
+          <div class="field third">
+            <label>Location</label>
+            <input id="mLocation" type="text" placeholder="Bangalore / Mumbai"/>
+          </div>
+
+          <div class="field full">
+            <label>Permissions (fine-grained)</label>
+            <textarea id="mPerms" placeholder="Comma separated (e.g., brd:create, brd:edit, brd:approve:it, admin:config)"></textarea>
+            <div class="help" style="margin-top:6px">In a real system this would map to RBAC policies. Here it is stored for export/audit.</div>
+          </div>
+
+          <div class="field full">
+            <label>Notes</label>
+            <textarea id="mNotes" placeholder="Admin notes, access approvals, etc."></textarea>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="two-col">
+          <button class="btn success" id="saveUserBtn">Save</button>
+          <button class="btn danger" id="deleteUserBtn" style="display:none">Delete User</button>
+        </div>
+
+        <div class="note" style="margin-top:12px">
+          <b>SoD quick checks:</b>
+          • If Role=Admin, avoid assigning brd:approve:* permissions.
+          • If Role=BA, avoid final publish approval permissions.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SoD MODAL -->
+  <div class="backdrop" id="sodModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>SoD Rules (Segregation of Duties)</h3>
+        <button class="btn small neutral" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="note">These rules are informational in this prototype but are exported with configuration.</div>
+        <div class="hr"></div>
+        <div class="sod-list" id="sodList"></div>
+        <div class="hr"></div>
+        <button class="btn add" id="addSodBtn">+ Add SoD Rule</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    /***********************
+     * User Management Page (offline functional)
+     * - localStorage persistence
+     * - CRUD users
+     * - bulk actions
+     * - SoD rules management
+     * - audit log + export
+     ***********************/
+    const ADMIN_EMAIL = "admin@org.com";
+    const Keys = {
+      CFG: "brd_admin_user_mgmt_v1",         // users/tenants/sod/audit
+      RUNTIME: "brd_ba_workspace_v1"         // optional: shared runtime store
+    };
+
+    const Roles = ["BA","SME","Risk","Compliance","InfoSec","IT","Admin"];
+    const Statuses = ["Active","Disabled","Locked"];
+
+    const nowISO = () => new Date().toISOString();
+    const fmt = (ts) => { try{ return new Date(ts).toLocaleString(undefined,{year:"numeric",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"}); }catch{ return ts; } };
+    const safeParse = (s, fb) => { try{return JSON.parse(s);}catch{return fb;} };
+    const escapeHtml = (s) => String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    const uid = (p="ID") => `${p}-${Math.random().toString(16).slice(2,10)}-${Math.random().toString(16).slice(2,10)}`.toUpperCase();
+
+    const $ = (q) => document.querySelector(q);
+    const $$ = (q) => Array.from(document.querySelectorAll(q));
+
+    function toast(title, msg){
+      const wrap = $("#toastWrap");
+      const el = document.createElement("div");
+      el.className="toast";
+      el.innerHTML = `<div class="ticon">✓</div><div><h4>${escapeHtml(title)}</h4><p>${escapeHtml(msg)}</p></div>`;
+      wrap.appendChild(el);
+      setTimeout(()=>{ el.style.opacity="0"; el.style.transform="translateY(6px)"; }, 2400);
+      setTimeout(()=> el.remove(), 3000);
+    }
+
+    function baseCfg(){
+      return {
+        tenantSelected: "BANK-DEFAULT",
+        tenants: [
+          {id:"BANK-DEFAULT", name:"Bank Default Tenant", industry:"Bank", status:"Active"},
+          {id:"NBFC-DEFAULT", name:"NBFC Default Tenant", industry:"NBFC", status:"Active"}
+        ],
+        users: [],
+        sodRules: [
+          {id:"SOD-01", title:"BA cannot be final approver for own BRD", desc:"If BRD.createdBy == user, block Final Approval."},
+          {id:"SOD-02", title:"Admin should not approve BRD content", desc:"Admin can configure system, but approvals should be by business/control roles."},
+          {id:"SOD-03", title:"InfoSec + IT approvals required before go-live", desc:"Both must approve before Publish/Go-live."},
+          {id:"SOD-04", title:"Compliance approval conditional", desc:"Required for NBFC tenant or regulatory-impact BRDs."}
+        ],
+        audit: []
+      };
+    }
+
+    function readCfg(){
+      const raw = localStorage.getItem(Keys.CFG);
+      return raw ? safeParse(raw, baseCfg()) : baseCfg();
+    }
+    function writeCfg(cfg){ localStorage.setItem(Keys.CFG, JSON.stringify(cfg)); }
+
+    function addAudit(cfg, action, userEmail, meta={}){
+      cfg.audit.unshift({at: nowISO(), by: ADMIN_EMAIL, action, user: userEmail, meta});
+    }
+
+    function openModal(id){ $(id).style.display="flex"; }
+    function closeModal(id){ $(id).style.display="none"; }
+    function wireModalClose(id){
+      const back = $(id);
+      back.addEventListener("click",(e)=>{ if(e.target===back) closeModal(id); });
+      back.querySelectorAll("[data-close]").forEach(b=> b.addEventListener("click", ()=> closeModal(id)));
+    }
+
+    let cfg;
+    let editingEmail = null;
+
+    // Helpers
+    function ensureSeedUsers(){
+      if(cfg.users.length) return;
+      cfg.users = [
+        {email:"asha.ba@bank.com", name:"Asha", role:"BA", tenant:"BANK-DEFAULT", dept:"Business", title:"Business Analyst", location:"Bangalore", status:"Active", perms:"brd:create, brd:edit, brd:submit", notes:"", lastLogin: nowISO()},
+        {email:"rohit.sme@bank.com", name:"Rohit", role:"SME", tenant:"BANK-DEFAULT", dept:"Business", title:"SME", location:"Mumbai", status:"Active", perms:"brd:review, brd:comment, brd:approve:sme", notes:"", lastLogin: nowISO()},
+        {email:"nadia.risk@bank.com", name:"Nadia", role:"Risk", tenant:"BANK-DEFAULT", dept:"Risk", title:"Risk Manager", location:"Mumbai", status:"Active", perms:"brd:risk:review, brd:approve:risk", notes:"", lastLogin: nowISO()},
+        {email:"meera.infosec@bank.com", name:"Meera", role:"InfoSec", tenant:"BANK-DEFAULT", dept:"InfoSec", title:"InfoSec Lead", location:"Bangalore", status:"Active", perms:"brd:security:review, brd:approve:infosec", notes:"", lastLogin: nowISO()},
+        {email:"ishaan.it@bank.com", name:"Ishaan", role:"IT", tenant:"BANK-DEFAULT", dept:"IT", title:"IT Lead", location:"Bangalore", status:"Active", perms:"brd:it:review, brd:approve:it", notes:"", lastLogin: nowISO()},
+        {email:"sanjay.compliance@nbfc.com", name:"Sanjay", role:"Compliance", tenant:"NBFC-DEFAULT", dept:"Compliance", title:"Compliance Officer", location:"Delhi", status:"Active", perms:"brd:compliance:review, brd:approve:compliance", notes:"", lastLogin: nowISO()},
+        {email:"admin@org.com", name:"Admin", role:"Admin", tenant:"BANK-DEFAULT", dept:"Platform", title:"System Admin", location:"Bangalore", status:"Active", perms:"admin:config, users:manage", notes:"Avoid approval permissions", lastLogin: nowISO()}
+      ];
+      addAudit(cfg, "SEED_USERS", "ALL", {count: cfg.users.length});
+      writeCfg(cfg);
+      toast("Seeded","BFSI demo users added.");
+    }
+
+    function tenantOptionsHTML(selected){
+      return cfg.tenants.map(t => `<option value="${escapeHtml(t.id)}" ${t.id===selected?"selected":""}>${escapeHtml(t.id)} • ${escapeHtml(t.name)}</option>`).join("");
+    }
+
+    function updateTenantPill(){
+      $("#tenantPill").textContent = cfg.tenantSelected || "—";
+    }
+
+    function fillFilters(){
+      // tenantFilter
+      const tf = $("#tenantFilter");
+      tf.innerHTML = `<option value="ALL">All tenants</option>` + cfg.tenants.map(t=>`<option value="${escapeHtml(t.id)}">${escapeHtml(t.id)} • ${escapeHtml(t.name)}</option>`).join("");
+      tf.value = "ALL";
+
+      // modal tenant list
+      $("#mTenant").innerHTML = tenantOptionsHTML(cfg.tenantSelected);
+
+      updateTenantPill();
+    }
+
+    function counts(users){
+      const total = users.length;
+      const active = users.filter(u=>u.status==="Active").length;
+      const disabled = users.filter(u=>u.status==="Disabled").length;
+      const locked = users.filter(u=>u.status==="Locked").length;
+      $("#kTotal").textContent = `Total: ${total}`;
+      $("#kActive").textContent = `Active: ${active}`;
+      $("#kDisabled").textContent = `Disabled: ${disabled}`;
+      $("#kLocked").textContent = `Locked: ${locked}`;
+    }
+
+    function roleChip(role){
+      const map = {
+        "BA":"blue",
+        "SME":"green",
+        "Risk":"amber",
+        "Compliance":"amber",
+        "InfoSec":"red",
+        "IT":"blue",
+        "Admin":"red"
+      };
+      const c = map[role] || "blue";
+      return `<span class="chip ${c}">${escapeHtml(role)}</span>`;
+    }
+    function statusChip(status){
+      if(status==="Active") return `<span class="chip green">Active</span>`;
+      if(status==="Disabled") return `<span class="chip amber">Disabled</span>`;
+      return `<span class="chip red">Locked</span>`;
+    }
+
+    function filteredUsers(){
+      const q = ($("#searchBox").value||"").trim().toLowerCase();
+      const tenant = $("#tenantFilter").value;
+      const role = $("#roleFilter").value;
+      const status = $("#statusFilter").value;
+
+      let users = [...cfg.users];
+
+      if(tenant !== "ALL") users = users.filter(u => u.tenant === tenant);
+      if(role !== "ALL") users = users.filter(u => u.role === role);
+      if(status !== "ALL") users = users.filter(u => u.status === status);
+
+      if(q){
+        users = users.filter(u =>
+          (u.email||"").toLowerCase().includes(q) ||
+          (u.name||"").toLowerCase().includes(q) ||
+          (u.dept||"").toLowerCase().includes(q) ||
+          (u.title||"").toLowerCase().includes(q) ||
+          (u.location||"").toLowerCase().includes(q) ||
+          (u.tenant||"").toLowerCase().includes(q)
+        );
+      }
+
+      return users;
+    }
+
+    function renderTable(){
+      const users = filteredUsers();
+      counts(users);
+
+      const visible = users.length;
+      const total = cfg.users.length;
+      $("#tableHelp").textContent = `Showing ${visible} of ${total} users. Select rows for bulk actions.`;
+
+      const tbody = $("#userTable");
+      tbody.innerHTML = users.map(u=>`
+        <tr>
+          <td><input type="checkbox" class="rowSel" data-email="${escapeHtml(u.email)}"/></td>
+          <td class="mono"><a href="#" data-edit="${escapeHtml(u.email)}"><b>${escapeHtml(u.email)}</b></a></td>
+          <td>${escapeHtml(u.name||"—")}</td>
+          <td>${roleChip(u.role)}</td>
+          <td class="mono">${escapeHtml(u.tenant||"—")}</td>
+          <td>${escapeHtml(u.dept||"—")}</td>
+          <td>${statusChip(u.status||"Active")}</td>
+          <td>${u.lastLogin ? fmt(u.lastLogin) : "—"}</td>
+          <td style="white-space:nowrap">
+            <button class="btn small primary" data-edit="${escapeHtml(u.email)}">Edit</button>
+            <button class="btn small warn" data-toggle="${escapeHtml(u.email)}">Toggle</button>
+            <button class="btn small danger" data-del="${escapeHtml(u.email)}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="9" class="mono">No users match filters.</td></tr>`;
+
+      // wire row actions
+      tbody.querySelectorAll("[data-edit]").forEach(el=>{
+        el.addEventListener("click",(e)=>{ e.preventDefault(); openEdit(el.dataset.edit); });
+      });
+      tbody.querySelectorAll("[data-toggle]").forEach(el=>{
+        el.addEventListener("click",()=>toggleUser(el.dataset.toggle));
+      });
+      tbody.querySelectorAll("[data-del]").forEach(el=>{
+        el.addEventListener("click",()=>deleteUser(el.dataset.del));
+      });
+
+      // selectAll
+      $("#selectAll").checked = false;
+    }
+
+    function selectedEmails(){
+      return $$(".rowSel").filter(x=>x.checked).map(x=>x.dataset.email);
+    }
+
+    // Modal operations
+    function clearModal(){
+      editingEmail = null;
+      $("#modalTitle").textContent = "Add User";
+      $("#mEmail").disabled = false;
+      $("#mEmail").value = "";
+      $("#mName").value = "";
+      $("#mRole").value = "BA";
+      $("#mTenant").innerHTML = tenantOptionsHTML(cfg.tenantSelected);
+      $("#mTenant").value = cfg.tenantSelected;
+      $("#mStatus").value = "Active";
+      $("#mDept").value = "";
+      $("#mTitle").value = "";
+      $("#mLocation").value = "";
+      $("#mPerms").value = "";
+      $("#mNotes").value = "";
+      $("#deleteUserBtn").style.display = "none";
+    }
+
+    function openAdd(){
+      clearModal();
+      openModal("#userModal");
+      $("#mEmail").focus();
+    }
+
+    function openEdit(email){
+      const u = cfg.users.find(x=>x.email===email);
+      if(!u){ toast("Not found","User not found."); return; }
+      editingEmail = email;
+      $("#modalTitle").textContent = "Edit User";
+      $("#mEmail").value = u.email;
+      $("#mEmail").disabled = true;
+      $("#mName").value = u.name || "";
+      $("#mRole").value = u.role || "BA";
+      $("#mTenant").innerHTML = tenantOptionsHTML(u.tenant);
+      $("#mTenant").value = u.tenant || cfg.tenantSelected;
+      $("#mStatus").value = u.status || "Active";
+      $("#mDept").value = u.dept || "";
+      $("#mTitle").value = u.title || "";
+      $("#mLocation").value = u.location || "";
+      $("#mPerms").value = u.perms || "";
+      $("#mNotes").value = u.notes || "";
+      $("#deleteUserBtn").style.display = "inline-flex";
+      openModal("#userModal");
+    }
+
+    function validateUser(payload){
+      const errs = [];
+      if(!payload.email || !payload.email.includes("@")) errs.push("Valid email is required.");
+      if(!payload.name) errs.push("Name is required.");
+      if(!Roles.includes(payload.role)) errs.push("Role invalid.");
+      if(!payload.tenant) errs.push("Tenant is required.");
+
+      // basic SoD checks (warn only)
+      const warn = [];
+      const perms = (payload.perms||"").toLowerCase();
+      if(payload.role==="Admin" && perms.includes("approve")) warn.push("Admin has approval-like permissions.");
+      if(payload.role==="BA" && (perms.includes("final") || perms.includes("publish") || perms.includes("approve:final"))) warn.push("BA has final/publish approval-like permissions.");
+      return {errs, warn};
+    }
+
+    function saveUser(){
+      const payload = {
+        email: ($("#mEmail").value||"").trim().toLowerCase(),
+        name: ($("#mName").value||"").trim(),
+        role: $("#mRole").value,
+        tenant: $("#mTenant").value,
+        status: $("#mStatus").value,
+        dept: ($("#mDept").value||"").trim(),
+        title: ($("#mTitle").value||"").trim(),
+        location: ($("#mLocation").value||"").trim(),
+        perms: ($("#mPerms").value||"").trim(),
+        notes: ($("#mNotes").value||"").trim()
+      };
+      const {errs, warn} = validateUser(payload);
+      if(errs.length){
+        alert("Fix these:\\n- " + errs.join("\\n- "));
+        return;
+      }
+      if(warn.length){
+        const ok = confirm("Warnings:\\n- " + warn.join("\\n- ") + "\\n\\nSave anyway?");
+        if(!ok) return;
+      }
+
+      if(editingEmail){
+        const u = cfg.users.find(x=>x.email===editingEmail);
+        Object.assign(u, payload);
+        addAudit(cfg, "UPDATE_USER", payload.email, {role:payload.role, tenant:payload.tenant, status:payload.status});
+        toast("Updated","User updated.");
+      } else {
+        if(cfg.users.some(x=>x.email===payload.email)){
+          alert("User already exists.");
+          return;
+        }
+        payload.lastLogin = null;
+        cfg.users.unshift(payload);
+        addAudit(cfg, "ADD_USER", payload.email, {role:payload.role, tenant:payload.tenant, status:payload.status});
+        toast("Added","User created.");
+      }
+
+      writeCfg(cfg);
+      closeModal("#userModal");
+      renderAll();
+    }
+
+    function deleteUser(email){
+      if(!confirm(`Delete user ${email}?`)) return;
+      cfg.users = cfg.users.filter(u=>u.email!==email);
+      addAudit(cfg, "DELETE_USER", email, {});
+      writeCfg(cfg);
+      toast("Deleted","User deleted.");
+      renderAll();
+    }
+
+    function deleteFromModal(){
+      if(!editingEmail) return;
+      deleteUser(editingEmail);
+      closeModal("#userModal");
+    }
+
+    function toggleUser(email){
+      const u = cfg.users.find(x=>x.email===email);
+      if(!u) return;
+      u.status = (u.status==="Active") ? "Disabled" : "Active";
+      addAudit(cfg, "TOGGLE_STATUS", email, {status:u.status});
+      writeCfg(cfg);
+      toast("Updated",`Status set to ${u.status}.`);
+      renderAll();
+    }
+
+    // Bulk operations
+    function bulkSetStatus(status){
+      const emails = selectedEmails();
+      if(!emails.length){ toast("Select users","Pick at least one row."); return; }
+      if(!confirm(`Set ${emails.length} users to ${status}?`)) return;
+      emails.forEach(email=>{
+        const u = cfg.users.find(x=>x.email===email);
+        if(u) u.status = status;
+      });
+      addAudit(cfg, "BULK_SET_STATUS", "MULTI", {count:emails.length, status});
+      writeCfg(cfg);
+      toast("Bulk update",`${emails.length} users updated.`);
+      renderAll();
+    }
+
+    function bulkDelete(){
+      const emails = selectedEmails();
+      if(!emails.length){ toast("Select users","Pick at least one row."); return; }
+      if(!confirm(`Delete ${emails.length} users? This cannot be undone.`)) return;
+      cfg.users = cfg.users.filter(u => !emails.includes(u.email));
+      addAudit(cfg, "BULK_DELETE", "MULTI", {count:emails.length});
+      writeCfg(cfg);
+      toast("Bulk delete",`${emails.length} users deleted.`);
+      renderAll();
+    }
+
+    function dlJson(name, obj){
+      const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function exportUsers(users){
+      const payload = { exportedAt: nowISO(), admin: ADMIN_EMAIL, tenantSelected: cfg.tenantSelected, users };
+      dlJson("BRD_USERS_EXPORT.json", payload);
+      addAudit(cfg, "EXPORT_USERS", "MULTI", {count: users.length});
+      writeCfg(cfg);
+      toast("Exported",`${users.length} users exported.`);
+      renderAll();
+    }
+
+    // SoD modal
+    function renderSod(){
+      const wrap = $("#sodList");
+      wrap.innerHTML = cfg.sodRules.map(r=>`
+        <div class="sod-item">
+          <div>
+            <b>${escapeHtml(r.title)}</b>
+            <div class="desc">${escapeHtml(r.desc||"")}</div>
+            <div class="help" style="margin-top:6px"><span class="mono">${escapeHtml(r.id)}</span></div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end">
+            <button class="btn small danger" data-del="${escapeHtml(r.id)}">Delete</button>
+          </div>
+        </div>
+      `).join("") || `<div class="note">No SoD rules yet.</div>`;
+
+      wrap.querySelectorAll("[data-del]").forEach(b=>{
+        b.addEventListener("click",()=>{
+          if(!confirm("Delete SoD rule?")) return;
+          const id = b.dataset.del;
+          cfg.sodRules = cfg.sodRules.filter(x=>x.id!==id);
+          addAudit(cfg, "DELETE_SOD_RULE", id, {});
+          writeCfg(cfg);
+          toast("Deleted","SoD rule removed.");
+          renderAll();
+          renderSod();
+        });
+      });
+    }
+
+    function addSodRule(){
+      const title = prompt("SoD rule title?"); if(!title) return;
+      const desc = prompt("Rule description/logic?") || "";
+      const id = uid("SOD");
+      cfg.sodRules.unshift({id, title, desc});
+      addAudit(cfg, "ADD_SOD_RULE", id, {});
+      writeCfg(cfg);
+      toast("Added","SoD rule added.");
+      renderAll();
+      renderSod();
+    }
+
+    // Audit
+    function renderAudit(){
+      const q = ($("#auditSearch").value||"").trim().toLowerCase();
+      let items = [...(cfg.audit||[])];
+      if(q){
+        items = items.filter(a =>
+          (a.action||"").toLowerCase().includes(q) ||
+          (a.user||"").toLowerCase().includes(q) ||
+          JSON.stringify(a.meta||{}).toLowerCase().includes(q)
+        );
+      }
+      $("#auditTable").innerHTML = items.slice(0,350).map(a=>`
+        <tr>
+          <td>${fmt(a.at)}</td>
+          <td class="mono">${escapeHtml(a.by)}</td>
+          <td>${escapeHtml(a.action)}</td>
+          <td class="mono">${escapeHtml(a.user)}</td>
+          <td class="mono">${escapeHtml(JSON.stringify(a.meta||{}))}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="mono">No audit entries.</td></tr>`;
+    }
+
+    function renderAll(){
+      cfg = readCfg();
+      updateTenantPill();
+      fillFilters();
+      renderTable();
+      renderAudit();
+    }
+
+    function wire(){
+      cfg = readCfg();
+
+      // Buttons top
+      $("#addUserTopBtn").addEventListener("click", openAdd);
+      $("#exportBtn").addEventListener("click", ()=> exportUsers(cfg.users));
+      $("#aiSeedBtn").addEventListener("click", ()=>{ ensureSeedUsers(); renderAll(); });
+
+      $("#resetBtn").addEventListener("click", ()=>{
+        if(!confirm("Reset user management data (localStorage)?")) return;
+        localStorage.removeItem(Keys.CFG);
+        toast("Reset","Local data cleared. Reloading…");
+        setTimeout(()=>location.reload(), 350);
+      });
+
+      // Filters
+      ["tenantFilter","roleFilter","statusFilter","searchBox"].forEach(id=>{
+        $("#"+id).addEventListener(id==="searchBox" ? "input" : "change", renderTable);
+      });
+
+      // Select all
+      $("#selectAll").addEventListener("change", ()=>{
+        const v = $("#selectAll").checked;
+        $$(".rowSel").forEach(cb=> cb.checked = v);
+      });
+
+      // Bulk
+      $("#bulkActivateBtn").addEventListener("click", ()=> bulkSetStatus("Active"));
+      $("#bulkDisableBtn").addEventListener("click", ()=> bulkSetStatus("Disabled"));
+      $("#bulkDeleteBtn").addEventListener("click", bulkDelete);
+      $("#bulkExportBtn").addEventListener("click", ()=>{
+        const emails = selectedEmails();
+        if(!emails.length){ toast("Select users","Pick at least one row."); return; }
+        exportUsers(cfg.users.filter(u=>emails.includes(u.email)));
+      });
+
+      // Modal wiring
+      wireModalClose("#userModal");
+      wireModalClose("#sodModal");
+      $("#saveUserBtn").addEventListener("click", saveUser);
+      $("#deleteUserBtn").addEventListener("click", deleteFromModal);
+
+      // SoD
+      $("#openSodBtn").addEventListener("click", ()=>{
+        renderSod();
+        openModal("#sodModal");
+      });
+      $("#addSodBtn").addEventListener("click", addSodRule);
+
+      // Export audit
+      $("#exportAuditBtn").addEventListener("click", ()=>{
+        dlJson("BRD_USER_ADMIN_AUDIT.json", {exportedAt: nowISO(), audit: cfg.audit});
+        toast("Exported","Audit exported.");
+      });
+      $("#auditSearch").addEventListener("input", renderAudit);
+
+      // Seed minimal if empty config
+      if(!cfg.tenants?.length){
+        cfg = baseCfg();
+        writeCfg(cfg);
+      }
+
+      // Boot
+      renderAll();
+    }
+
+    wire();
+
+    // Page switcher
+    document.getElementById("pageSwitcher").addEventListener("change", (e)=>{
+      window.location.href = e.target.value;
+    });
+  </script>
+</body>
+</html>

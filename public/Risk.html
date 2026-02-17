@@ -1,0 +1,1471 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BRD Portal • Risk Workspace (nadia.risk@bank.com)</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --border2:#f1f5f9;
+      --shadow: 0 10px 28px rgba(2,6,23,.08);
+      --r:16px;
+
+      --primary:#2563eb;   /* accept/approve */
+      --success:#16a34a;
+      --warning:#f59e0b;   /* request mitigation */
+      --danger:#ef4444;    /* reject / high risk */
+      --indigo:#4f46e5;    /* export */
+      --slate:#334155;     /* neutral */
+      --pink:#db2777;      /* AI */
+      --teal:#0d9488;      /* add */
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:var(--font); background:var(--bg); color:var(--text)}
+    a{color:inherit; text-decoration:none}
+
+    .topbar{position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--border)}
+    .topbar-inner{max-width:1480px; margin:0 auto; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px}
+    .brand{display:flex; align-items:center; gap:10px}
+    .logo{width:36px; height:36px; border-radius:14px; background:linear-gradient(135deg,var(--danger),#fb7185); box-shadow:0 10px 20px rgba(239,68,68,.18)}
+    .brand h1{margin:0; font-size:15px; letter-spacing:-.2px}
+    .brand .sub{margin:4px 0 0; font-size:12px; color:var(--muted)}
+    .right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:13px}
+    .dot{width:8px; height:8px; border-radius:999px; background:#16a34a}
+    .kbd{font-family:var(--mono); font-size:12px; padding:2px 6px; border:1px solid var(--border); border-bottom-width:2px; border-radius:8px; color:var(--muted); background:#fff}
+
+    .wrap{max-width:1480px; margin:0 auto; padding:16px}
+    .layout{display:grid; grid-template-columns:350px 1fr; gap:14px; align-items:start}
+    .card{border:1px solid var(--border); border-radius:var(--r); background:#fff; box-shadow:var(--shadow); overflow:hidden}
+    .card.noshadow{box-shadow:none}
+    .card-head{padding:14px 14px 10px; border-bottom:1px solid var(--border2); display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+    .card-head h3{margin:0; font-size:14px}
+    .card-head p{margin:6px 0 0; font-size:12.5px; color:var(--muted); line-height:1.35}
+    .card-body{padding:14px}
+    .hr{height:1px; background:var(--border2); margin:12px 0}
+
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:9px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:850;
+      display:inline-flex; align-items:center; gap:8px;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      user-select:none;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow); border-color:#d1d5db}
+    .btn:active{transform:translateY(0)}
+    .btn.small{padding:7px 10px; border-radius:10px; font-size:13px}
+    .btn.primary{background:linear-gradient(135deg,var(--primary),#60a5fa); color:#fff; border-color:transparent}
+    .btn.success{background:linear-gradient(135deg,var(--success),#22c55e); color:#fff; border-color:transparent}
+    .btn.warn{background:linear-gradient(135deg,var(--warning),#fbbf24); color:#111827; border-color:transparent}
+    .btn.danger{background:linear-gradient(135deg,var(--danger),#fb7185); color:#fff; border-color:transparent}
+    .btn.export{background:linear-gradient(135deg,var(--indigo),#7c3aed); color:#fff; border-color:transparent}
+    .btn.ai{background:linear-gradient(135deg,var(--pink),#f472b6); color:#fff; border-color:transparent}
+    .btn.add{background:linear-gradient(135deg,var(--teal),#22c55e); color:#fff; border-color:transparent}
+    .btn.neutral{background:linear-gradient(135deg,var(--slate),#64748b); color:#fff; border-color:transparent}
+
+    .nav{display:flex; flex-direction:column; gap:6px}
+    .nav a{
+      padding:10px 10px; border-radius:12px;
+      border:1px solid transparent; color:var(--muted);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      font-weight:900;
+    }
+    .nav a.active{background:rgba(239,68,68,.08); border-color:rgba(239,68,68,.20); color:var(--text)}
+    .nav a:hover{background:#f8fafc; border-color:var(--border); color:var(--text)}
+    .badge{font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); background:#fff}
+    .mono{font-family:var(--mono)}
+
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .span-12{grid-column:span 12}
+    .span-8{grid-column:span 8}
+    .span-6{grid-column:span 6}
+    .span-4{grid-column:span 4}
+    .title{font-size:20px; margin:0; letter-spacing:-.3px}
+    .subtext{margin:6px 0 0; font-size:13px; color:var(--muted)}
+
+    label{font-size:12px; color:var(--muted); font-weight:900}
+    input[type="text"], input[type="number"], textarea, select{
+      width:100%;
+      border:1px solid var(--border);
+      padding:10px 12px;
+      border-radius:12px;
+      outline:none;
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+    }
+    textarea{min-height:110px; resize:vertical}
+    .inputs{display:grid; grid-template-columns:repeat(12,1fr); gap:10px}
+    .field{grid-column:span 6; display:flex; flex-direction:column; gap:6px}
+    .field.full{grid-column:span 12}
+    .field.third{grid-column:span 4}
+    .help{font-size:12.5px; color:var(--muted); line-height:1.35}
+    .note{border:1px dashed #d1d5db; background:#f8fafc; border-radius:12px; padding:10px; color:var(--muted); font-size:12.5px; line-height:1.35; white-space:pre-wrap}
+
+    .table{
+      width:100%;
+      border-collapse:collapse;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .table th,.table td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--border2);
+      text-align:left;
+      vertical-align:top;
+      font-size:13px;
+    }
+    .table th{background:#f8fafc; color:var(--muted); font-weight:900}
+    .table tr:last-child td{border-bottom:none}
+    .chip{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:12px; font-weight:900; color:var(--muted)}
+    .chip.red{border-color:rgba(239,68,68,.25); background:rgba(239,68,68,.06); color:#b91c1c}
+    .chip.amber{border-color:rgba(245,158,11,.25); background:rgba(245,158,11,.07); color:#92400e}
+    .chip.green{border-color:rgba(22,163,74,.25); background:rgba(22,163,74,.07); color:#166534}
+
+    .progress{width:100%; height:10px; border-radius:999px; border:1px solid var(--border); background:#f1f5f9; overflow:hidden}
+    .progress>span{display:block; height:100%; width:0%; background:linear-gradient(135deg,var(--danger),#fb7185)}
+
+    /* Modal */
+    .backdrop{
+      position:fixed; inset:0; z-index:60;
+      background: rgba(2,6,23,.45);
+      display:none;
+      align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .modal{
+      width:min(1160px, 100%);
+      max-height:92vh;
+      overflow:auto;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:0 25px 70px rgba(2,6,23,.25);
+    }
+    .modal-head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:center; justify-content:space-between; gap:10px
+    }
+    .modal-head h3{margin:0; font-size:14px}
+    .modal-body{padding:14px}
+
+    /* Toast */
+    .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:80; display:flex; flex-direction:column; gap:10px}
+    .toast{
+      width:min(460px, calc(100vw - 32px));
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      padding:10px;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .ticon{width:26px; height:26px; border-radius:10px; background:rgba(239,68,68,.10); display:flex; align-items:center; justify-content:center; flex:0 0 auto}
+    .toast h4{margin:0; font-size:13px}
+    .toast p{margin:4px 0 0; font-size:12.5px; color:var(--muted)}
+
+    /* Page Switcher */
+    .page-switcher{
+      padding:8px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      color:var(--text);
+      font-size:13px;
+      font-family:var(--font);
+      cursor:pointer;
+      font-weight:700;
+    }
+    .page-switcher:hover{border-color:#d1d5db; background:#f8fafc}
+
+    @media (max-width:1160px){
+      .layout{grid-template-columns:1fr}
+      .span-8,.span-6,.span-4{grid-column:span 12}
+      .field,.field.third{grid-column:span 12}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>Risk Workspace • BRD Automation</h1>
+          <div class="sub">Signed in as <span class="mono">nadia.risk@bank.com</span> • Role: Risk</div>
+        </div>
+      </div>
+      <select class="page-switcher" id="pageSwitcher">
+        <option value="Admin.html">Admin</option>
+        <option value="BA.html">BA Workspace</option>
+        <option value="Compliance.html">Compliance</option>
+        <option value="In Take 1.html">Intake Tracker</option>
+        <option value="Infosec.html">InfoSec</option>
+        <option value="IT.html">IT</option>
+        <option value="Risk.html" selected>Risk</option>
+        <option value="SME.html">SME</option>
+        <option value="User Management 1.html">User Management</option>
+      </select>
+      <div class="right">
+        <div class="pill"><span class="dot"></span><span id="activeBrdPill">No BRD selected</span></div>
+        <div class="pill"><span class="mono">Risk Review</span> <span class="kbd">ON</span></div>
+        <button class="btn small neutral" id="resetBtn" title="Clears local data">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="layout">
+      <!-- LEFT -->
+      <aside class="card">
+        <div class="card-head">
+          <div>
+            <h3>Risk Navigation</h3>
+            <p>Validate risk controls: credit/ops/fraud/AML, model governance, overrides, limits, and auditability.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="nav" id="nav">
+            <a href="#" data-view="inbox" class="active">Risk Inbox <span class="badge" id="inboxBadge">0</span></a>
+            <a href="#" data-view="riskmap">Risk Map <span class="badge">RCSA</span></a>
+            <a href="#" data-view="controls">Controls & Mitigation <span class="badge">Design</span></a>
+            <a href="#" data-view="fraud">Fraud / AML <span class="badge">Scenarios</span></a>
+            <a href="#" data-view="limits">Limits & Overrides <span class="badge">Policy</span></a>
+            <a href="#" data-view="model">Model / Scorecards <span class="badge">Governance</span></a>
+            <a href="#" data-view="nfr">NFR Security & Ops <span class="badge">Resilience</span></a>
+            <a href="#" data-view="decision">Risk Decision <span class="badge">Sign-off</span></a>
+            <a href="#" data-view="audit">Audit Trail <span class="badge">Evidence</span></a>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="note">
+            <b>Risk review checklist:</b><br/>
+            • Risk events identified (credit, ops, fraud, AML, compliance impact)?<br/>
+            • Controls mapped (prevent/detect/correct) with owner + evidence?<br/>
+            • Overrides have limits, maker-checker, and audit logging?<br/>
+            • Model governance: validation, drift monitoring, explainability?<br/>
+            • Resilience: retries, fallbacks, manual modes, reconciliation?
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
+            <button class="btn ai" id="aiRiskBtn">✨ AI Risk Scan</button>
+            <button class="btn export" id="exportRiskBtn">Export Risk Pack</button>
+          </div>
+          <div class="help" style="margin-top:8px">Risk pack includes risk register + controls + decision log (JSON).</div>
+        </div>
+      </aside>
+
+      <!-- RIGHT -->
+      <main class="grid">
+        <!-- INBOX -->
+        <section class="card span-12" id="view-inbox">
+          <div class="card-head">
+            <div>
+              <h3>Risk Inbox</h3>
+              <p>BRDs awaiting risk assessment. Focus on high-impact changes and control design.</p>
+            </div>
+            <div class="right">
+              <div style="min-width:260px">
+                <label>Search</label>
+                <input id="searchInbox" type="text" placeholder="Search by ID/title/domain…" />
+              </div>
+              <div style="min-width:220px">
+                <label>Filter</label>
+                <select id="filterInbox">
+                  <option value="ALL">All</option>
+                  <option value="In Review">In Review</option>
+                  <option value="Changes Requested">Changes Requested</option>
+                  <option value="Approved">Approved</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>BRD</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                  <th>Risk Score</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="inboxTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- RISK MAP -->
+        <section class="card span-12" id="view-riskmap" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Risk Map (Risk Register)</h3>
+              <p>Identify risk events and assess impact/likelihood; assign risk owner; define evidence.</p>
+            </div>
+            <div class="right">
+              <span class="badge">Status: <b id="statusText">—</b></span>
+              <button class="btn add" id="addRiskBtn">+ Add Risk</button>
+              <button class="btn ai" id="aiAddRisksBtn">✨ AI: Suggest Risks</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="grid">
+              <div class="span-12">
+                <h2 class="title" id="brdTitle">No BRD selected</h2>
+                <div class="subtext" id="brdMeta">—</div>
+              </div>
+              <div class="span-12">
+                <div class="progress"><span id="riskBar"></span></div>
+                <div class="help" id="riskScoreText" style="margin-top:8px">—</div>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Risk ID</th>
+                  <th>Risk Event</th>
+                  <th>Category</th>
+                  <th>Impact</th>
+                  <th>Likelihood</th>
+                  <th>Inherent</th>
+                  <th>Residual</th>
+                  <th>Owner</th>
+                  <th>Evidence</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="riskTable"></tbody>
+            </table>
+
+            <div class="note" style="margin-top:12px">
+              Tip: Include credit policy risk (threshold wrong), operational risk (manual overrides), model risk (bias/drift),
+              fraud risk (doc tampering), AML risk (false negatives), data risk (PII leakage), and reconciliation risk.
+            </div>
+          </div>
+        </section>
+
+        <!-- CONTROLS -->
+        <section class="card span-12" id="view-controls" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Controls & Mitigation Plan</h3>
+              <p>Map controls to risks (prevent/detect/correct). Define control frequency, evidence, and control owner.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addControlBtn">+ Add Control</button>
+              <button class="btn ai" id="aiControlsBtn">✨ AI: Suggest Controls</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Control ID</th>
+                  <th>Mapped Risk</th>
+                  <th>Type</th>
+                  <th>Control</th>
+                  <th>Frequency</th>
+                  <th>Owner</th>
+                  <th>Evidence / Report</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="controlTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- FRAUD / AML -->
+        <section class="card span-12" id="view-fraud" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Fraud / AML Scenarios</h3>
+              <p>Define scenarios, red-flags, escalation flow, false-positive handling, and audit evidence.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addScenarioBtn">+ Add Scenario</button>
+              <button class="btn ai" id="aiFraudBtn">✨ AI: Suggest Scenarios</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Scenario ID</th>
+                  <th>Scenario</th>
+                  <th>Triggers / Red Flags</th>
+                  <th>Action</th>
+                  <th>Escalation</th>
+                  <th>Evidence</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="scenarioTable"></tbody>
+            </table>
+
+            <div class="note" style="margin-top:12px">
+              Examples: forged docs, synthetic identity, mule accounts, PAN/Aadhaar mismatch, multiple applications, unusual cashflows,
+              repeated address/phone re-use, high-risk geographies, sanctions hits, adverse media, rapid top-ups and withdrawals.
+            </div>
+          </div>
+        </section>
+
+        <!-- LIMITS / OVERRIDES -->
+        <section class="card span-12" id="view-limits" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Limits & Overrides</h3>
+              <p>Define override policy, caps, approval chain, logging, and periodic review requirements.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addLimitBtn">+ Add Limit</button>
+              <button class="btn ai" id="aiLimitsBtn">✨ AI: Suggest Limits</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Policy ID</th>
+                  <th>Limit / Cap</th>
+                  <th>Who can override</th>
+                  <th>Approval chain</th>
+                  <th>Evidence / Logging</th>
+                  <th>Periodic Review</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="limitTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- MODEL GOVERNANCE -->
+        <section class="card span-12" id="view-model" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Model / Scorecards Governance</h3>
+              <p>Model inventory, validation cadence, drift monitoring, explainability, and adverse action messaging (where applicable).</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addModelItemBtn">+ Add Item</button>
+              <button class="btn ai" id="aiModelBtn">✨ AI: Suggest Governance</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Item ID</th>
+                  <th>Model / Score</th>
+                  <th>Purpose</th>
+                  <th>Inputs</th>
+                  <th>Monitoring</th>
+                  <th>Validation</th>
+                  <th>Explainability</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="modelTable"></tbody>
+            </table>
+
+            <div class="note" style="margin-top:12px">
+              Include: score cutoffs, champion/challenger, bias checks, drift thresholds, retraining triggers, and
+              model change approval workflow.
+            </div>
+          </div>
+        </section>
+
+        <!-- NFR -->
+        <section class="card span-12" id="view-nfr" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>NFR Security & Ops (Risk View)</h3>
+              <p>Resilience, segregation of duties, auditability, access controls, and reconciliation.</p>
+            </div>
+            <div class="right">
+              <button class="btn ai" id="aiNfrBtn">✨ AI: Find NFR gaps</button>
+              <button class="btn add" id="addNfrGapBtn">+ Add NFR Gap</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="grid">
+              <section class="card span-6 noshadow">
+                <div class="card-head"><div><h3>From BRD (read)</h3><p>BA captured NFR summary.</p></div></div>
+                <div class="card-body">
+                  <div class="note" id="brdNfrBox">—</div>
+                </div>
+              </section>
+              <section class="card span-6 noshadow">
+                <div class="card-head"><div><h3>Risk-required NFR additions</h3><p>Capture gaps and mitigations.</p></div></div>
+                <div class="card-body">
+                  <table class="table">
+                    <thead><tr><th>Gap ID</th><th>Gap</th><th>Mitigation</th><th>Actions</th></tr></thead>
+                    <tbody id="nfrGapTable"></tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <!-- DECISION -->
+        <section class="card span-12" id="view-decision" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Risk Decision (Sign-off)</h3>
+              <p>Approve / Request Mitigation / Reject. Adds a risk sign-off entry to approvals log.</p>
+            </div>
+            <div class="right">
+              <button class="btn success" id="approveBtn">Approve (Risk)</button>
+              <button class="btn warn" id="mitigateBtn">Request Mitigation</button>
+              <button class="btn danger" id="rejectBtn">Reject</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="inputs">
+              <div class="field full">
+                <label>Decision Notes (visible to BA + reviewers)</label>
+                <textarea id="decisionNotes" placeholder="Summarize key risks, required controls, and conditions for approval."></textarea>
+              </div>
+              <div class="field third">
+                <label>Risk rating</label>
+                <select id="riskRating">
+                  <option value="Low">Low</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </select>
+              </div>
+              <div class="field third">
+                <label>Mitigation due (days)</label>
+                <input id="mitDue" type="number" min="1" value="7"/>
+              </div>
+              <div class="field third">
+                <label>Evidence ref</label>
+                <input id="evidenceRef" type="text" placeholder="Policy doc / JIRA / control report ref"/>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <h3 style="margin:0; font-size:14px">Approvals log (read)</h3>
+            <table class="table" style="margin-top:10px">
+              <thead><tr><th>Stage</th><th>Decision</th><th>By</th><th>At</th><th>Notes</th></tr></thead>
+              <tbody id="apTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- AUDIT -->
+        <section class="card span-12" id="view-audit" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Audit Trail (read)</h3>
+              <p>Append-only events (prototype stored in localStorage).</p>
+            </div>
+            <div class="right">
+              <div style="min-width:280px">
+                <label>Search</label>
+                <input id="auditSearch" type="text" placeholder="Filter by action/user/id…"/>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead><tr><th>At</th><th>User</th><th>Action</th><th>Entity</th><th>ID</th><th>Meta</th></tr></thead>
+              <tbody id="auditTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- AI MODAL -->
+  <div class="backdrop" id="aiModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>AI Risk Scan (offline mock)</h3>
+        <button class="btn small neutral" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid" style="grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px">
+          <button class="btn ai" id="aiRisksBtn">Generate Risk Events</button>
+          <button class="btn ai" id="aiControlsBtn">Suggest Controls</button>
+          <button class="btn ai" id="aiFraudBtn">Fraud/AML Scenarios</button>
+        </div>
+        <div class="grid">
+          <section class="card span-6 noshadow">
+            <div class="card-head"><div><h3>Risk events</h3><p>Populate register.</p></div></div>
+            <div class="card-body" id="aiRisksOut"><div class="note">Run “Generate Risk Events”.</div></div>
+          </section>
+          <section class="card span-6 noshadow">
+            <div class="card-head"><div><h3>Controls</h3><p>Mapped mitigations.</p></div></div>
+            <div class="card-body" id="aiControlsOut"><div class="note">Run “Suggest Controls”.</div></div>
+          </section>
+          <section class="card span-12 noshadow">
+            <div class="card-head"><div><h3>Fraud / AML scenarios</h3><p>Scenarios & triggers.</p></div></div>
+            <div class="card-body" id="aiFraudOut"><div class="note">Run “Fraud/AML Scenarios”.</div></div>
+          </section>
+        </div>
+        <div class="hr"></div>
+        <div class="note"><b>Production:</b> Replace mock AI with model calls. Store outputs as evidence IDs + approvals artifacts.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    /***********************
+     * Risk Workspace (offline functional)
+     * - reads BRDs from shared localStorage store
+     * - maintains a risk pack per BRD: risks, controls, fraud scenarios, limits, model gov, nfr gaps
+     * - can record risk decision in approvals log
+     ***********************/
+    const RISK_EMAIL = "nadia.risk@bank.com";
+    const Store = { KEY:"brd_ba_workspace_v1", SELECTED:"brd_ba_selected_v1" };
+    const Status = { DRAFT:"Draft", IN_REVIEW:"In Review", CHANGES:"Changes Requested", APPROVED:"Approved", PUBLISHED:"Published", ARCHIVED:"Archived" };
+
+    const nowISO = () => new Date().toISOString();
+    const fmt = (ts) => { try{ return new Date(ts).toLocaleString(undefined,{year:"numeric",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"}); }catch{ return ts; } };
+    const safeParse = (s, fb) => { try{return JSON.parse(s);}catch{return fb;} };
+    const escapeHtml = (s) => String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    const uid = (p="ID") => `${p}-${Math.random().toString(16).slice(2,10)}-${Math.random().toString(16).slice(2,10)}`.toUpperCase();
+
+    const $ = (q) => document.querySelector(q);
+    const $$ = (q) => Array.from(document.querySelectorAll(q));
+
+    function toast(title, msg){
+      const wrap = $("#toastWrap");
+      const el = document.createElement("div");
+      el.className="toast";
+      el.innerHTML = `<div class="ticon">✓</div><div><h4>${escapeHtml(title)}</h4><p>${escapeHtml(msg)}</p></div>`;
+      wrap.appendChild(el);
+      setTimeout(()=>{ el.style.opacity="0"; el.style.transform="translateY(6px)"; }, 2400);
+      setTimeout(()=> el.remove(), 3000);
+    }
+
+    function readDB(){
+      const raw = localStorage.getItem(Store.KEY);
+      return raw ? safeParse(raw, { brds:[], audit:[] }) : { brds:[], audit:[] };
+    }
+    function writeDB(db){ localStorage.setItem(Store.KEY, JSON.stringify(db)); }
+    function addAudit(action, entityId, meta={}){
+      const db = readDB();
+      db.audit.unshift({ at: nowISO(), by: RISK_EMAIL, action, entity:"BRD", id: entityId, meta });
+      writeDB(db);
+    }
+
+    let db, selectedId;
+
+    function getSelected(){
+      if(!selectedId) selectedId = localStorage.getItem(Store.SELECTED) || db.brds[0]?.id;
+      return db.brds.find(b=>b.id===selectedId) || db.brds[0];
+    }
+    function setSelected(id){
+      selectedId = id;
+      localStorage.setItem(Store.SELECTED, id);
+      renderAll();
+    }
+
+    function setActiveNav(view){
+      $$("#nav a").forEach(a=> a.classList.toggle("active", a.dataset.view===view));
+      const map = {
+        inbox:"#view-inbox",
+        riskmap:"#view-riskmap",
+        controls:"#view-controls",
+        fraud:"#view-fraud",
+        limits:"#view-limits",
+        model:"#view-model",
+        nfr:"#view-nfr",
+        decision:"#view-decision",
+        audit:"#view-audit"
+      };
+      Object.values(map).forEach(sel => $(sel).style.display="none");
+      $(map[view]).style.display="block";
+    }
+
+    function openModal(id){ $(id).style.display="flex"; }
+    function closeModal(id){ $(id).style.display="none"; }
+    function wireModalClose(id){
+      const back = $(id);
+      back.addEventListener("click",(e)=>{ if(e.target===back) closeModal(id); });
+      back.querySelectorAll("[data-close]").forEach(b=> b.addEventListener("click", ()=> closeModal(id)));
+    }
+
+    function ensureRiskPack(brd){
+      brd.reviews = brd.reviews || {};
+      brd.reviews.risk = brd.reviews.risk || {
+        updatedAt:null,
+        risks:[],        // {id,event,category,impact,likelihood,inherent,residual,owner,evidence}
+        controls:[],     // {id,riskId,type,control,frequency,owner,evidence}
+        scenarios:[],    // {id,scenario,triggers,action,escalation,evidence}
+        limits:[],       // {id,limit,who,chain,logging,review}
+        models:[],       // {id,model,purpose,inputs,monitoring,validation,explainability}
+        nfrGaps:[]       // {id,gap,mitigation}
+      };
+      return brd.reviews.risk;
+    }
+
+    function riskScore(pack){
+      // simple scoring: average of inherent scores + + for missing controls; scaled to 0..100
+      const toNum = (x)=>({Low:1,Medium:2,High:3,Critical:4}[x]||2);
+      const rs = pack.risks.length ? pack.risks.reduce((a,r)=>a + (toNum(r.impact)*toNum(r.likelihood)),0)/pack.risks.length : 2;
+      const missingControls = pack.risks.filter(r => !pack.controls.some(c=>c.riskId===r.id)).length;
+      let score = Math.round((rs/16)*100 + Math.min(30, missingControls*6));
+      return Math.max(0, Math.min(100, score));
+    }
+    function scoreChip(score){
+      if(score>=75) return {cls:"red", label:"High"};
+      if(score>=45) return {cls:"amber", label:"Medium"};
+      return {cls:"green", label:"Low"};
+    }
+
+    function fromBrdNfr(brd){
+      const n = brd.nfr || {};
+      const lines = [];
+      if(n.securityControls?.length) lines.push("Security Controls:\n- " + n.securityControls.join("\n- "));
+      if(n.availability) lines.push("\nAvailability/SLA:\n" + n.availability);
+      if(n.audit) lines.push("\nAudit:\n" + n.audit);
+      if(n.performance) lines.push("\nPerformance:\n" + n.performance);
+      if(n.privacy) lines.push("\nPrivacy:\n" + n.privacy);
+      return lines.join("\n") || "—";
+    }
+
+    function appendApproval(brd, decision, notes){
+      brd.approvals = brd.approvals || [];
+      brd.approvals.unshift({
+        stage: "Risk Review",
+        decision,
+        by: RISK_EMAIL,
+        at: nowISO(),
+        notes
+      });
+      addAudit("RISK_DECISION", brd.id, {decision});
+    }
+
+    function doDecision(kind){
+      const brd = getSelected(); if(!brd) return;
+      const rating = $("#riskRating").value;
+      const due = parseInt($("#mitDue").value,10) || 7;
+      const ev = ($("#evidenceRef").value||"").trim();
+      const notes = ($("#decisionNotes").value||"").trim();
+
+      const pack = ensureRiskPack(brd);
+      pack.updatedAt = nowISO();
+
+      const packNotes = [
+        `Risk rating: ${rating}`,
+        kind==="Mitigate" ? `Mitigation due: ${due} days` : null,
+        ev ? `Evidence: ${ev}` : null,
+        notes ? `Notes: ${notes}` : "Notes: —"
+      ].filter(Boolean).join(" | ");
+
+      if(kind==="Approve"){
+        appendApproval(brd, "Approved", packNotes);
+        brd.status = Status.IN_REVIEW; // other sign-offs remain
+        toast("Approved","Risk approval recorded (BRD remains In Review for remaining sign-offs).");
+      }else if(kind==="Mitigate"){
+        appendApproval(brd, "Mitigation Requested", packNotes);
+        brd.status = Status.CHANGES;
+        toast("Mitigation","Mitigation requested. BRD moved to Changes Requested.");
+      }else if(kind==="Reject"){
+        appendApproval(brd, "Rejected", packNotes);
+        brd.status = Status.CHANGES;
+        toast("Rejected","Risk rejection recorded. BRD moved to Changes Requested.");
+      }
+
+      brd.updatedAt = nowISO();
+      writeDB(db);
+      renderAll();
+      setActiveNav("decision");
+    }
+
+    // CRUD helpers
+    function addRisk(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+
+      const event = prompt("Risk event (e.g., Incorrect threshold causes high NPA) ?");
+      if(!event) return;
+      const category = prompt("Category (Credit/Ops/Fraud/AML/Model/Data/Compliance) ?") || "Credit";
+      const impact = prompt("Impact (Low/Medium/High/Critical)?") || "High";
+      const likelihood = prompt("Likelihood (Low/Medium/High/Critical)?") || "Medium";
+      const owner = prompt("Risk owner (role/email)?") || "Risk";
+      const evidence = prompt("Evidence/ref (policy/control report)?") || "";
+
+      const inherent = `${impact} x ${likelihood}`;
+      const residual = prompt("Residual rating (Low/Medium/High/Critical) after controls?") || "Medium";
+
+      pack.risks.unshift({id:uid("RISK"), event, category, impact, likelihood, inherent, residual, owner, evidence, at:nowISO()});
+      pack.updatedAt = nowISO();
+      brd.updatedAt = nowISO();
+      writeDB(db);
+      addAudit("RISK_ADD_RISK", brd.id, {event});
+      toast("Added","Risk added to register.");
+      renderAll();
+    }
+    function delRisk(rid){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      pack.risks = pack.risks.filter(r=>r.id!==rid);
+      pack.controls = pack.controls.filter(c=>c.riskId!==rid); // remove mapped controls
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("RISK_DEL_RISK", brd.id, {rid});
+      toast("Deleted","Risk removed.");
+      renderAll();
+    }
+
+    function addControl(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      if(!pack.risks.length){ toast("Add risk first","Create a risk event to map a control."); return; }
+
+      const riskId = prompt("Mapped Risk ID (copy from register) ?\n\nAvailable:\n" + pack.risks.map(r=>`${r.id}: ${r.event}`).slice(0,8).join("\n"));
+      if(!riskId) return;
+
+      const type = prompt("Type (Prevent/Detect/Correct)?") || "Prevent";
+      const control = prompt("Control description?") || "";
+      if(!control.trim()) return;
+      const frequency = prompt("Frequency (Realtime/Daily/Weekly/Monthly/Per txn)?") || "Realtime";
+      const owner = prompt("Control owner (role/team)?") || "Ops";
+      const evidence = prompt("Evidence/report/log reference?") || "Audit logs";
+
+      pack.controls.unshift({id:uid("CTRL"), riskId:riskId.trim(), type, control, frequency, owner, evidence, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("RISK_ADD_CONTROL", brd.id, {riskId});
+      toast("Added","Control added.");
+      renderAll();
+    }
+    function delControl(cid){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      pack.controls = pack.controls.filter(c=>c.id!==cid);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("RISK_DEL_CONTROL", brd.id, {cid});
+      toast("Deleted","Control removed.");
+      renderAll();
+    }
+
+    function addScenario(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      const scenario = prompt("Scenario (e.g., forged bank statement) ?"); if(!scenario) return;
+      const triggers = prompt("Triggers / red flags?") || "";
+      const action = prompt("Action (hold/step-up verification/block)?") || "Hold & verify";
+      const escalation = prompt("Escalation (team + SLA)?") || "Fraud team within 4h";
+      const evidence = prompt("Evidence (case ID / logs)?") || "Case management ticket";
+      pack.scenarios.unshift({id:uid("SCN"), scenario, triggers, action, escalation, evidence, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("RISK_ADD_SCENARIO", brd.id, {});
+      toast("Added","Scenario added.");
+      renderAll();
+    }
+    function delScenario(sid){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      pack.scenarios = pack.scenarios.filter(s=>s.id!==sid);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("RISK_DEL_SCENARIO", brd.id, {sid});
+      toast("Deleted","Scenario removed.");
+      renderAll();
+    }
+
+    function addLimit(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      const limit = prompt("Limit/cap (e.g., Override FOIR up to +5% only) ?"); if(!limit) return;
+      const who = prompt("Who can override?") || "Branch Manager";
+      const chain = prompt("Approval chain (maker-checker + escalation)?") || "Maker: RM, Checker: BM, Escalate: RH";
+      const logging = prompt("Evidence/logging requirements?") || "Override reason code + audit log + monthly report";
+      const review = prompt("Periodic review cadence?") || "Monthly risk review";
+      pack.limits.unshift({id:uid("LIM"), limit, who, chain, logging, review, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("RISK_ADD_LIMIT", brd.id, {});
+      toast("Added","Override/limit policy added.");
+      renderAll();
+    }
+    function delLimit(lid){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      pack.limits = pack.limits.filter(l=>l.id!==lid);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("RISK_DEL_LIMIT", brd.id, {lid});
+      toast("Deleted","Limit removed.");
+      renderAll();
+    }
+
+    function addModelItem(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      const model = prompt("Model/Score name (e.g., Bureau Score, Internal PD Model) ?"); if(!model) return;
+      const purpose = prompt("Purpose? (eligibility/pricing/limit/fraud)") || "Eligibility";
+      const inputs = prompt("Key inputs?") || "Bureau + income + bank statement";
+      const monitoring = prompt("Monitoring? (drift, performance, bias)") || "Monthly drift + quarterly performance";
+      const validation = prompt("Validation cadence?") || "Quarterly validation";
+      const explainability = prompt("Explainability requirement?") || "Reason codes + top factors";
+      pack.models.unshift({id:uid("MDL"), model, purpose, inputs, monitoring, validation, explainability, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("RISK_ADD_MODEL_GOV", brd.id, {});
+      toast("Added","Model governance item added.");
+      renderAll();
+    }
+    function delModelItem(mid){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      pack.models = pack.models.filter(m=>m.id!==mid);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("RISK_DEL_MODEL_GOV", brd.id, {mid});
+      toast("Deleted","Model governance item removed.");
+      renderAll();
+    }
+
+    function addNfrGap(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      const gap = prompt("NFR gap? (e.g., Need immutable audit logs for overrides)"); if(!gap) return;
+      const mitigation = prompt("Mitigation?") || "Add audit logging + retention + access controls";
+      pack.nfrGaps.unshift({id:uid("NFR"), gap, mitigation, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("RISK_ADD_NFR_GAP", brd.id, {});
+      toast("Added","NFR gap added.");
+      renderAll();
+    }
+    function delNfrGap(nid){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      pack.nfrGaps = pack.nfrGaps.filter(n=>n.id!==nid);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("RISK_DEL_NFR_GAP", brd.id, {nid});
+      toast("Deleted","NFR gap removed.");
+      renderAll();
+    }
+
+    // AI mock generation
+    function aiSuggestRisks(brd){
+      const domain = (brd.master?.domain||"").toLowerCase();
+      const list = [
+        {event:"Incorrect policy thresholds lead to elevated delinquency/NPA", category:"Credit", impact:"High", likelihood:"Medium", owner:"Credit Policy", residual:"Medium", evidence:"Credit Policy"},
+        {event:"Override misuse causes policy breach and audit findings", category:"Ops", impact:"High", likelihood:"High", owner:"Operations", residual:"Medium", evidence:"Override report"},
+        {event:"Document fraud not detected due to weak validation", category:"Fraud", impact:"Critical", likelihood:"Medium", owner:"Fraud Risk", residual:"High", evidence:"Fraud playbook"},
+        {event:"AML false negatives due to missing screening and adverse media checks", category:"AML", impact:"Critical", likelihood:"Low", owner:"AML Team", residual:"Medium", evidence:"AML SOP"},
+        {event:"Model drift reduces decision quality without monitoring", category:"Model", impact:"High", likelihood:"Medium", owner:"Model Risk", residual:"Medium", evidence:"Model monitoring"}
+      ];
+      if(domain.includes("cards") || domain.includes("payments")){
+        list.unshift({event:"Rapid transaction fraud due to insufficient velocity controls", category:"Fraud", impact:"Critical", likelihood:"High", owner:"Fraud Risk", residual:"High", evidence:"Velocity rules"});
+      }
+      return list;
+    }
+    function aiSuggestControls(brd){
+      return [
+        {type:"Prevent", control:"Maker-checker for all overrides with reason codes + cap validation", frequency:"Realtime", owner:"Ops", evidence:"Override audit log + monthly report"},
+        {type:"Detect", control:"Daily reconciliation between BRD system decisions and CBS/LMS outcomes", frequency:"Daily", owner:"IT/Ops", evidence:"Recon report"},
+        {type:"Prevent", control:"Step-up verification on high-risk segments (geo/device/bureau thin-file)", frequency:"Realtime", owner:"Fraud", evidence:"Case logs"},
+        {type:"Detect", control:"Model drift monitoring with alert thresholds and escalation", frequency:"Monthly", owner:"Model Risk", evidence:"Monitoring dashboard"},
+        {type:"Correct", control:"Incident response playbook + rollback procedure for policy/config changes", frequency:"As needed", owner:"Risk/IT", evidence:"IR ticket"}
+      ];
+    }
+    function aiSuggestFraud(brd){
+      return [
+        {scenario:"Forged income proof / payslips", triggers:"Template mismatch, abnormal fonts, employer not verifiable", action:"Hold + verify employer", escalation:"Fraud team within 8h", evidence:"Case ticket"},
+        {scenario:"Synthetic identity", triggers:"Thin file + repeated contact reuse + device reuse", action:"Step-up KYC + address verification", escalation:"Risk ops within 24h", evidence:"KYC logs"},
+        {scenario:"Mule account / abnormal cashflows", triggers:"High bounce rate, high cash deposits, circular transfers", action:"Enhanced due diligence", escalation:"AML within 24h", evidence:"AML case"},
+        {scenario:"Multiple applications same PAN/phone", triggers:"Velocity on PAN/phone/device", action:"Block/queue for review", escalation:"Fraud within 4h", evidence:"Velocity report"}
+      ];
+    }
+
+    function aiRiskScan(){
+      const brd = getSelected(); if(!brd){ toast("Select BRD","Open a BRD first."); return; }
+      openModal("#aiModal");
+
+      $("#aiRisksBtn").onclick = ()=>{
+        const pack = ensureRiskPack(brd);
+        const suggested = aiSuggestRisks(brd);
+        const html = `<div class="note"><ul>${suggested.map(r=>`<li><b>${escapeHtml(r.category)}:</b> ${escapeHtml(r.event)} (${escapeHtml(r.impact)}/${escapeHtml(r.likelihood)})</li>`).join("")}</ul></div>`;
+        $("#aiRisksOut").innerHTML = html;
+        // auto-add them
+        suggested.forEach(r=>{
+          pack.risks.unshift({id:uid("RISK"), event:r.event, category:r.category, impact:r.impact, likelihood:r.likelihood, inherent:`${r.impact} x ${r.likelihood}`, residual:r.residual, owner:r.owner, evidence:r.evidence, at:nowISO()});
+        });
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_RISK_ADD_RISKS", brd.id, {count:suggested.length});
+        toast("AI","Risks generated & added.");
+        renderAll();
+      };
+
+      $("#aiControlsBtn").onclick = ()=>{
+        const pack = ensureRiskPack(brd);
+        if(!pack.risks.length){ toast("Add risks first","Generate risks before controls."); return; }
+        const sug = aiSuggestControls(brd);
+        // map first controls to first risks in round-robin
+        sug.forEach((c, i)=>{
+          const rid = pack.risks[i % pack.risks.length].id;
+          pack.controls.unshift({id:uid("CTRL"), riskId:rid, type:c.type, control:c.control, frequency:c.frequency, owner:c.owner, evidence:c.evidence, at:nowISO()});
+        });
+        $("#aiControlsOut").innerHTML = `<div class="note"><ul>${sug.map(c=>`<li><b>${escapeHtml(c.type)}:</b> ${escapeHtml(c.control)} (${escapeHtml(c.frequency)})</li>`).join("")}</ul></div>`;
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_RISK_ADD_CONTROLS", brd.id, {count:sug.length});
+        toast("AI","Controls suggested & added.");
+        renderAll();
+      };
+
+      $("#aiFraudBtn").onclick = ()=>{
+        const pack = ensureRiskPack(brd);
+        const sug = aiSuggestFraud(brd);
+        sug.forEach(s=>{
+          pack.scenarios.unshift({id:uid("SCN"), scenario:s.scenario, triggers:s.triggers, action:s.action, escalation:s.escalation, evidence:s.evidence, at:nowISO()});
+        });
+        $("#aiFraudOut").innerHTML = `<div class="note"><ul>${sug.map(s=>`<li><b>${escapeHtml(s.scenario)}:</b> ${escapeHtml(s.triggers)}</li>`).join("")}</ul></div>`;
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_RISK_ADD_FRAUD", brd.id, {count:sug.length});
+        toast("AI","Fraud/AML scenarios added.");
+        renderAll();
+      };
+    }
+
+    // Rendering
+    function renderInbox(){
+      const q = ($("#searchInbox").value||"").trim().toLowerCase();
+      const f = $("#filterInbox").value || "ALL";
+      let items = db.brds || [];
+      items = items.filter(b => b.status !== Status.ARCHIVED);
+
+      if(f!=="ALL") items = items.filter(b => b.status === f);
+
+      if(q){
+        items = items.filter(b =>
+          (b.id||"").toLowerCase().includes(q) ||
+          (b.master?.title||"").toLowerCase().includes(q) ||
+          (b.master?.domain||"").toLowerCase().includes(q) ||
+          (b.master?.product||"").toLowerCase().includes(q)
+        );
+      }
+
+      $("#inboxBadge").textContent = String(items.filter(b=>b.status===Status.IN_REVIEW).length);
+
+      $("#inboxTable").innerHTML = items.map(b=>{
+        const pack = ensureRiskPack(b);
+        const score = riskScore(pack);
+        const chip = scoreChip(score);
+        return `
+          <tr>
+            <td class="mono">${b.id}</td>
+            <td>
+              <div style="display:flex; flex-direction:column; gap:4px">
+                <a href="#" data-open="${b.id}" style="font-weight:900">${escapeHtml(b.master?.title||"(untitled)")}</a>
+                <div class="help">${escapeHtml(b.master?.domain||"—")} • ${escapeHtml(b.master?.product||"—")}</div>
+              </div>
+            </td>
+            <td>${escapeHtml(b.status)}</td>
+            <td>${fmt(b.updatedAt)}</td>
+            <td><span class="chip ${chip.cls}">${chip.label} • ${score}/100</span></td>
+            <td style="white-space:nowrap">
+              <button class="btn small primary" data-open="${b.id}">Open</button>
+              <button class="btn small" data-go="decision" data-open="${b.id}">Decide</button>
+            </td>
+          </tr>
+        `;
+      }).join("") || `<tr><td colspan="6" class="mono">No BRDs found.</td></tr>`;
+
+      $("#inboxTable").querySelectorAll("[data-open]").forEach(el=>{
+        el.addEventListener("click",(e)=>{
+          e.preventDefault();
+          const id = el.dataset.open;
+          const go = el.dataset.go || "riskmap";
+          setSelected(id);
+          setActiveNav(go);
+          renderAll();
+        });
+      });
+    }
+
+    function renderHeader(){
+      const brd = getSelected();
+      if(!brd){
+        $("#activeBrdPill").textContent = "No BRD selected";
+        $("#brdTitle").textContent = "No BRD selected";
+        $("#brdMeta").textContent = "Open a BRD from Inbox.";
+        $("#statusText").textContent = "—";
+        return;
+      }
+      const pack = ensureRiskPack(brd);
+      const score = riskScore(pack);
+      $("#activeBrdPill").textContent = `${brd.master?.title || brd.id} • ${brd.status}`;
+      $("#brdTitle").textContent = brd.master?.title || "(untitled)";
+      $("#brdMeta").innerHTML = `<span class="mono">${brd.id}</span> • Owner: <span class="mono">${brd.ownerEmail||"—"}</span> • Updated: ${fmt(brd.updatedAt)}`;
+      $("#statusText").textContent = brd.status;
+
+      $("#riskBar").style.width = score + "%";
+      const chip = scoreChip(score);
+      $("#riskScoreText").innerHTML = `Risk score: <b>${score}/100</b> • ${chip.label} • Risks: ${pack.risks.length} • Controls: ${pack.controls.length} • Updated: ${pack.updatedAt ? fmt(pack.updatedAt) : "—"}`;
+    }
+
+    function renderRiskTable(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      $("#riskTable").innerHTML = pack.risks.map(r=>`
+        <tr>
+          <td class="mono">${r.id}</td>
+          <td><b>${escapeHtml(r.event)}</b></td>
+          <td>${escapeHtml(r.category||"—")}</td>
+          <td>${escapeHtml(r.impact||"—")}</td>
+          <td>${escapeHtml(r.likelihood||"—")}</td>
+          <td>${escapeHtml(r.inherent||"—")}</td>
+          <td>${escapeHtml(r.residual||"—")}</td>
+          <td>${escapeHtml(r.owner||"—")}</td>
+          <td class="mono">${escapeHtml(r.evidence||"—")}</td>
+          <td style="white-space:nowrap">
+            <button class="btn small danger" data-del="${r.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="10" class="mono">No risks yet. Add risks or use AI Risk Scan.</td></tr>`;
+
+      $("#riskTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delRisk(b.dataset.del)));
+    }
+
+    function renderControls(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      const riskName = (rid)=> pack.risks.find(r=>r.id===rid)?.event || rid;
+
+      $("#controlTable").innerHTML = pack.controls.map(c=>`
+        <tr>
+          <td class="mono">${c.id}</td>
+          <td title="${escapeHtml(riskName(c.riskId))}">${escapeHtml(riskName(c.riskId)).slice(0,70)}${riskName(c.riskId).length>70?"…":""}</td>
+          <td>${escapeHtml(c.type||"—")}</td>
+          <td><b>${escapeHtml(c.control||"—")}</b></td>
+          <td>${escapeHtml(c.frequency||"—")}</td>
+          <td>${escapeHtml(c.owner||"—")}</td>
+          <td class="mono">${escapeHtml(c.evidence||"—")}</td>
+          <td style="white-space:nowrap">
+            <button class="btn small danger" data-del="${c.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="8" class="mono">No controls yet. Add controls or use AI suggestions.</td></tr>`;
+
+      $("#controlTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delControl(b.dataset.del)));
+    }
+
+    function renderScenarios(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      $("#scenarioTable").innerHTML = pack.scenarios.map(s=>`
+        <tr>
+          <td class="mono">${s.id}</td>
+          <td><b>${escapeHtml(s.scenario)}</b></td>
+          <td>${escapeHtml(s.triggers||"—")}</td>
+          <td>${escapeHtml(s.action||"—")}</td>
+          <td>${escapeHtml(s.escalation||"—")}</td>
+          <td class="mono">${escapeHtml(s.evidence||"—")}</td>
+          <td style="white-space:nowrap">
+            <button class="btn small danger" data-del="${s.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="7" class="mono">No scenarios yet.</td></tr>`;
+
+      $("#scenarioTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delScenario(b.dataset.del)));
+    }
+
+    function renderLimits(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      $("#limitTable").innerHTML = pack.limits.map(l=>`
+        <tr>
+          <td class="mono">${l.id}</td>
+          <td><b>${escapeHtml(l.limit)}</b></td>
+          <td>${escapeHtml(l.who||"—")}</td>
+          <td>${escapeHtml(l.chain||"—")}</td>
+          <td>${escapeHtml(l.logging||"—")}</td>
+          <td>${escapeHtml(l.review||"—")}</td>
+          <td style="white-space:nowrap">
+            <button class="btn small danger" data-del="${l.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="7" class="mono">No override limits yet.</td></tr>`;
+
+      $("#limitTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delLimit(b.dataset.del)));
+    }
+
+    function renderModels(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      $("#modelTable").innerHTML = pack.models.map(m=>`
+        <tr>
+          <td class="mono">${m.id}</td>
+          <td><b>${escapeHtml(m.model)}</b></td>
+          <td>${escapeHtml(m.purpose||"—")}</td>
+          <td>${escapeHtml(m.inputs||"—")}</td>
+          <td>${escapeHtml(m.monitoring||"—")}</td>
+          <td>${escapeHtml(m.validation||"—")}</td>
+          <td>${escapeHtml(m.explainability||"—")}</td>
+          <td style="white-space:nowrap">
+            <button class="btn small danger" data-del="${m.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="8" class="mono">No model governance items yet.</td></tr>`;
+
+      $("#modelTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delModelItem(b.dataset.del)));
+    }
+
+    function renderNfr(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      $("#brdNfrBox").textContent = fromBrdNfr(brd);
+
+      $("#nfrGapTable").innerHTML = pack.nfrGaps.map(n=>`
+        <tr>
+          <td class="mono">${n.id}</td>
+          <td><b>${escapeHtml(n.gap)}</b></td>
+          <td>${escapeHtml(n.mitigation||"—")}</td>
+          <td style="white-space:nowrap"><button class="btn small danger" data-del="${n.id}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="4" class="mono">No NFR gaps recorded.</td></tr>`;
+
+      $("#nfrGapTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delNfrGap(b.dataset.del)));
+    }
+
+    function renderApprovals(){
+      const brd = getSelected(); if(!brd) return;
+      $("#apTable").innerHTML = (brd.approvals||[]).map(a=>`
+        <tr>
+          <td>${escapeHtml(a.stage)}</td>
+          <td>${escapeHtml(a.decision)}</td>
+          <td class="mono">${escapeHtml(a.by)}</td>
+          <td>${fmt(a.at)}</td>
+          <td>${escapeHtml(a.notes||"—")}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="mono">No approvals yet.</td></tr>`;
+    }
+
+    function renderAudit(){
+      const q = ($("#auditSearch").value||"").trim().toLowerCase();
+      let items = [...(db.audit||[])];
+      if(q){
+        items = items.filter(a =>
+          (a.action||"").toLowerCase().includes(q) ||
+          (a.by||"").toLowerCase().includes(q) ||
+          (a.id||"").toLowerCase().includes(q) ||
+          JSON.stringify(a.meta||{}).toLowerCase().includes(q)
+        );
+      }
+      $("#auditTable").innerHTML = items.slice(0,450).map(a=>`
+        <tr>
+          <td>${fmt(a.at)}</td>
+          <td class="mono">${escapeHtml(a.by)}</td>
+          <td>${escapeHtml(a.action)}</td>
+          <td>${escapeHtml(a.entity)}</td>
+          <td class="mono">${escapeHtml(a.id)}</td>
+          <td class="mono">${escapeHtml(JSON.stringify(a.meta||{}))}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No audit entries.</td></tr>`;
+    }
+
+    function exportRiskPack(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensureRiskPack(brd);
+      const payload = {
+        brdId: brd.id,
+        brdTitle: brd.master?.title || "",
+        riskEmail: RISK_EMAIL,
+        exportedAt: nowISO(),
+        riskPack: pack,
+        approvals: brd.approvals || []
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${brd.id}_RISK_PACK.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      addAudit("EXPORT_RISK_PACK", brd.id, {});
+      toast("Exported","Risk pack downloaded.");
+    }
+
+    function renderAll(){
+      db = readDB();
+      renderInbox();
+      renderHeader();
+      renderRiskTable();
+      renderControls();
+      renderScenarios();
+      renderLimits();
+      renderModels();
+      renderNfr();
+      renderApprovals();
+      renderAudit();
+      // Update pill
+      const brd = getSelected();
+      if(brd) $("#activeBrdPill").textContent = `${brd.master?.title || brd.id} • ${brd.status}`;
+      else $("#activeBrdPill").textContent = "No BRD selected";
+    }
+
+    function wire(){
+      db = readDB();
+      selectedId = localStorage.getItem(Store.SELECTED) || db.brds[0]?.id;
+
+      $$("#nav a").forEach(a=>{
+        a.addEventListener("click",(e)=>{
+          e.preventDefault();
+          setActiveNav(a.dataset.view);
+          renderAll();
+        });
+      });
+
+      $("#searchInbox").addEventListener("input", renderInbox);
+      $("#filterInbox").addEventListener("change", renderInbox);
+
+      $("#addRiskBtn").addEventListener("click", addRisk);
+      $("#aiAddRisksBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensureRiskPack(brd);
+        const sug = aiSuggestRisks(brd);
+        sug.forEach(r=>{
+          pack.risks.unshift({id:uid("RISK"), event:r.event, category:r.category, impact:r.impact, likelihood:r.likelihood, inherent:`${r.impact} x ${r.likelihood}`, residual:r.residual, owner:r.owner, evidence:r.evidence, at:nowISO()});
+        });
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_RISK_ADD_RISKS", brd.id, {count:sug.length});
+        toast("AI","Risks suggested & added.");
+        renderAll();
+      });
+
+      $("#addControlBtn").addEventListener("click", addControl);
+      $("#aiControlsBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensureRiskPack(brd);
+        if(!pack.risks.length){ toast("Add risks first","Generate risks before controls."); return; }
+        const sug = aiSuggestControls(brd);
+        sug.forEach((c,i)=>{
+          const rid = pack.risks[i % pack.risks.length].id;
+          pack.controls.unshift({id:uid("CTRL"), riskId:rid, type:c.type, control:c.control, frequency:c.frequency, owner:c.owner, evidence:c.evidence, at:nowISO()});
+        });
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_RISK_ADD_CONTROLS", brd.id, {count:sug.length});
+        toast("AI","Controls suggested & added.");
+        renderAll();
+        setActiveNav("controls");
+      });
+
+      $("#addScenarioBtn").addEventListener("click", addScenario);
+      $("#aiFraudBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensureRiskPack(brd);
+        const sug = aiSuggestFraud(brd);
+        sug.forEach(s=>{
+          pack.scenarios.unshift({id:uid("SCN"), scenario:s.scenario, triggers:s.triggers, action:s.action, escalation:s.escalation, evidence:s.evidence, at:nowISO()});
+        });
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_RISK_ADD_FRAUD", brd.id, {count:sug.length});
+        toast("AI","Fraud/AML scenarios added.");
+        renderAll();
+        setActiveNav("fraud");
+      });
+
+      $("#addLimitBtn").addEventListener("click", addLimit);
+      $("#aiLimitsBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensureRiskPack(brd);
+        const sug = [
+          {limit:"FOIR override cap +5% only; >+5% requires Regional Head", who:"BM/RH", chain:"RM→BM→RH", logging:"Reason codes + immutable audit log", review:"Monthly override committee"},
+          {limit:"Max 2 manual eligibility overrides per RM per month", who:"BM", chain:"RM→BM", logging:"Override register + periodic audit", review:"Monthly"},
+          {limit:"High-risk geography applications require step-up KYC", who:"System enforced", chain:"N/A", logging:"Case ticket + KYC artifacts", review:"Quarterly"}
+        ];
+        sug.forEach(x=> pack.limits.unshift({id:uid("LIM"), ...x, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_RISK_ADD_LIMITS", brd.id, {count:sug.length});
+        toast("AI","Limits suggested & added.");
+        renderAll();
+        setActiveNav("limits");
+      });
+
+      $("#addModelItemBtn").addEventListener("click", addModelItem);
+      $("#aiModelBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensureRiskPack(brd);
+        const sug = [
+          {model:"Internal PD Score (Retail/SME)", purpose:"Eligibility + pricing", inputs:"Bureau + income + cashflow", monitoring:"Monthly drift + delinquency tracking", validation:"Quarterly validation + annual re-calibration", explainability:"Reason codes + top factors"},
+          {model:"Fraud risk score", purpose:"Step-up verification", inputs:"Device + velocity + geo + doc signals", monitoring:"Weekly alert precision/recall", validation:"Quarterly backtesting", explainability:"Triggered rules + signals"},
+          {model:"AML screening", purpose:"Sanctions/adverse media", inputs:"Name + DOB + address", monitoring:"False positives + SLA", validation:"Quarterly tuning", explainability:"Match confidence + source"}
+        ];
+        sug.forEach(x=> pack.models.unshift({id:uid("MDL"), ...x, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_RISK_ADD_MODEL_GOV", brd.id, {count:sug.length});
+        toast("AI","Model governance items added.");
+        renderAll();
+        setActiveNav("model");
+      });
+
+      $("#aiNfrBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensureRiskPack(brd);
+        const sug = [
+          {gap:"Immutable audit logging for overrides and policy changes", mitigation:"Append-only logs + retention 7 years + restricted access"},
+          {gap:"Manual fallback mode when bureau/CKYC down", mitigation:"Queue + retry + manual approval + reconciliation"},
+          {gap:"Periodic reconciliation of decisions vs disbursals", mitigation:"Daily recon report + exception workflow"}
+        ];
+        sug.forEach(x=> pack.nfrGaps.unshift({id:uid("NFR"), ...x, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_RISK_ADD_NFR_GAPS", brd.id, {count:sug.length});
+        toast("AI","NFR gaps added.");
+        renderAll();
+        setActiveNav("nfr");
+      });
+
+      $("#addNfrGapBtn").addEventListener("click", addNfrGap);
+
+      $("#approveBtn").addEventListener("click", ()=> doDecision("Approve"));
+      $("#mitigateBtn").addEventListener("click", ()=> doDecision("Mitigate"));
+      $("#rejectBtn").addEventListener("click", ()=> doDecision("Reject"));
+
+      $("#aiRiskBtn").addEventListener("click", aiRiskScan);
+      $("#exportRiskBtn").addEventListener("click", exportRiskPack);
+
+      $("#auditSearch").addEventListener("input", renderAudit);
+
+      $("#resetBtn").addEventListener("click", ()=>{
+        if(!confirm("Reset shared workspace data (localStorage)?")) return;
+        localStorage.removeItem(Store.KEY);
+        localStorage.removeItem(Store.SELECTED);
+        location.reload();
+      });
+
+      wireModalClose("#aiModal");
+
+      setActiveNav("inbox");
+      renderAll();
+    }
+
+    wire();
+
+    // Page switcher
+    document.getElementById("pageSwitcher").addEventListener("change", (e)=>{
+      window.location.href = e.target.value;
+    });
+  </script>
+</body>
+</html>

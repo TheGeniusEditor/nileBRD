@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BRD Portal • Admin Console (admin@org.com)</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --border2:#f1f5f9;
+      --shadow: 0 10px 28px rgba(2,6,23,.08);
+      --r:16px;
+
+      --primary:#2563eb;
+      --success:#16a34a;
+      --warning:#f59e0b;
+      --danger:#ef4444;
+      --indigo:#4f46e5;
+      --slate:#334155;
+      --pink:#db2777;
+      --teal:#0d9488;
+
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:var(--font); background:var(--bg); color:var(--text)}
+    a{color:inherit; text-decoration:none}
+
+    .topbar{position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--border)}
+    .topbar-inner{max-width:1520px; margin:0 auto; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px}
+    .brand{display:flex; align-items:center; gap:10px}
+    .logo{width:36px; height:36px; border-radius:14px; background:linear-gradient(135deg,#111827,#7c3aed); box-shadow:0 10px 20px rgba(124,58,237,.18)}
+    .brand h1{margin:0; font-size:15px; letter-spacing:-.2px}
+    .brand .sub{margin:4px 0 0; font-size:12px; color:var(--muted)}
+    .right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:13px}
+    .kbd{font-family:var(--mono); font-size:12px; padding:2px 6px; border:1px solid var(--border); border-bottom-width:2px; border-radius:8px; color:var(--muted); background:#fff}
+
+    .wrap{max-width:1520px; margin:0 auto; padding:16px}
+    .layout{display:grid; grid-template-columns:390px 1fr; gap:14px; align-items:start}
+    .card{border:1px solid var(--border); border-radius:var(--r); background:#fff; box-shadow:var(--shadow); overflow:hidden}
+    .card.noshadow{box-shadow:none}
+    .card-head{padding:14px 14px 10px; border-bottom:1px solid var(--border2); display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+    .card-head h3{margin:0; font-size:14px}
+    .card-head p{margin:6px 0 0; font-size:12.5px; color:var(--muted); line-height:1.35}
+    .card-body{padding:14px}
+    .hr{height:1px; background:var(--border2); margin:12px 0}
+
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:9px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:850;
+      display:inline-flex; align-items:center; gap:8px;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow); border-color:#d1d5db}
+    .btn:active{transform:translateY(0)}
+    .btn.small{padding:7px 10px; border-radius:10px; font-size:13px}
+    .btn.primary{background:linear-gradient(135deg,var(--primary),#60a5fa); color:#fff; border-color:transparent}
+    .btn.success{background:linear-gradient(135deg,var(--success),#22c55e); color:#fff; border-color:transparent}
+    .btn.warn{background:linear-gradient(135deg,var(--warning),#fbbf24); color:#111827; border-color:transparent}
+    .btn.danger{background:linear-gradient(135deg,var(--danger),#fb7185); color:#fff; border-color:transparent}
+    .btn.export{background:linear-gradient(135deg,var(--indigo),#7c3aed); color:#fff; border-color:transparent}
+    .btn.ai{background:linear-gradient(135deg,var(--pink),#f472b6); color:#fff; border-color:transparent}
+    .btn.add{background:linear-gradient(135deg,var(--teal),#22c55e); color:#fff; border-color:transparent}
+    .btn.neutral{background:linear-gradient(135deg,var(--slate),#64748b); color:#fff; border-color:transparent}
+
+    .nav{display:flex; flex-direction:column; gap:6px}
+    .nav a{
+      padding:10px 10px; border-radius:12px;
+      border:1px solid transparent; color:var(--muted);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      font-weight:900;
+    }
+    .nav a.active{background:rgba(124,58,237,.10); border-color:rgba(124,58,237,.22); color:var(--text)}
+    .nav a:hover{background:#f8fafc; border-color:var(--border); color:var(--text)}
+    .badge{font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); background:#fff}
+    .mono{font-family:var(--mono)}
+
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .span-12{grid-column:span 12}
+    .span-8{grid-column:span 8}
+    .span-6{grid-column:span 6}
+    .span-4{grid-column:span 4}
+    .title{font-size:20px; margin:0; letter-spacing:-.3px}
+    .subtext{margin:6px 0 0; font-size:13px; color:var(--muted)}
+
+    label{font-size:12px; color:var(--muted); font-weight:900}
+    input[type="text"], input[type="number"], textarea, select{
+      width:100%;
+      border:1px solid var(--border);
+      padding:10px 12px;
+      border-radius:12px;
+      outline:none;
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+    }
+    textarea{min-height:110px; resize:vertical}
+    .inputs{display:grid; grid-template-columns:repeat(12,1fr); gap:10px}
+    .field{grid-column:span 6; display:flex; flex-direction:column; gap:6px}
+    .field.full{grid-column:span 12}
+    .field.third{grid-column:span 4}
+    .help{font-size:12.5px; color:var(--muted); line-height:1.35}
+    .note{border:1px dashed #d1d5db; background:#f8fafc; border-radius:12px; padding:10px; color:var(--muted); font-size:12.5px; line-height:1.35; white-space:pre-wrap}
+
+    .table{
+      width:100%;
+      border-collapse:collapse;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .table th,.table td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--border2);
+      text-align:left;
+      vertical-align:top;
+      font-size:13px;
+    }
+    .table th{background:#f8fafc; color:var(--muted); font-weight:900}
+    .table tr:last-child td{border-bottom:none}
+
+    .chip{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:12px; font-weight:900; color:var(--muted)}
+    .chip.red{border-color:rgba(239,68,68,.25); background:rgba(239,68,68,.06); color:#b91c1c}
+    .chip.amber{border-color:rgba(245,158,11,.25); background:rgba(245,158,11,.07); color:#92400e}
+    .chip.green{border-color:rgba(22,163,74,.25); background:rgba(22,163,74,.07); color:#166534}
+
+    /* Modal */
+    .backdrop{
+      position:fixed; inset:0; z-index:60;
+      background: rgba(2,6,23,.45);
+      display:none;
+      align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .modal{
+      width:min(1260px, 100%);
+      max-height:92vh;
+      overflow:auto;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:0 25px 70px rgba(2,6,23,.25);
+    }
+    .modal-head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:center; justify-content:space-between; gap:10px
+    }
+    .modal-head h3{margin:0; font-size:14px}
+    .modal-body{padding:14px}
+
+    /* Toast */
+    .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:80; display:flex; flex-direction:column; gap:10px}
+    .toast{
+      width:min(460px, calc(100vw - 32px));
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      padding:10px;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .ticon{width:26px; height:26px; border-radius:10px; background:rgba(124,58,237,.12); display:flex; align-items:center; justify-content:center; flex:0 0 auto}
+    .toast h4{margin:0; font-size:13px}
+    .toast p{margin:4px 0 0; font-size:12.5px; color:var(--muted)}
+
+    /* Page Switcher */
+    .page-switcher{
+      padding:8px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      color:var(--text);
+      font-size:13px;
+      font-family:var(--font);
+      cursor:pointer;
+      font-weight:700;
+    }
+    .page-switcher:hover{border-color:#d1d5db; background:#f8fafc}
+
+    @media (max-width:1240px){
+      .layout{grid-template-columns:1fr}
+      .span-8,.span-6,.span-4{grid-column:span 12}
+      .field,.field.third{grid-column:span 12}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>Admin Console • BRD Automation</h1>
+          <div class="sub">Signed in as <span class="mono">admin@org.com</span> • Role: Admin</div>
+        </div>
+      </div>
+      <select class="page-switcher" id="pageSwitcher">
+        <option value="Admin.html" selected>Admin</option>
+        <option value="BA.html">BA Workspace</option>
+        <option value="Compliance.html">Compliance</option>
+        <option value="In Take 1.html">Intake Tracker</option>
+        <option value="Infosec.html">InfoSec</option>
+        <option value="IT.html">IT</option>
+        <option value="Risk.html">Risk</option>
+        <option value="SME.html">SME</option>
+        <option value="User Management 1.html">User Management</option>
+      </select>
+      <div class="right">
+        <div class="pill"><b>Tenant:</b> <span class="mono" id="tenantPill">BANK-DEFAULT</span></div>
+        <div class="pill"><b>Mode:</b> <span class="kbd">CONFIG</span></div>
+        <button class="btn small export" id="exportAllBtn">Export Config</button>
+        <button class="btn small neutral" id="resetBtn">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="layout">
+      <!-- LEFT -->
+      <aside class="card">
+        <div class="card-head">
+          <div>
+            <h3>Admin Navigation</h3>
+            <p>Manage users/roles, workflow stages, templates, AI policies, security guardrails, and audit exports.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="nav" id="nav">
+            <a href="#" data-view="overview" class="active">Overview <span class="badge">Health</span></a>
+            <a href="#" data-view="tenants">Tenants <span class="badge">Multi</span></a>
+            <a href="#" data-view="users">Users & Roles <span class="badge" id="userBadge">0</span></a>
+            <a href="#" data-view="workflow">Workflow Config <span class="badge">Stages</span></a>
+            <a href="#" data-view="templates">Templates <span class="badge">BRD</span></a>
+            <a href="#" data-view="ai">AI Policies <span class="badge">Guardrails</span></a>
+            <a href="#" data-view="security">Security Controls <span class="badge">RBAC</span></a>
+            <a href="#" data-view="integrations">Integrations <span class="badge">SMTP/Teams</span></a>
+            <a href="#" data-view="audit">Audit & Exports <span class="badge">Logs</span></a>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="note">
+            <b>Admin notes:</b><br/>
+            • This is a fully offline prototype using localStorage.<br/>
+            • It configures tenants, roles, and workflow stages used by all role pages.<br/>
+            • Export produces a JSON file you can import in a real system.
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
+            <button class="btn add" id="seedBtn">Seed Demo Config</button>
+            <button class="btn ai" id="aiPolicyBtn">✨ AI Policy Wizard</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RIGHT -->
+      <main class="grid">
+        <!-- OVERVIEW -->
+        <section class="card span-12" id="view-overview">
+          <div class="card-head">
+            <div>
+              <h3>System Overview</h3>
+              <p>High-level health and configuration summary.</p>
+            </div>
+            <div class="right">
+              <button class="btn small export" id="exportRuntimeBtn">Export Runtime</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="grid">
+              <div class="card span-4 noshadow">
+                <div class="card-head"><div><h3>Tenants</h3><p>Configured organizations.</p></div></div>
+                <div class="card-body"><div class="title" id="kTenants">0</div><div class="help">Multi-tenant ready config.</div></div>
+              </div>
+              <div class="card span-4 noshadow">
+                <div class="card-head"><div><h3>Users</h3><p>Accounts and roles.</p></div></div>
+                <div class="card-body"><div class="title" id="kUsers">0</div><div class="help">RBAC/SoD policies apply.</div></div>
+              </div>
+              <div class="card span-4 noshadow">
+                <div class="card-head"><div><h3>Workflow Stages</h3><p>Approval steps.</p></div></div>
+                <div class="card-body"><div class="title" id="kStages">0</div><div class="help">Maker-checker enforced.</div></div>
+              </div>
+
+              <div class="span-12">
+                <div class="note" id="overviewNote">No config yet. Click “Seed Demo Config”.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TENANTS -->
+        <section class="card span-12" id="view-tenants" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Tenants</h3>
+              <p>Create and manage organizations (Banks/NBFCs). Each tenant has its own workflow and policies.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addTenantBtn">+ Add Tenant</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr><th>Tenant ID</th><th>Name</th><th>Industry</th><th>Regulators</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="tenantTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- USERS -->
+        <section class="card span-12" id="view-users" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Users & Roles</h3>
+              <p>Manage users and role assignments. Enforce segregation of duties (SoD).</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addUserBtn">+ Add User</button>
+              <button class="btn ai" id="aiRoleMapBtn">✨ AI: Suggest Role Map</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr><th>Email</th><th>Name</th><th>Role</th><th>Tenant</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="userTable"></tbody>
+            </table>
+
+            <div class="hr"></div>
+            <div class="note">
+              <b>SoD defaults (editable):</b><br/>
+              • BA cannot approve final publish for own BRD.<br/>
+              • Admin can configure workflow but should not approve BRD content.<br/>
+              • InfoSec/Compliance approvals required for go-live.
+            </div>
+          </div>
+        </section>
+
+        <!-- WORKFLOW -->
+        <section class="card span-12" id="view-workflow" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Workflow Configuration</h3>
+              <p>Define stages, required approvers, SLA days, and gating rules.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addStageBtn">+ Add Stage</button>
+              <button class="btn ai" id="aiFlowBtn">✨ AI: Suggest Workflow</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr><th>Stage ID</th><th>Stage</th><th>Role Required</th><th>SLA Days</th><th>Gate</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="stageTable"></tbody>
+            </table>
+
+            <div class="hr"></div>
+            <div class="help">Gate examples: “InfoSec must approve before IT”, “Compliance required only for NBFC”, “Risk required if credit impacts”.</div>
+          </div>
+        </section>
+
+        <!-- TEMPLATES -->
+        <section class="card span-12" id="view-templates" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Templates</h3>
+              <p>Configure BRD templates (sections, mandatory fields) and export layouts.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addTemplateBtn">+ Add Template</button>
+              <button class="btn ai" id="aiTemplateBtn">✨ AI: Generate Template</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr><th>Template ID</th><th>Name</th><th>Industry</th><th>Version</th><th>Mandatory Sections</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="templateTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- AI -->
+        <section class="card span-12" id="view-ai" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>AI Policies</h3>
+              <p>Configure what AI can do: suggestions, redaction, prompt logging, and human-in-the-loop requirements.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addAiPolicyBtn">+ Add Policy</button>
+              <button class="btn ai" id="aiPolicyBtn2">✨ AI Wizard</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr><th>Policy ID</th><th>Capability</th><th>Allowed</th><th>Constraints</th><th>Audit</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="aiTable"></tbody>
+            </table>
+
+            <div class="hr"></div>
+            <div class="note">
+              Suggested defaults: redact PII in prompts, disable “auto-approve”, require approval for generated content, store prompts in audit trail.
+            </div>
+          </div>
+        </section>
+
+        <!-- SECURITY -->
+        <section class="card span-12" id="view-security" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Security Controls</h3>
+              <p>RBAC, permissions, and access review configuration.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addPermBtn">+ Add Permission</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr><th>Perm ID</th><th>Role</th><th>Permission</th><th>Description</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="permTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- INTEGRATIONS -->
+        <section class="card span-12" id="view-integrations" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Integrations</h3>
+              <p>Configure notifications and connectors (email, Teams, ticketing). Offline mock only.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addIntBtn">+ Add Integration</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr><th>Integration ID</th><th>Type</th><th>Config</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="intTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- AUDIT -->
+        <section class="card span-12" id="view-audit" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Audit & Exports</h3>
+              <p>Config changes and system events. Append-only log (localStorage).</p>
+            </div>
+            <div class="right">
+              <div style="min-width:280px">
+                <label>Search</label>
+                <input id="auditSearch" type="text" placeholder="Filter by action/user/id…"/>
+              </div>
+              <button class="btn small export" id="exportAuditBtn">Export Audit</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead><tr><th>At</th><th>User</th><th>Action</th><th>Entity</th><th>ID</th><th>Meta</th></tr></thead>
+              <tbody id="auditTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- AI WIZARD MODAL -->
+  <div class="backdrop" id="aiModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>AI Policy Wizard (offline mock)</h3>
+        <button class="btn small neutral" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="note">
+          This wizard will add a recommended set of AI guardrails:
+          • PII redaction required
+          • No auto-approval
+          • Prompt logging enabled
+          • Human review required for generated BRD sections
+        </div>
+        <div class="hr"></div>
+        <button class="btn ai" id="applyAiDefaults">Apply Recommended Policies</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    /***********************
+     * Admin Console (offline functional)
+     * - config store in localStorage
+     ***********************/
+    const A_EMAIL = "admin@org.com";
+    const Store = { CFG:"brd_admin_config_v1", RUNTIME:"brd_ba_workspace_v1" };
+
+    const nowISO = () => new Date().toISOString();
+    const fmt = (ts) => { try{ return new Date(ts).toLocaleString(undefined,{year:"numeric",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"}); }catch{ return ts; } };
+    const safeParse = (s, fb) => { try{return JSON.parse(s);}catch{return fb;} };
+    const escapeHtml = (s) => String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    const uid = (p="ID") => `${p}-${Math.random().toString(16).slice(2,10)}-${Math.random().toString(16).slice(2,10)}`.toUpperCase();
+
+    const $ = (q) => document.querySelector(q);
+    const $$ = (q) => Array.from(document.querySelectorAll(q));
+
+    function toast(title, msg){
+      const wrap = $("#toastWrap");
+      const el = document.createElement("div");
+      el.className="toast";
+      el.innerHTML = `<div class="ticon">✓</div><div><h4>${escapeHtml(title)}</h4><p>${escapeHtml(msg)}</p></div>`;
+      wrap.appendChild(el);
+      setTimeout(()=>{ el.style.opacity="0"; el.style.transform="translateY(6px)"; }, 2400);
+      setTimeout(()=> el.remove(), 3000);
+    }
+
+    function readCfg(){
+      const raw = localStorage.getItem(Store.CFG);
+      return raw ? safeParse(raw, baseCfg()) : baseCfg();
+    }
+    function writeCfg(cfg){ localStorage.setItem(Store.CFG, JSON.stringify(cfg)); }
+
+    function readRuntime(){
+      const raw = localStorage.getItem(Store.RUNTIME);
+      return raw ? safeParse(raw, { brds:[], audit:[] }) : { brds:[], audit:[] };
+    }
+    function writeRuntime(rt){ localStorage.setItem(Store.RUNTIME, JSON.stringify(rt)); }
+
+    function addAudit(action, entity, id, meta={}){
+      const cfg = readCfg();
+      cfg.audit.unshift({at:nowISO(), by:A_EMAIL, action, entity, id, meta});
+      writeCfg(cfg);
+    }
+
+    function baseCfg(){
+      return {
+        tenantSelected:"BANK-DEFAULT",
+        tenants:[],
+        users:[],
+        stages:[],
+        templates:[],
+        aiPolicies:[],
+        permissions:[],
+        integrations:[],
+        audit:[]
+      };
+    }
+
+    let cfg;
+
+    function setActiveNav(view){
+      $$("#nav a").forEach(a=> a.classList.toggle("active", a.dataset.view===view));
+      const map = {
+        overview:"#view-overview",
+        tenants:"#view-tenants",
+        users:"#view-users",
+        workflow:"#view-workflow",
+        templates:"#view-templates",
+        ai:"#view-ai",
+        security:"#view-security",
+        integrations:"#view-integrations",
+        audit:"#view-audit"
+      };
+      Object.values(map).forEach(sel => $(sel).style.display="none");
+      $(map[view]).style.display="block";
+    }
+
+    function openModal(id){ $(id).style.display="flex"; }
+    function closeModal(id){ $(id).style.display="none"; }
+    function wireModalClose(id){
+      const back = $(id);
+      back.addEventListener("click",(e)=>{ if(e.target===back) closeModal(id); });
+      back.querySelectorAll("[data-close]").forEach(b=> b.addEventListener("click", ()=> closeModal(id)));
+    }
+
+    // Seed demo config
+    function seed(){
+      cfg = baseCfg();
+      cfg.tenants = [
+        {id:"BANK-DEFAULT", name:"Bank Default Tenant", industry:"Bank", regulators:"RBI", status:"Active"},
+        {id:"NBFC-DEFAULT", name:"NBFC Default Tenant", industry:"NBFC", regulators:"RBI", status:"Active"}
+      ];
+      cfg.tenantSelected = "BANK-DEFAULT";
+      cfg.users = [
+        {email:"asha.ba@bank.com", name:"Asha", role:"BA", tenant:"BANK-DEFAULT", status:"Active"},
+        {email:"rohit.sme@bank.com", name:"Rohit", role:"SME", tenant:"BANK-DEFAULT", status:"Active"},
+        {email:"nadia.risk@bank.com", name:"Nadia", role:"Risk", tenant:"BANK-DEFAULT", status:"Active"},
+        {email:"meera.infosec@bank.com", name:"Meera", role:"InfoSec", tenant:"BANK-DEFAULT", status:"Active"},
+        {email:"ishaan.it@bank.com", name:"Ishaan", role:"IT", tenant:"BANK-DEFAULT", status:"Active"},
+        {email:"sanjay.compliance@nbfc.com", name:"Sanjay", role:"Compliance", tenant:"NBFC-DEFAULT", status:"Active"},
+        {email:"admin@org.com", name:"Admin", role:"Admin", tenant:"BANK-DEFAULT", status:"Active"}
+      ];
+      cfg.stages = [
+        {id:"STG-01", stage:"Business Review", role:"SME", sla:3, gate:"Always"},
+        {id:"STG-02", stage:"Risk Review", role:"Risk", sla:3, gate:"If credit/limits impacted"},
+        {id:"STG-03", stage:"InfoSec Review", role:"InfoSec", sla:5, gate:"Always"},
+        {id:"STG-04", stage:"IT Review", role:"IT", sla:5, gate:"Always"},
+        {id:"STG-05", stage:"Compliance Review", role:"Compliance", sla:5, gate:"NBFC only / regulatory change"},
+        {id:"STG-06", stage:"Final Approval", role:"Admin", sla:2, gate:"SoD enforced (maker-checker)"}
+      ];
+      cfg.templates = [
+        {id:"TPL-BASE", name:"BFSI BRD Master", industry:"Bank/NBFC", version:"1.0", mandatory:"Scope, As-Is/To-Be, Requirements, NFR, Risk, Compliance, Security, Approvals"}
+      ];
+      cfg.aiPolicies = [
+        {id:"AI-01", cap:"Suggest requirements", allowed:true, constraints:"No secrets; no PII; human review required", audit:"Prompt+output logged"},
+        {id:"AI-02", cap:"Redact PII in prompts", allowed:true, constraints:"Mandatory redaction", audit:"Redaction log stored"},
+        {id:"AI-03", cap:"Auto-approve", allowed:false, constraints:"Not allowed", audit:"N/A"}
+      ];
+      cfg.permissions = [
+        {id:"PERM-BA-1", role:"BA", perm:"Create/Edit BRD", desc:"Draft BRD content and submit"},
+        {id:"PERM-SME-1", role:"SME", perm:"Review/Comment", desc:"Business validation"},
+        {id:"PERM-RISK-1", role:"Risk", perm:"Risk assessment", desc:"Risk notes + sign-off"},
+        {id:"PERM-INF-1", role:"InfoSec", perm:"Security review", desc:"Threat model + controls + sign-off"},
+        {id:"PERM-IT-1", role:"IT", perm:"IT review", desc:"HLD/NFR/DR/Runbooks + sign-off"},
+        {id:"PERM-COMP-1", role:"Compliance", perm:"Regulatory review", desc:"Mapping + obligations + sign-off"},
+        {id:"PERM-ADM-1", role:"Admin", perm:"Configure system", desc:"Tenants, templates, workflow, policies"}
+      ];
+      cfg.integrations = [
+        {id:"INT-01", type:"Email (SMTP)", config:"host=smtp.example | from=brd@org.com", status:"Configured"},
+        {id:"INT-02", type:"Teams Webhook", config:"channel=BRD-Approvals", status:"Configured"}
+      ];
+      cfg.audit.unshift({at:nowISO(), by:A_EMAIL, action:"SEED_CONFIG", entity:"System", id:"CFG", meta:{tenants:2, users:7}});
+      writeCfg(cfg);
+      toast("Seeded","Demo admin config created.");
+      renderAll();
+    }
+
+    // CRUD (prompt-based)
+    function addTenant(){
+      const id = (prompt("Tenant ID (e.g., BANK-XYZ)")||"").trim(); if(!id) return;
+      const name = prompt("Tenant name?") || id;
+      const industry = prompt("Industry (Bank/NBFC)?") || "Bank";
+      const regulators = prompt("Regulators (RBI/SEBI/IRDA etc.) ?") || "RBI";
+      const status = prompt("Status (Active/Disabled)?") || "Active";
+      cfg.tenants.unshift({id, name, industry, regulators, status});
+      addAudit("ADD_TENANT","Tenant",id,{});
+      writeCfg(cfg); toast("Added","Tenant added."); renderAll();
+    }
+    function delTenant(id){
+      if(!confirm("Delete tenant?")) return;
+      cfg.tenants = cfg.tenants.filter(t=>t.id!==id);
+      addAudit("DEL_TENANT","Tenant",id,{});
+      writeCfg(cfg); toast("Deleted","Tenant removed."); renderAll();
+    }
+    function selectTenant(id){
+      cfg.tenantSelected = id;
+      addAudit("SELECT_TENANT","Tenant",id,{});
+      writeCfg(cfg); toast("Selected",`Tenant set to ${id}`); renderAll();
+    }
+
+    function addUser(){
+      const email = (prompt("User email?")||"").trim().toLowerCase(); if(!email) return;
+      const name = prompt("Name?") || email.split("@")[0];
+      const role = prompt("Role (BA/SME/Risk/Compliance/InfoSec/IT/Admin)?") || "BA";
+      const tenant = prompt(`Tenant (${cfg.tenants.map(t=>t.id).join(", ")})?`) || cfg.tenantSelected;
+      const status = prompt("Status (Active/Disabled)?") || "Active";
+      cfg.users.unshift({email, name, role, tenant, status});
+      addAudit("ADD_USER","User",email,{role,tenant});
+      writeCfg(cfg); toast("Added","User added."); renderAll();
+    }
+    function delUser(email){
+      if(!confirm("Delete user?")) return;
+      cfg.users = cfg.users.filter(u=>u.email!==email);
+      addAudit("DEL_USER","User",email,{});
+      writeCfg(cfg); toast("Deleted","User removed."); renderAll();
+    }
+
+    function addStage(){
+      const stage = prompt("Stage name? (e.g., InfoSec Review)"); if(!stage) return;
+      const role = prompt("Role required?") || "InfoSec";
+      const sla = parseInt(prompt("SLA days?")||"3",10) || 3;
+      const gate = prompt("Gate condition? (Always/If ...)") || "Always";
+      const id = uid("STG");
+      cfg.stages.unshift({id, stage, role, sla, gate});
+      addAudit("ADD_STAGE","Stage",id,{stage,role});
+      writeCfg(cfg); toast("Added","Stage added."); renderAll();
+    }
+    function delStage(id){
+      if(!confirm("Delete stage?")) return;
+      cfg.stages = cfg.stages.filter(s=>s.id!==id);
+      addAudit("DEL_STAGE","Stage",id,{});
+      writeCfg(cfg); toast("Deleted","Stage removed."); renderAll();
+    }
+
+    function addTemplate(){
+      const name = prompt("Template name?"); if(!name) return;
+      const industry = prompt("Industry?") || "Bank/NBFC";
+      const version = prompt("Version?") || "1.0";
+      const mandatory = prompt("Mandatory sections (comma separated)?") || "Scope, Requirements, NFR, Approvals";
+      const id = uid("TPL");
+      cfg.templates.unshift({id, name, industry, version, mandatory});
+      addAudit("ADD_TEMPLATE","Template",id,{name});
+      writeCfg(cfg); toast("Added","Template added."); renderAll();
+    }
+    function delTemplate(id){
+      if(!confirm("Delete template?")) return;
+      cfg.templates = cfg.templates.filter(t=>t.id!==id);
+      addAudit("DEL_TEMPLATE","Template",id,{});
+      writeCfg(cfg); toast("Deleted","Template removed."); renderAll();
+    }
+
+    function addAiPolicy(){
+      const cap = prompt("Capability? (e.g., Suggest requirements)"); if(!cap) return;
+      const allowed = (prompt("Allowed? (yes/no)")||"yes").toLowerCase().startsWith("y");
+      const constraints = prompt("Constraints?") || "";
+      const audit = prompt("Audit? (what to log)") || "Prompt+output logged";
+      const id = uid("AI");
+      cfg.aiPolicies.unshift({id, cap, allowed, constraints, audit});
+      addAudit("ADD_AI_POLICY","AIPolicy",id,{cap,allowed});
+      writeCfg(cfg); toast("Added","AI policy added."); renderAll();
+    }
+    function delAiPolicy(id){
+      if(!confirm("Delete AI policy?")) return;
+      cfg.aiPolicies = cfg.aiPolicies.filter(p=>p.id!==id);
+      addAudit("DEL_AI_POLICY","AIPolicy",id,{});
+      writeCfg(cfg); toast("Deleted","AI policy removed."); renderAll();
+    }
+
+    function addPerm(){
+      const role = prompt("Role?") || "BA";
+      const perm = prompt("Permission?") || "View";
+      const desc = prompt("Description?") || "";
+      const id = uid("PERM");
+      cfg.permissions.unshift({id, role, perm, desc});
+      addAudit("ADD_PERMISSION","Permission",id,{role,perm});
+      writeCfg(cfg); toast("Added","Permission added."); renderAll();
+    }
+    function delPerm(id){
+      if(!confirm("Delete permission?")) return;
+      cfg.permissions = cfg.permissions.filter(p=>p.id!==id);
+      addAudit("DEL_PERMISSION","Permission",id,{});
+      writeCfg(cfg); toast("Deleted","Permission removed."); renderAll();
+    }
+
+    function addIntegration(){
+      const type = prompt("Integration type? (SMTP/Teams/Jira)"); if(!type) return;
+      const config = prompt("Config string?") || "";
+      const status = prompt("Status (Configured/Disabled)?") || "Configured";
+      const id = uid("INT");
+      cfg.integrations.unshift({id, type, config, status});
+      addAudit("ADD_INTEGRATION","Integration",id,{type});
+      writeCfg(cfg); toast("Added","Integration added."); renderAll();
+    }
+    function delIntegration(id){
+      if(!confirm("Delete integration?")) return;
+      cfg.integrations = cfg.integrations.filter(i=>i.id!==id);
+      addAudit("DEL_INTEGRATION","Integration",id,{});
+      writeCfg(cfg); toast("Deleted","Integration removed."); renderAll();
+    }
+
+    // “AI” helpers
+    function aiRoleMap(){
+      const note = [
+        "Recommended mapping:",
+        "• BA: Create/Edit, Submit",
+        "• SME: Business Review (mandatory)",
+        "• Risk: Risk Review (conditional: credit impact)",
+        "• InfoSec: Security Review (mandatory)",
+        "• IT: IT Review (mandatory)",
+        "• Compliance: Regulatory Review (conditional: NBFC or regulatory change)",
+        "• Admin: Configure workflow, final publish gate (maker-checker)"
+      ].join("\\n");
+      alert(note);
+      addAudit("AI_SUGGEST_ROLE_MAP","System","AI", {});
+    }
+    function aiWorkflow(){
+      const suggested = [
+        {stage:"Business Review", role:"SME", sla:3, gate:"Always"},
+        {stage:"Risk Review", role:"Risk", sla:3, gate:"If credit/limits impacted"},
+        {stage:"InfoSec Review", role:"InfoSec", sla:5, gate:"Always"},
+        {stage:"IT Review", role:"IT", sla:5, gate:"Always"},
+        {stage:"Compliance Review", role:"Compliance", sla:5, gate:"NBFC only / regulatory change"},
+        {stage:"Final Approval", role:"Admin", sla:2, gate:"SoD enforced (maker-checker)"}
+      ];
+      suggested.forEach(s=> cfg.stages.unshift({id:uid("STG"), ...s}));
+      addAudit("AI_ADD_WORKFLOW","Workflow","AI",{count:suggested.length});
+      writeCfg(cfg); toast("AI","Workflow stages added."); renderAll();
+    }
+    function aiTemplate(){
+      const t = {id:uid("TPL"), name:"BRD - BFSI Standard", industry:"Bank/NBFC", version:"1.0",
+        mandatory:"Problem, Scope, As-Is/To-Be, Stakeholders, Requirements (FR/NFR), Data, Security, Compliance, Risk, Testing, Rollout, Approvals"};
+      cfg.templates.unshift(t);
+      addAudit("AI_ADD_TEMPLATE","Template",t.id,{name:t.name});
+      writeCfg(cfg); toast("AI","Template generated."); renderAll();
+    }
+    function openAiWizard(){ openModal("#aiModal"); }
+    function applyAiDefaults(){
+      const defaults = [
+        {cap:"Suggest requirements", allowed:true, constraints:"Human review required; cite sources where possible", audit:"Prompt+output logged"},
+        {cap:"Redact PII", allowed:true, constraints:"Mandatory redaction; mask account numbers", audit:"Redaction log stored"},
+        {cap:"Auto-approve", allowed:false, constraints:"Never allowed", audit:"N/A"},
+        {cap:"Generate BRD sections", allowed:true, constraints:"Draft only; requires BA confirmation", audit:"Output versioned"}
+      ];
+      defaults.forEach(p=> cfg.aiPolicies.unshift({id:uid("AI"), ...p}));
+      addAudit("AI_APPLY_DEFAULT_POLICIES","AIPolicy","AI",{count:defaults.length});
+      writeCfg(cfg); toast("Applied","AI policies updated."); closeModal("#aiModal"); renderAll();
+    }
+
+    // Exports
+    function dlJson(name, obj){
+      const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+    function exportConfig(){
+      dlJson("BRD_ADMIN_CONFIG.json", cfg);
+      addAudit("EXPORT_CONFIG","Config","CFG",{});
+      toast("Exported","Config JSON downloaded.");
+      renderAll();
+    }
+    function exportRuntime(){
+      const rt = readRuntime();
+      dlJson("BRD_RUNTIME_WORKSPACE.json", rt);
+      toast("Exported","Runtime/workspace JSON downloaded.");
+    }
+    function exportAudit(){
+      dlJson("BRD_ADMIN_AUDIT.json", cfg.audit || []);
+      toast("Exported","Admin audit downloaded.");
+    }
+
+    // Renderers
+    function renderOverview(){
+      $("#tenantPill").textContent = cfg.tenantSelected || "—";
+      $("#kTenants").textContent = String(cfg.tenants.length);
+      $("#kUsers").textContent = String(cfg.users.length);
+      $("#kStages").textContent = String(cfg.stages.length);
+      $("#userBadge").textContent = String(cfg.users.length);
+
+      const activeTenant = cfg.tenants.find(t=>t.id===cfg.tenantSelected);
+      const note = activeTenant
+        ? `Active tenant: ${activeTenant.id} • ${activeTenant.name}\nIndustry: ${activeTenant.industry} • Regulators: ${activeTenant.regulators}\n\nTemplates: ${cfg.templates.length} | AI Policies: ${cfg.aiPolicies.length} | Permissions: ${cfg.permissions.length} | Integrations: ${cfg.integrations.length}`
+        : `No active tenant selected.\n\nTenants: ${cfg.tenants.length} | Users: ${cfg.users.length} | Stages: ${cfg.stages.length}`;
+      $("#overviewNote").textContent = note;
+    }
+
+    function renderTenants(){
+      $("#tenantTable").innerHTML = cfg.tenants.map(t=>`
+        <tr>
+          <td class="mono">${escapeHtml(t.id)}</td>
+          <td><b>${escapeHtml(t.name)}</b></td>
+          <td>${escapeHtml(t.industry)}</td>
+          <td>${escapeHtml(t.regulators)}</td>
+          <td>${escapeHtml(t.status)}</td>
+          <td style="white-space:nowrap">
+            <button class="btn small primary" data-sel="${t.id}">Select</button>
+            <button class="btn small danger" data-del="${t.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No tenants. Seed or add one.</td></tr>`;
+
+      $("#tenantTable").querySelectorAll("[data-sel]").forEach(b=> b.addEventListener("click",()=>selectTenant(b.dataset.sel)));
+      $("#tenantTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delTenant(b.dataset.del)));
+    }
+
+    function renderUsers(){
+      $("#userTable").innerHTML = cfg.users.map(u=>`
+        <tr>
+          <td class="mono">${escapeHtml(u.email)}</td>
+          <td>${escapeHtml(u.name)}</td>
+          <td><b>${escapeHtml(u.role)}</b></td>
+          <td class="mono">${escapeHtml(u.tenant)}</td>
+          <td>${escapeHtml(u.status)}</td>
+          <td><button class="btn small danger" data-del="${escapeHtml(u.email)}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No users.</td></tr>`;
+
+      $("#userTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delUser(b.dataset.del)));
+    }
+
+    function renderWorkflow(){
+      $("#stageTable").innerHTML = cfg.stages.map(s=>`
+        <tr>
+          <td class="mono">${escapeHtml(s.id)}</td>
+          <td><b>${escapeHtml(s.stage)}</b></td>
+          <td>${escapeHtml(s.role)}</td>
+          <td>${escapeHtml(String(s.sla))}</td>
+          <td>${escapeHtml(s.gate)}</td>
+          <td><button class="btn small danger" data-del="${escapeHtml(s.id)}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No stages.</td></tr>`;
+
+      $("#stageTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delStage(b.dataset.del)));
+    }
+
+    function renderTemplates(){
+      $("#templateTable").innerHTML = cfg.templates.map(t=>`
+        <tr>
+          <td class="mono">${escapeHtml(t.id)}</td>
+          <td><b>${escapeHtml(t.name)}</b></td>
+          <td>${escapeHtml(t.industry)}</td>
+          <td class="mono">${escapeHtml(t.version)}</td>
+          <td>${escapeHtml(t.mandatory)}</td>
+          <td><button class="btn small danger" data-del="${escapeHtml(t.id)}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No templates.</td></tr>`;
+
+      $("#templateTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delTemplate(b.dataset.del)));
+    }
+
+    function renderAi(){
+      $("#aiTable").innerHTML = cfg.aiPolicies.map(p=>`
+        <tr>
+          <td class="mono">${escapeHtml(p.id)}</td>
+          <td><b>${escapeHtml(p.cap)}</b></td>
+          <td>${p.allowed ? `<span class="chip green">Allowed</span>` : `<span class="chip red">Blocked</span>`}</td>
+          <td>${escapeHtml(p.constraints||"—")}</td>
+          <td>${escapeHtml(p.audit||"—")}</td>
+          <td><button class="btn small danger" data-del="${escapeHtml(p.id)}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No AI policies.</td></tr>`;
+
+      $("#aiTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delAiPolicy(b.dataset.del)));
+    }
+
+    function renderPerm(){
+      $("#permTable").innerHTML = cfg.permissions.map(p=>`
+        <tr>
+          <td class="mono">${escapeHtml(p.id)}</td>
+          <td><b>${escapeHtml(p.role)}</b></td>
+          <td>${escapeHtml(p.perm)}</td>
+          <td>${escapeHtml(p.desc||"—")}</td>
+          <td><button class="btn small danger" data-del="${escapeHtml(p.id)}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="mono">No permissions.</td></tr>`;
+
+      $("#permTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delPerm(b.dataset.del)));
+    }
+
+    function renderInt(){
+      $("#intTable").innerHTML = cfg.integrations.map(i=>`
+        <tr>
+          <td class="mono">${escapeHtml(i.id)}</td>
+          <td><b>${escapeHtml(i.type)}</b></td>
+          <td class="mono">${escapeHtml(i.config||"—")}</td>
+          <td>${escapeHtml(i.status||"—")}</td>
+          <td><button class="btn small danger" data-del="${escapeHtml(i.id)}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="mono">No integrations.</td></tr>`;
+
+      $("#intTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delIntegration(b.dataset.del)));
+    }
+
+    function renderAudit(){
+      const q = ($("#auditSearch").value||"").trim().toLowerCase();
+      let items = [...(cfg.audit||[])];
+      if(q){
+        items = items.filter(a =>
+          (a.action||"").toLowerCase().includes(q) ||
+          (a.by||"").toLowerCase().includes(q) ||
+          (a.entity||"").toLowerCase().includes(q) ||
+          (a.id||"").toLowerCase().includes(q) ||
+          JSON.stringify(a.meta||{}).toLowerCase().includes(q)
+        );
+      }
+      $("#auditTable").innerHTML = items.slice(0,450).map(a=>`
+        <tr>
+          <td>${fmt(a.at)}</td>
+          <td class="mono">${escapeHtml(a.by)}</td>
+          <td>${escapeHtml(a.action)}</td>
+          <td>${escapeHtml(a.entity)}</td>
+          <td class="mono">${escapeHtml(a.id)}</td>
+          <td class="mono">${escapeHtml(JSON.stringify(a.meta||{}))}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No admin audit entries.</td></tr>`;
+    }
+
+    function renderAll(){
+      cfg = readCfg();
+      renderOverview();
+      renderTenants();
+      renderUsers();
+      renderWorkflow();
+      renderTemplates();
+      renderAi();
+      renderPerm();
+      renderInt();
+      renderAudit();
+    }
+
+    function wire(){
+      cfg = readCfg();
+      $("#tenantPill").textContent = cfg.tenantSelected || "—";
+
+      $$("#nav a").forEach(a=>{
+        a.addEventListener("click",(e)=>{
+          e.preventDefault();
+          setActiveNav(a.dataset.view);
+          renderAll();
+        });
+      });
+
+      $("#seedBtn").addEventListener("click", seed);
+      $("#addTenantBtn").addEventListener("click", addTenant);
+      $("#addUserBtn").addEventListener("click", addUser);
+      $("#addStageBtn").addEventListener("click", addStage);
+      $("#addTemplateBtn").addEventListener("click", addTemplate);
+      $("#addAiPolicyBtn").addEventListener("click", addAiPolicy);
+      $("#addPermBtn").addEventListener("click", addPerm);
+      $("#addIntBtn").addEventListener("click", addIntegration);
+
+      $("#aiRoleMapBtn").addEventListener("click", aiRoleMap);
+      $("#aiFlowBtn").addEventListener("click", aiWorkflow);
+      $("#aiTemplateBtn").addEventListener("click", aiTemplate);
+
+      $("#aiPolicyBtn").addEventListener("click", openAiWizard);
+      $("#aiPolicyBtn2").addEventListener("click", openAiWizard);
+      $("#applyAiDefaults").addEventListener("click", applyAiDefaults);
+      wireModalClose("#aiModal");
+
+      $("#exportAllBtn").addEventListener("click", exportConfig);
+      $("#exportRuntimeBtn").addEventListener("click", exportRuntime);
+      $("#exportAuditBtn").addEventListener("click", exportAudit);
+      $("#auditSearch").addEventListener("input", renderAudit);
+
+      $("#resetBtn").addEventListener("click", ()=>{
+        if(!confirm("Reset admin config + runtime workspace (localStorage)?")) return;
+        localStorage.removeItem(Store.CFG);
+        localStorage.removeItem(Store.RUNTIME);
+        toast("Reset","Local data cleared. Reloading…");
+        setTimeout(()=>location.reload(), 400);
+      });
+
+      // boot
+      setActiveNav("overview");
+      renderAll();
+    }
+
+    wire();
+
+    // Page switcher
+    document.getElementById("pageSwitcher").addEventListener("change", (e)=>{
+      window.location.href = e.target.value;
+    });
+  </script>
+</body>
+</html>

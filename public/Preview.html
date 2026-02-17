@@ -1,0 +1,1381 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BRD Automation • Final Preview & Digital Sign-off</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e5e7eb;
+      --border2:#f1f5f9;
+      --shadow: 0 18px 44px rgba(2,6,23,.10);
+      --r:18px;
+
+      --primary:#2563eb;
+      --success:#16a34a;
+      --warning:#f59e0b;
+      --danger:#ef4444;
+      --indigo:#4f46e5;
+      --slate:#334155;
+      --pink:#db2777;
+      --teal:#0d9488;
+
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --focus: 0 0 0 4px rgba(37,99,235,.14);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:var(--font); background:var(--bg); color:var(--text)}
+    a{color:inherit; text-decoration:none}
+    button,input,select,textarea{font-family:inherit}
+    textarea{resize:vertical}
+
+    /* Topbar */
+    .topbar{position:sticky; top:0; z-index:30; background:#fff; border-bottom:1px solid var(--border2)}
+    .topbar-inner{
+      max-width:1680px; margin:0 auto; padding:12px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{width:40px; height:40px; border-radius:16px; background:linear-gradient(135deg,#111827,#7c3aed); box-shadow:0 14px 26px rgba(124,58,237,.20)}
+    .brand h1{margin:0; font-size:15px; letter-spacing:-.2px}
+    .brand .sub{margin:4px 0 0; font-size:12.5px; color:var(--muted)}
+    .actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:12.5px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .pill b{color:var(--text)}
+    .mono{font-family:var(--mono)}
+
+    /* Layout */
+    .wrap{max-width:1680px; margin:0 auto; padding:16px}
+    .layout{display:grid; grid-template-columns: 420px 1fr; gap:14px; align-items:start}
+
+    .card{border:1px solid var(--border); border-radius:var(--r); background:#fff; box-shadow:var(--shadow); overflow:hidden}
+    .card-head{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px
+    }
+    .card-head h2,.card-head h3{margin:0; font-size:14px; letter-spacing:-.2px}
+    .card-head p{margin:6px 0 0; font-size:12.5px; color:var(--muted); line-height:1.35}
+    .card-body{padding:14px}
+    .hr{height:1px; background:var(--border2); margin:12px 0}
+    .row{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+
+    /* Buttons */
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:9px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:850;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow); border-color:#d1d5db}
+    .btn:active{transform:translateY(0)}
+    .btn:focus{outline:none; box-shadow:var(--shadow), var(--focus)}
+    .btn.small{padding:7px 10px; border-radius:10px; font-size:13px}
+    .btn.block{width:100%}
+    .btn.primary{background:linear-gradient(135deg,var(--primary),#60a5fa); color:#fff; border-color:transparent}
+    .btn.success{background:linear-gradient(135deg,var(--success),#22c55e); color:#fff; border-color:transparent}
+    .btn.warn{background:linear-gradient(135deg,var(--warning),#fbbf24); color:#111827; border-color:transparent}
+    .btn.danger{background:linear-gradient(135deg,var(--danger),#fb7185); color:#fff; border-color:transparent}
+    .btn.ai{background:linear-gradient(135deg,var(--pink),#f472b6); color:#fff; border-color:transparent}
+    .btn.neutral{background:linear-gradient(135deg,var(--slate),#64748b); color:#fff; border-color:transparent}
+    .btn.export{background:linear-gradient(135deg,var(--indigo),#7c3aed); color:#fff; border-color:transparent}
+    .btn.teal{background:linear-gradient(135deg,var(--teal),#2dd4bf); color:#062a24; border-color:transparent}
+
+    /* Inputs */
+    label{font-size:12px; color:var(--muted); font-weight:900}
+    input[type="text"], input[type="date"], textarea, select{
+      width:100%;
+      border:1px solid var(--border);
+      padding:10px 12px;
+      border-radius:12px;
+      outline:none;
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+    }
+    input:focus, select:focus, textarea:focus{box-shadow:var(--focus); border-color:rgba(37,99,235,.45)}
+    textarea{min-height:100px}
+
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .span-12{grid-column:span 12}
+    .span-6{grid-column:span 6}
+    .span-4{grid-column:span 4}
+    .span-8{grid-column:span 8}
+    .field{display:flex; flex-direction:column; gap:6px}
+
+    /* Chips & status */
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:12px;
+      font-weight:900;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .chip.blue{border-color:rgba(37,99,235,.24); background:rgba(37,99,235,.06); color:#1d4ed8}
+    .chip.green{border-color:rgba(22,163,74,.22); background:rgba(22,163,74,.06); color:#166534}
+    .chip.amber{border-color:rgba(245,158,11,.24); background:rgba(245,158,11,.06); color:#92400e}
+    .chip.red{border-color:rgba(239,68,68,.22); background:rgba(239,68,68,.06); color:#b91c1c}
+    .chip.pink{border-color:rgba(219,39,119,.22); background:rgba(219,39,119,.06); color:#9d174d}
+    .chip.teal{border-color:rgba(13,148,136,.22); background:rgba(13,148,136,.06); color:#0f766e}
+
+    .note{
+      border:1px dashed #d1d5db;
+      background:#f8fafc;
+      border-radius:14px;
+      padding:10px;
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.35;
+      white-space:pre-wrap;
+    }
+
+    /* Checklist */
+    .checklist{display:flex; flex-direction:column; gap:10px}
+    .check{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px;
+      display:flex; align-items:flex-start; gap:10px;
+      background:#fff;
+    }
+    .check input{margin-top:4px}
+    .check b{font-size:13px}
+    .check .small{font-size:12.5px; color:var(--muted); margin-top:4px; line-height:1.35}
+
+    /* Preview document */
+    .doc{
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:#fff;
+      overflow:hidden;
+    }
+    .doc-head{
+      padding:14px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    }
+    .doc-title b{font-size:15px}
+    .doc-title .meta{font-size:12.5px; color:var(--muted); margin-top:6px; line-height:1.35}
+    .doc-body{padding:14px}
+    .section{margin-bottom:14px}
+    .section h3{
+      margin:0 0 8px;
+      font-size:13.5px;
+      letter-spacing:-.1px;
+    }
+    .section .content{
+      border:1px solid var(--border2);
+      background:#fff;
+      border-radius:14px;
+      padding:10px;
+      color:var(--text);
+      line-height:1.45;
+      font-size:13px;
+      white-space:pre-wrap;
+    }
+    .two{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .tbl{
+      width:100%;
+      border-collapse:collapse;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .tbl th,.tbl td{
+      padding:10px;
+      border-bottom:1px solid var(--border2);
+      font-size:13px;
+      text-align:left;
+      vertical-align:top;
+    }
+    .tbl th{background:#f8fafc; color:var(--muted); font-weight:900}
+    .tbl tr:last-child td{border-bottom:none}
+    .sig{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+    }
+    .sig .pad{
+      border:1px dashed #d1d5db;
+      border-radius:14px;
+      height:120px;
+      background:#f8fafc;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:12.5px;
+      text-align:center;
+      padding:10px;
+    }
+
+    /* Timeline */
+    .timeline{display:flex; flex-direction:column; gap:10px}
+    .event{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .event-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .event b{font-size:13.5px}
+    .event .meta{font-size:12.5px; color:var(--muted); line-height:1.35}
+
+    /* Modal */
+    .backdrop{
+      position:fixed; inset:0; z-index:60;
+      background: rgba(2,6,23,.45);
+      display:none;
+      align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .modal{
+      width:min(1180px, 100%);
+      max-height:92vh;
+      overflow:auto;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:0 25px 70px rgba(2,6,23,.25);
+    }
+    .modal-head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:center; justify-content:space-between; gap:10px
+    }
+    .modal-head h3{margin:0; font-size:14px}
+    .modal-body{padding:14px}
+
+    @media (max-width:1320px){
+      .layout{grid-template-columns:1fr}
+      .two{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>Final BRD Preview & Digital Sign-off</h1>
+          <div class="sub">Freeze BRD version, run completeness checks, capture approvals, and generate signed artifact (offline prototype)</div>
+        </div>
+      </div>
+      <div class="actions">
+        <span class="pill"><b>Status:</b> <span id="kStatus">Draft</span></span>
+        <span class="pill"><b>BRD:</b> <span class="mono" id="kId">—</span></span>
+        <span class="pill"><b>Version:</b> <span id="kVer">v1.0</span></span>
+        <button class="btn small ai" id="btnAIReview">✨ AI Quality Review</button>
+        <button class="btn small export" id="btnExport">Export (JSON)</button>
+        <button class="btn small neutral" id="btnReset">Reset</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="layout">
+      <!-- LEFT: Controls / Sign-off workflow -->
+      <aside class="card">
+        <div class="card-head">
+          <div>
+            <h2>Sign-off workflow</h2>
+            <p>Configure approval route, ensure all checks pass, then request digital signatures.</p>
+          </div>
+          <span class="chip blue" id="kChecks">Checks: 0/0</span>
+        </div>
+        <div class="card-body">
+          <div class="grid">
+            <div class="field span-12">
+              <label>BRD title *</label>
+              <input id="fTitle" type="text" placeholder="e.g., Digital MSME Renewal Journey"/>
+            </div>
+
+            <div class="field span-6">
+              <label>Tenant</label>
+              <select id="fTenant">
+                <option value="BANK">BANK</option>
+                <option value="NBFC">NBFC</option>
+                <option value="BOTH">BOTH</option>
+              </select>
+            </div>
+            <div class="field span-6">
+              <label>Priority</label>
+              <select id="fPriority">
+                <option value="P2">P2</option>
+                <option value="P1">P1</option>
+                <option value="P0">P0</option>
+              </select>
+            </div>
+
+            <div class="field span-6">
+              <label>BRD ID</label>
+              <input id="fId" type="text" placeholder="Auto-generated"/>
+            </div>
+            <div class="field span-6">
+              <label>Version</label>
+              <input id="fVer" type="text" placeholder="v1.0"/>
+            </div>
+
+            <div class="field span-12">
+              <label>Release / target sprint</label>
+              <input id="fRelease" type="text" placeholder="e.g., R1 / Sprint 12 / FY26 Q1"/>
+            </div>
+
+            <div class="field span-12">
+              <label>Freeze note (what changed in this version)</label>
+              <textarea id="fFreezeNote" placeholder="Summarize what was finalized for this version..."></textarea>
+            </div>
+
+            <div class="field span-12">
+              <div class="row" style="justify-content:flex-end; gap:10px">
+                <button class="btn warn" id="btnRunChecks">Run Checks</button>
+                <button class="btn primary" id="btnFreeze">Freeze Version</button>
+              </div>
+              <div class="help" style="margin-top:8px; color:var(--muted); font-size:12.5px; line-height:1.35">
+                Freeze locks the content snapshot (still editable later by creating v1.1 / v2.0).
+              </div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <h3 style="margin:0 0 10px; font-size:13.5px">Approval route</h3>
+          <div class="note" style="margin-bottom:10px">
+Default route (editable): Business Owner → BA → SME → Risk → Compliance → InfoSec → IT → Admin.
+You can mark any approver as optional or parallel.
+          </div>
+
+          <div class="checklist" id="approverList"></div>
+
+          <div class="hr"></div>
+
+          <div class="row" style="justify-content:flex-end; gap:10px">
+            <button class="btn teal" id="btnRequestSign">Request Digital Signatures</button>
+            <button class="btn success" id="btnFinalize" title="Finalizes only if all required approvers are signed">Finalize BRD</button>
+          </div>
+
+          <div class="hr"></div>
+
+          <h3 style="margin:0 0 10px; font-size:13.5px">Audit timeline</h3>
+          <div class="timeline" id="timeline"></div>
+        </div>
+      </aside>
+
+      <!-- RIGHT: BRD Final Preview -->
+      <main class="card">
+        <div class="card-head">
+          <div>
+            <h2>Final BRD preview</h2>
+            <p>Preview the BRD narrative + structured sections. Export snapshot after signatures.</p>
+          </div>
+          <div class="row" style="gap:10px">
+            <button class="btn small ai" id="btnAutoFill">✨ Load Sample BRD</button>
+            <button class="btn small export" id="btnExportPrint">Export as HTML (Print)</button>
+            <button class="btn small neutral" id="btnOpenPack">Open Signed Pack</button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="doc" id="doc">
+            <div class="doc-head">
+              <div class="doc-title">
+                <b id="pTitle">—</b>
+                <div class="meta" id="pMeta">—</div>
+              </div>
+              <div class="row" style="gap:8px">
+                <span class="chip blue" id="pType">BRD</span>
+                <span class="chip teal" id="pTenant">—</span>
+                <span class="chip amber" id="pPriority">—</span>
+                <span class="chip green" id="pState">Draft</span>
+              </div>
+            </div>
+
+            <div class="doc-body">
+              <div class="section">
+                <h3>1. Executive Summary</h3>
+                <div class="content" id="pSummary">—</div>
+              </div>
+
+              <div class="two">
+                <div class="section">
+                  <h3>2. Problem Statement</h3>
+                  <div class="content" id="pProblem">—</div>
+                </div>
+                <div class="section">
+                  <h3>3. Business Objectives</h3>
+                  <div class="content" id="pObjectives">—</div>
+                </div>
+              </div>
+
+              <div class="two">
+                <div class="section">
+                  <h3>4. Scope (In)</h3>
+                  <div class="content" id="pScopeIn">—</div>
+                </div>
+                <div class="section">
+                  <h3>5. Scope (Out)</h3>
+                  <div class="content" id="pScopeOut">—</div>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3>6. Functional Requirements</h3>
+                <div class="content" id="pFR">—</div>
+              </div>
+
+              <div class="section">
+                <h3>7. Non-Functional Requirements</h3>
+                <div class="content" id="pNFR">—</div>
+              </div>
+
+              <div class="two">
+                <div class="section">
+                  <h3>8. Business Rules / Eligibility</h3>
+                  <div class="content" id="pRules">—</div>
+                </div>
+                <div class="section">
+                  <h3>9. Dependencies & Assumptions</h3>
+                  <div class="content" id="pDeps">—</div>
+                </div>
+              </div>
+
+              <div class="two">
+                <div class="section">
+                  <h3>10. Exceptions / Edge Cases</h3>
+                  <div class="content" id="pEdges">—</div>
+                </div>
+                <div class="section">
+                  <h3>11. Risks & Controls</h3>
+                  <div class="content" id="pRisks">—</div>
+                </div>
+              </div>
+
+              <div class="two">
+                <div class="section">
+                  <h3>12. Data Requirements</h3>
+                  <div class="content" id="pData">—</div>
+                </div>
+                <div class="section">
+                  <h3>13. Audit / Reporting</h3>
+                  <div class="content" id="pAudit">—</div>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3>14. Acceptance Criteria</h3>
+                <div class="content" id="pAC">—</div>
+              </div>
+
+              <div class="section">
+                <h3>15. Sign-off Matrix</h3>
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th style="width:170px">Role</th>
+                      <th>Approver</th>
+                      <th style="width:150px">Required</th>
+                      <th style="width:170px">Status</th>
+                      <th style="width:220px">Digital Signature</th>
+                    </tr>
+                  </thead>
+                  <tbody id="signTable"></tbody>
+                </table>
+              </div>
+
+              <div class="section">
+                <h3>16. Digital Signature Evidence</h3>
+                <div class="grid">
+                  <div class="span-6 sig">
+                    <div class="row" style="margin-bottom:8px">
+                      <b>Signing method</b>
+                      <span class="chip pink" id="pSigMethod">OTP / eSign (simulated)</span>
+                    </div>
+                    <div class="note" id="pSigEvidence">—</div>
+                  </div>
+                  <div class="span-6 sig">
+                    <div class="row" style="margin-bottom:8px">
+                      <b>Signature pad (optional)</b>
+                      <span class="chip amber">Offline demo</span>
+                    </div>
+                    <div class="pad" id="sigPad">
+                      This is a prototype. In production, integrate eSign provider or internal PKI signing.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: Quality Review / Signed Pack -->
+  <div class="backdrop" id="modal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="mTitle">Details</h3>
+        <button class="btn small neutral" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="note" id="mBody">—</div>
+        <div class="hr"></div>
+        <div class="row" style="justify-content:flex-end; gap:10px">
+          <button class="btn export" id="mCopy">Copy</button>
+          <button class="btn success" id="mOk">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**********************************
+     * Final BRD Preview & Digital Sign-off (offline functional)
+     * - Freeze version (snapshot)
+     * - Run completeness checks
+     * - Request signatures (simulated OTP + signature hash)
+     * - Approver route (required/optional, sequential/parallel simulated)
+     * - Finalize BRD only when required approvers signed
+     * - Export: JSON + printable HTML
+     **********************************/
+    const KEY = "brd_final_preview_signoff_v1";
+
+    const $ = (q)=>document.querySelector(q);
+    const $$ = (q)=>Array.from(document.querySelectorAll(q));
+    const safeParse = (s, fb)=>{ try{return JSON.parse(s);}catch{return fb;} };
+    const nowISO = ()=>new Date().toISOString();
+    const fmt = (ts)=>{ try{ return new Date(ts).toLocaleString(undefined,{year:"numeric",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"});}catch{return ts;} };
+    const uid = (p="BRD") => `${p}-${Math.random().toString(16).slice(2,10)}-${Math.random().toString(16).slice(2,10)}`.toUpperCase();
+
+    function baseState(){
+      return {
+        brd: {
+          id: uid("BRD"),
+          type: "BRD",
+          title: "",
+          tenant: "BANK",
+          priority: "P2",
+          version: "v1.0",
+          release: "",
+          status: "Draft", // Draft | Frozen | SignaturesRequested | Finalized
+          freezeNote: "",
+          summary: "",
+          sections: {
+            problem:"", objectives:"", scopeIn:"", scopeOut:"",
+            fr:"", nfr:"", rules:"", deps:"",
+            edges:"", risks:"", data:"", audit:"", ac:""
+          }
+        },
+        approvers: [
+          { role:"Business Owner", name:"", email:"", required:true, mode:"Sequential", status:"Pending", signedAt:"", signatureId:"", signatureHash:"" },
+          { role:"BA", name:"Asha (BA)", email:"asha.ba@bank.com", required:true, mode:"Sequential", status:"Pending", signedAt:"", signatureId:"", signatureHash:"" },
+          { role:"SME", name:"Rohit (SME)", email:"rohit.sme@bank.com", required:true, mode:"Sequential", status:"Pending", signedAt:"", signatureId:"", signatureHash:"" },
+          { role:"Risk", name:"Nadia (Risk)", email:"nadia.risk@bank.com", required:true, mode:"Sequential", status:"Pending", signedAt:"", signatureId:"", signatureHash:"" },
+          { role:"Compliance", name:"Sanjay (Compliance)", email:"sanjay.compliance@nbfc.com", required:true, mode:"Sequential", status:"Pending", signedAt:"", signatureId:"", signatureHash:"" },
+          { role:"InfoSec", name:"Meera (InfoSec)", email:"meera.infosec@bank.com", required:true, mode:"Sequential", status:"Pending", signedAt:"", signatureId:"", signatureHash:"" },
+          { role:"IT", name:"Ishaan (IT)", email:"ishaan.it@bank.com", required:true, mode:"Sequential", status:"Pending", signedAt:"", signatureId:"", signatureHash:"" },
+          { role:"Admin", name:"Admin", email:"admin@org.com", required:true, mode:"Sequential", status:"Pending", signedAt:"", signatureId:"", signatureHash:"" },
+        ],
+        checks: [],
+        audit: [
+          { at: nowISO(), who:"System", action:"Draft created", detail:"Initialized final preview workflow" }
+        ],
+        signedPack: null // created at finalize
+      };
+    }
+
+    let state = read();
+
+    function read(){
+      const raw = localStorage.getItem(KEY);
+      return raw ? safeParse(raw, baseState()) : baseState();
+    }
+    function write(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+    // --- Modal helpers ---
+    function openModal(title, body){
+      $("#mTitle").textContent = title;
+      $("#mBody").textContent = body;
+      $("#modal").style.display="flex";
+    }
+    function closeModal(){ $("#modal").style.display="none"; }
+    function copyModal(){
+      const txt = $("#mBody").textContent || "";
+      navigator.clipboard?.writeText(txt).then(()=>alert("Copied."), ()=>alert("Copy failed."));
+    }
+
+    // --- UI sync ---
+    function syncFormToState(){
+      const b = state.brd;
+      b.title = ($("#fTitle").value||"").trim();
+      b.tenant = $("#fTenant").value;
+      b.priority = $("#fPriority").value;
+      b.id = ($("#fId").value||"").trim() || b.id;
+      b.version = ($("#fVer").value||"").trim() || b.version;
+      b.release = ($("#fRelease").value||"").trim();
+      b.freezeNote = ($("#fFreezeNote").value||"").trim();
+
+      // Summary: auto built lightly if empty
+      if(!b.summary){
+        b.summary = `This BRD defines ${b.title || "the initiative"} for ${b.tenant} including scope, requirements, controls and acceptance criteria.`;
+      }
+
+      // Business owner name from approver list (first row)
+      // (Let user edit via approver inputs)
+      write();
+    }
+
+    function syncStateToForm(){
+      const b = state.brd;
+      $("#fTitle").value = b.title || "";
+      $("#fTenant").value = b.tenant || "BANK";
+      $("#fPriority").value = b.priority || "P2";
+      $("#fId").value = b.id || "";
+      $("#fVer").value = b.version || "v1.0";
+      $("#fRelease").value = b.release || "";
+      $("#fFreezeNote").value = b.freezeNote || "";
+    }
+
+    function setPreview(){
+      const b = state.brd;
+      $("#kStatus").textContent = b.status;
+      $("#kId").textContent = b.id;
+      $("#kVer").textContent = b.version;
+
+      $("#pTitle").textContent = b.title || "—";
+      $("#pType").textContent = b.type || "BRD";
+      $("#pTenant").textContent = b.tenant || "—";
+      $("#pPriority").textContent = b.priority || "—";
+      $("#pState").textContent = b.status || "Draft";
+
+      $("#pMeta").textContent =
+        `${b.id} • ${b.version} • ${b.release || "No release set"} • Last updated: ${fmt(state.audit[state.audit.length-1]?.at || nowISO())}`;
+
+      $("#pSummary").textContent = b.summary || "—";
+
+      $("#pProblem").textContent = b.sections.problem || "—";
+      $("#pObjectives").textContent = b.sections.objectives || "—";
+      $("#pScopeIn").textContent = b.sections.scopeIn || "—";
+      $("#pScopeOut").textContent = b.sections.scopeOut || "—";
+      $("#pFR").textContent = b.sections.fr || "—";
+      $("#pNFR").textContent = b.sections.nfr || "—";
+      $("#pRules").textContent = b.sections.rules || "—";
+      $("#pDeps").textContent = b.sections.deps || "—";
+      $("#pEdges").textContent = b.sections.edges || "—";
+      $("#pRisks").textContent = b.sections.risks || "—";
+      $("#pData").textContent = b.sections.data || "—";
+      $("#pAudit").textContent = b.sections.audit || "—";
+      $("#pAC").textContent = b.sections.ac || "—";
+
+      // Signature evidence
+      const signedRequired = state.approvers.filter(a=>a.required).filter(a=>a.status==="Signed").length;
+      const totalRequired = state.approvers.filter(a=>a.required).length;
+      $("#pSigEvidence").textContent =
+`Signature workflow state: ${b.status}
+Required signatures: ${signedRequired}/${totalRequired}
+Last event: ${state.audit[state.audit.length-1]?.action || "—"} • ${fmt(state.audit[state.audit.length-1]?.at || nowISO())}
+
+Evidence fields (simulated):
+• Document hash: ${docHash()}
+• Signature IDs recorded per approver
+• Timestamp + email + role bound to signature
+• Freeze note included in signature payload`;
+
+      renderApprovers();
+      renderTimeline();
+      renderChecksChip();
+    }
+
+    // --- Approvers UI ---
+    function renderApprovers(){
+      const wrap = $("#approverList");
+      wrap.innerHTML = state.approvers.map((a, idx)=>{
+        const statusChip = a.status==="Signed" ? "green" : (a.status==="Rejected" ? "red" : (a.status==="Pending" ? "amber" : "blue"));
+        return `
+          <div class="check" style="flex-direction:column">
+            <div class="row">
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+                <span class="chip ${statusChip}">${a.status}</span>
+                <b>${a.role}</b>
+                <span class="pill"><b>Mode:</b> ${a.mode}</span>
+                <span class="pill"><b>Required:</b> ${a.required ? "Yes" : "No"}</span>
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap">
+                <button class="btn small" data-act="sign" data-i="${idx}">Sign</button>
+                <button class="btn small danger" data-act="reject" data-i="${idx}">Reject</button>
+              </div>
+            </div>
+
+            <div class="grid" style="margin-top:10px">
+              <div class="field span-6">
+                <label>Approver name</label>
+                <input type="text" data-k="name" data-i="${idx}" value="${escapeAttr(a.name)}" placeholder="Name"/>
+              </div>
+              <div class="field span-6">
+                <label>Email</label>
+                <input type="text" data-k="email" data-i="${idx}" value="${escapeAttr(a.email)}" placeholder="email@org.com"/>
+              </div>
+              <div class="field span-6">
+                <label>Required?</label>
+                <select data-k="required" data-i="${idx}">
+                  <option value="true" ${a.required?"selected":""}>Yes</option>
+                  <option value="false" ${!a.required?"selected":""}>No</option>
+                </select>
+              </div>
+              <div class="field span-6">
+                <label>Approval mode</label>
+                <select data-k="mode" data-i="${idx}">
+                  <option value="Sequential" ${a.mode==="Sequential"?"selected":""}>Sequential</option>
+                  <option value="Parallel" ${a.mode==="Parallel"?"selected":""}>Parallel</option>
+                </select>
+              </div>
+              <div class="field span-12">
+                <div class="small" style="font-size:12.5px; color:var(--muted); line-height:1.35">
+                  SignedAt: ${a.signedAt ? fmt(a.signedAt) : "—"} • SignatureID: ${a.signatureId || "—"}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      // Wire actions
+      wrap.querySelectorAll("[data-act]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const i = Number(btn.getAttribute("data-i"));
+          const act = btn.getAttribute("data-act");
+          if(act==="sign") signApprover(i);
+          if(act==="reject") rejectApprover(i);
+        });
+      });
+
+      wrap.querySelectorAll("[data-k]").forEach(inp=>{
+        inp.addEventListener("change", ()=>{
+          const i = Number(inp.getAttribute("data-i"));
+          const k = inp.getAttribute("data-k");
+          if(k==="name") state.approvers[i].name = inp.value.trim();
+          if(k==="email") state.approvers[i].email = inp.value.trim();
+          if(k==="required") state.approvers[i].required = (inp.value==="true");
+          if(k==="mode") state.approvers[i].mode = inp.value;
+          audit("Approver updated", `${state.approvers[i].role}: ${k} changed`);
+          write();
+          setPreview();
+        });
+      });
+
+      // Sign table in preview
+      $("#signTable").innerHTML = state.approvers.map(a=>{
+        const s = a.status;
+        const sChip = s==="Signed" ? "green" : (s==="Rejected" ? "red" : "amber");
+        const sig = a.status==="Signed"
+          ? `ID: ${a.signatureId}\nAt: ${fmt(a.signedAt)}\nHash: ${a.signatureHash.slice(0,18)}…`
+          : "—";
+        return `
+          <tr>
+            <td><b>${escapeHtml(a.role)}</b></td>
+            <td>${escapeHtml(a.name || "—")}<div class="meta">${escapeHtml(a.email || "")}</div></td>
+            <td>${a.required ? "Yes" : "No"}</td>
+            <td><span class="chip ${sChip}">${escapeHtml(s)}</span></td>
+            <td class="mono" style="white-space:pre-wrap">${escapeHtml(sig)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function escapeHtml(s){
+      return String(s??"")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function escapeAttr(s){ return escapeHtml(s).replaceAll('"',"&quot;"); }
+
+    // --- Audit timeline ---
+    function renderTimeline(){
+      const wrap = $("#timeline");
+      wrap.innerHTML = state.audit.slice().reverse().slice(0,20).map(e=>{
+        return `
+          <div class="event">
+            <div class="event-top">
+              <b>${escapeHtml(e.action)}</b>
+              <span class="pill"><b>At:</b> ${fmt(e.at)}</span>
+            </div>
+            <div class="meta">Who: ${escapeHtml(e.who)} • ${escapeHtml(e.detail || "—")}</div>
+          </div>
+        `;
+      }).join("") || `<div class="note">No events yet.</div>`;
+    }
+
+    function audit(action, detail, who="System"){
+      state.audit.push({ at: nowISO(), who, action, detail });
+      state.brdUpdatedAt = nowISO();
+      write();
+    }
+
+    // --- Checks ---
+    function runChecks(){
+      syncFormToState();
+      const b = state.brd;
+
+      const checks = [];
+
+      // Basic completeness
+      checks.push({ id:"title", label:"BRD title present", pass: !!b.title, hint:"Add BRD title." });
+      checks.push({ id:"freezeNote", label:"Freeze note present (for sign-off)", pass: !!b.freezeNote.trim(), hint:"Add freeze note describing what changed/finalized." });
+
+      // Key sections non-empty
+      const must = [
+        ["problem","Problem statement"], ["objectives","Business objectives"],
+        ["scopeIn","In-scope"], ["fr","Functional requirements"],
+        ["nfr","Non-functional requirements"], ["rules","Business rules / eligibility"],
+        ["risks","Risks & controls"], ["audit","Audit/reporting needs"], ["ac","Acceptance criteria"]
+      ];
+      must.forEach(([k,label])=>{
+        checks.push({ id:k, label:`Section present: ${label}`, pass: !!(b.sections[k]||"").trim(), hint:`Fill section: ${label}` });
+      });
+
+      // Approvers checks
+      const requiredApprovers = state.approvers.filter(a=>a.required);
+      checks.push({ id:"approvers", label:"Required approvers configured", pass: requiredApprovers.length>=3, hint:"Mark required approvers (min 3) for governance." });
+      checks.push({ id:"approverEmails", label:"Approver emails present", pass: requiredApprovers.every(a=>a.email && a.email.includes("@")), hint:"Ensure each required approver has a valid email." });
+
+      // Version format
+      checks.push({ id:"ver", label:"Version format looks valid (vX.Y)", pass: /^v\d+(\.\d+)?$/i.test(b.version.trim()), hint:"Use version like v1.0, v1.1, v2.0" });
+
+      // Status gating: if already finalized, checks pass if sign pack exists
+      if(b.status==="Finalized"){
+        checks.push({ id:"signedPack", label:"Signed pack generated", pass: !!state.signedPack, hint:"Finalize to generate signed pack." });
+      }
+
+      state.checks = checks;
+      audit("Checks executed", `${checks.filter(c=>c.pass).length}/${checks.length} passed`);
+      write();
+      renderChecksModal();
+      setPreview();
+    }
+
+    function renderChecksChip(){
+      const total = state.checks.length || 0;
+      const pass = state.checks.filter(c=>c.pass).length || 0;
+      $("#kChecks").textContent = `Checks: ${pass}/${total}`;
+      $("#kChecks").className = "chip " + (total && pass===total ? "green" : "amber");
+    }
+
+    function renderChecksModal(){
+      const lines = state.checks.map(c=>{
+        const s = c.pass ? "PASS" : "FAIL";
+        const hint = c.pass ? "" : ` → ${c.hint}`;
+        return `${s} • ${c.label}${hint}`;
+      }).join("\n");
+
+      openModal("Completeness checks", lines || "No checks executed.");
+    }
+
+    // --- Freeze / Request Signatures / Finalize ---
+    function freezeVersion(){
+      syncFormToState();
+
+      // Run checks first
+      runChecks();
+      const total = state.checks.length;
+      const pass = state.checks.filter(c=>c.pass).length;
+
+      // Allow freeze even if checks fail, but warn
+      if(pass < total){
+        if(!confirm(`Only ${pass}/${total} checks passed. Freeze anyway?`)) return;
+      }
+
+      state.brd.status = "Frozen";
+      audit("Version frozen", `${state.brd.version} frozen with note: ${state.brd.freezeNote || "—"}`);
+      write();
+      setPreview();
+    }
+
+    function requestSignatures(){
+      syncFormToState();
+      if(state.brd.status!=="Frozen" && state.brd.status!=="SignaturesRequested"){
+        alert("Freeze the BRD version before requesting signatures.");
+        return;
+      }
+
+      // mark all pending as "Pending" and request
+      state.brd.status = "SignaturesRequested";
+      const required = state.approvers.filter(a=>a.required);
+      const missing = required.filter(a=>!(a.email && a.email.includes("@")));
+      if(missing.length){
+        alert("Some required approvers are missing email. Fix and retry.");
+        return;
+      }
+
+      audit("Signatures requested", `Requested from ${required.length} required approver(s)`);
+      write();
+      setPreview();
+
+      openModal("Signature request created",
+`This is a simulated flow.
+In production, you would:
+• Generate a canonical document hash (PDF/HTML snapshot)
+• Create sign requests with an eSign provider / internal PKI
+• Send OTP/email to approvers with signing link
+• Store signed certificates + timestamps + signer identity
+• Append evidence to the BRD signed pack
+
+For demo: click “Sign” next to each approver to simulate signing.`);
+    }
+
+    async function sha256(text){
+      // Use WebCrypto if available; fallback to simple hash
+      try{
+        const enc = new TextEncoder().encode(text);
+        const buf = await crypto.subtle.digest("SHA-256", enc);
+        return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+      }catch{
+        // fallback (non-cryptographic)
+        let h=0; for(let i=0;i<text.length;i++){ h=(h*31 + text.charCodeAt(i))>>>0; }
+        return "fallback-" + h.toString(16);
+      }
+    }
+
+    function docCanonicalPayload(){
+      const b = state.brd;
+      const payload = {
+        id:b.id, version:b.version, tenant:b.tenant, priority:b.priority, title:b.title, release:b.release,
+        freezeNote:b.freezeNote, summary:b.summary, sections:b.sections
+      };
+      return JSON.stringify(payload);
+    }
+
+    function docHash(){
+      // quick deterministic hash preview (sync) for UI; real hash stored async during signing
+      const s = docCanonicalPayload();
+      let h=0; for(let i=0;i<s.length;i++){ h=(h*33 + s.charCodeAt(i))>>>0; }
+      return "H" + h.toString(16).padStart(8,"0").toUpperCase();
+    }
+
+    function requiredApproverGate(idx){
+      // sequential gate: if sequential mode and previous required sequential not signed, block
+      const a = state.approvers[idx];
+      if(a.mode!=="Sequential") return true;
+      // find previous required sequential approver
+      for(let i=0;i<idx;i++){
+        const prev = state.approvers[i];
+        if(prev.required && prev.mode==="Sequential" && prev.status!=="Signed"){
+          return false;
+        }
+      }
+      return true;
+    }
+
+    async function signApprover(idx){
+      syncFormToState();
+      const a = state.approvers[idx];
+
+      if(state.brd.status!=="SignaturesRequested" && state.brd.status!=="Frozen"){
+        alert("Freeze and request signatures before signing.");
+        return;
+      }
+
+      if(!requiredApproverGate(idx)){
+        alert("Sequential approval: previous required approver(s) must sign first.");
+        return;
+      }
+
+      const signer = a.email || a.name || a.role;
+      const otp = prompt(`Simulated OTP sent to ${signer}\nEnter OTP (any 4 digits):`, "1234");
+      if(!otp) return;
+      if(!/^\d{4}$/.test(otp.trim())){
+        alert("OTP must be 4 digits (demo rule).");
+        return;
+      }
+
+      const payload = docCanonicalPayload() + `|signer=${a.role}|email=${a.email}|otp=${otp.trim()}|at=${nowISO()}`;
+      const sigHash = await sha256(payload);
+
+      a.status = "Signed";
+      a.signedAt = nowISO();
+      a.signatureId = uid("SIG");
+      a.signatureHash = sigHash;
+
+      state.brd.status = "SignaturesRequested";
+      audit("Signed", `${a.role} signed • ${a.signatureId}`, a.name || a.role);
+      write();
+      setPreview();
+    }
+
+    function rejectApprover(idx){
+      const a = state.approvers[idx];
+      const reason = prompt(`Reason for rejection by ${a.role}:`, "Missing details / unclear scope");
+      if(reason===null) return;
+      a.status = "Rejected";
+      a.signedAt = "";
+      a.signatureId = "";
+      a.signatureHash = "";
+      state.brd.status = "Frozen";
+      audit("Rejected", `${a.role} rejected: ${reason}`, a.name || a.role);
+      write();
+      setPreview();
+    }
+
+    function canFinalize(){
+      const required = state.approvers.filter(a=>a.required);
+      return required.every(a=>a.status==="Signed");
+    }
+
+    function buildSignedPack(){
+      const b = state.brd;
+      const pack = {
+        generatedAt: nowISO(),
+        brdSnapshot: JSON.parse(docCanonicalPayload()),
+        docHash: docHash(),
+        signatures: state.approvers.map(a=>({
+          role:a.role, name:a.name, email:a.email,
+          required:a.required, mode:a.mode, status:a.status,
+          signedAt:a.signedAt, signatureId:a.signatureId, signatureHash:a.signatureHash
+        })),
+        auditTrail: state.audit.slice()
+      };
+      return pack;
+    }
+
+    function finalizeBRD(){
+      syncFormToState();
+      if(state.brd.status!=="SignaturesRequested" && state.brd.status!=="Frozen"){
+        alert("Freeze and request signatures before finalizing.");
+        return;
+      }
+      if(!canFinalize()){
+        alert("Cannot finalize: not all required approvers have signed.");
+        return;
+      }
+      state.brd.status = "Finalized";
+      state.signedPack = buildSignedPack();
+      audit("Finalized", `BRD finalized with ${state.approvers.filter(a=>a.required).length} required signatures`);
+      write();
+      setPreview();
+
+      openModal("BRD Finalized (Signed Pack Created)",
+`Signed pack created and stored locally.
+Next steps in production:
+• Generate PDF and embed signature certificates
+• Store signed pack in immutable storage (WORM)
+• Publish to downstream systems (Jira/ADO/Confluence)
+• Lock changes; future edits require new version (v1.1/v2.0)`);
+    }
+
+    // --- AI Quality Review (simulated) ---
+    function aiReview(){
+      syncFormToState();
+      const b = state.brd;
+      const issues = [];
+
+      function need(field, msg){
+        if(!(field||"").trim()) issues.push("• " + msg);
+      }
+
+      need(b.title, "Title is empty.");
+      need(b.freezeNote, "Freeze note is missing for sign-off.");
+      need(b.sections.problem, "Problem statement is missing.");
+      need(b.sections.objectives, "Business objectives are missing.");
+      need(b.sections.fr, "Functional requirements are missing.");
+      need(b.sections.nfr, "Non-functional requirements are missing.");
+      need(b.sections.ac, "Acceptance criteria missing.");
+
+      // heuristic warnings
+      const frLines = (b.sections.fr||"").split("\n").filter(x=>x.trim()).length;
+      const acLines = (b.sections.ac||"").split("\n").filter(x=>x.trim()).length;
+      if(frLines>0 && acLines>0 && acLines < Math.ceil(frLines/2)){
+        issues.push("• Acceptance criteria may be too short compared to FR count (add measurable pass/fail checks).");
+      }
+      if((b.sections.nfr||"").toLowerCase().includes("sla")===false){
+        issues.push("• Consider adding SLA/latency targets under NFR (even approximate).");
+      }
+      if((b.sections.audit||"").toLowerCase().includes("audit")===false){
+        issues.push("• Add explicit audit trail requirements (who/when/what, versioning, approvals).");
+      }
+
+      const output =
+`AI Quality Review (simulated)
+BRD: ${b.id} • ${b.version}
+Status: ${b.status}
+
+Findings:
+${issues.length ? issues.join("\n") : "• Looks good. No major gaps detected by rules."}
+
+Recommended next:
+• Run Checks
+• Freeze Version
+• Request Signatures
+• Finalize when required approvers signed`;
+
+      openModal("AI Quality Review", output);
+      audit("AI review executed", `${issues.length} issue(s) flagged`);
+      write();
+      setPreview();
+    }
+
+    // --- Export ---
+    function downloadJson(name, obj){
+      const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function exportJSON(){
+      syncFormToState();
+      downloadJson(`${state.brd.id}_${state.brd.version}_SIGNOFF_EXPORT.json`, {
+        exportedAt: nowISO(),
+        brd: state.brd,
+        approvers: state.approvers,
+        checks: state.checks,
+        audit: state.audit,
+        signedPack: state.signedPack
+      });
+    }
+
+    function exportPrintableHTML(){
+      syncFormToState();
+      // Create a printable HTML snapshot (includes signatures)
+      const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+      <title>${escapeHtml(state.brd.title || "BRD")}</title>
+      <style>
+        body{font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin:24px; color:#0f172a}
+        h1{margin:0 0 6px; font-size:22px}
+        .meta{color:#64748b; font-size:13px; margin-bottom:14px; line-height:1.35}
+        h2{margin:18px 0 8px; font-size:15px}
+        .box{border:1px solid #e5e7eb; border-radius:12px; padding:10px; white-space:pre-wrap; line-height:1.45; font-size:13px}
+        table{width:100%; border-collapse:collapse; margin-top:10px}
+        th,td{border:1px solid #e5e7eb; padding:8px; font-size:12.5px; vertical-align:top}
+        th{background:#f8fafc; color:#334155; text-align:left}
+        .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+        @media print{ .noprint{display:none} }
+      </style></head><body>
+        <h1>${escapeHtml(state.brd.title || "—")}</h1>
+        <div class="meta">
+          ID: <span class="mono">${escapeHtml(state.brd.id)}</span> • Version: ${escapeHtml(state.brd.version)} • Tenant: ${escapeHtml(state.brd.tenant)} • Priority: ${escapeHtml(state.brd.priority)} • Release: ${escapeHtml(state.brd.release||"—")}<br>
+          Status: ${escapeHtml(state.brd.status)} • Generated: ${escapeHtml(fmt(nowISO()))}<br>
+          Freeze note: ${escapeHtml(state.brd.freezeNote||"—")}
+        </div>
+
+        <h2>Executive Summary</h2><div class="box">${escapeHtml(state.brd.summary||"—")}</div>
+
+        <h2>Problem Statement</h2><div class="box">${escapeHtml(state.brd.sections.problem||"—")}</div>
+        <h2>Business Objectives</h2><div class="box">${escapeHtml(state.brd.sections.objectives||"—")}</div>
+        <h2>Scope (In)</h2><div class="box">${escapeHtml(state.brd.sections.scopeIn||"—")}</div>
+        <h2>Scope (Out)</h2><div class="box">${escapeHtml(state.brd.sections.scopeOut||"—")}</div>
+        <h2>Functional Requirements</h2><div class="box">${escapeHtml(state.brd.sections.fr||"—")}</div>
+        <h2>Non-Functional Requirements</h2><div class="box">${escapeHtml(state.brd.sections.nfr||"—")}</div>
+        <h2>Business Rules / Eligibility</h2><div class="box">${escapeHtml(state.brd.sections.rules||"—")}</div>
+        <h2>Dependencies & Assumptions</h2><div class="box">${escapeHtml(state.brd.sections.deps||"—")}</div>
+        <h2>Exceptions / Edge Cases</h2><div class="box">${escapeHtml(state.brd.sections.edges||"—")}</div>
+        <h2>Risks & Controls</h2><div class="box">${escapeHtml(state.brd.sections.risks||"—")}</div>
+        <h2>Data Requirements</h2><div class="box">${escapeHtml(state.brd.sections.data||"—")}</div>
+        <h2>Audit / Reporting</h2><div class="box">${escapeHtml(state.brd.sections.audit||"—")}</div>
+        <h2>Acceptance Criteria</h2><div class="box">${escapeHtml(state.brd.sections.ac||"—")}</div>
+
+        <h2>Sign-off Matrix</h2>
+        <table>
+          <thead><tr><th>Role</th><th>Approver</th><th>Required</th><th>Status</th><th>Signature Evidence</th></tr></thead>
+          <tbody>
+            ${state.approvers.map(a=>{
+              const sig = a.status==="Signed" ? `ID: ${a.signatureId}\nAt: ${fmt(a.signedAt)}\nHash: ${a.signatureHash?.slice(0,24)}…` : "—";
+              return `<tr>
+                <td><b>${escapeHtml(a.role)}</b></td>
+                <td>${escapeHtml(a.name||"—")}<div class="meta">${escapeHtml(a.email||"")}</div></td>
+                <td>${a.required ? "Yes":"No"}</td>
+                <td>${escapeHtml(a.status)}</td>
+                <td class="mono" style="white-space:pre-wrap">${escapeHtml(sig)}</td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+
+        <h2>Document Hash</h2>
+        <div class="box mono">${escapeHtml(docHash())}</div>
+
+        <h2>Audit Trail (Last 30)</h2>
+        <div class="box">${escapeHtml(state.audit.slice(-30).map(e=>`${fmt(e.at)} • ${e.who} • ${e.action} • ${e.detail}`).join("\n"))}</div>
+
+        <div class="noprint" style="margin-top:18px;color:#64748b;font-size:12px">
+          Tip: Use browser Print → Save as PDF to create a signed PDF artifact.
+        </div>
+      </body></html>`;
+
+      const blob = new Blob([html], {type:"text/html"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${state.brd.id}_${state.brd.version}_PRINT.html`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function openSignedPack(){
+      if(!state.signedPack){
+        openModal("Signed Pack", "No signed pack yet. Finalize the BRD after required signatures are signed.");
+        return;
+      }
+      openModal("Signed Pack (stored locally)", JSON.stringify(state.signedPack, null, 2));
+    }
+
+    // --- Sample data ---
+    function loadSample(){
+      state.brd.title = "Digital MSME Renewal Journey";
+      state.brd.tenant = "BANK";
+      state.brd.priority = "P1";
+      state.brd.version = state.brd.version || "v1.0";
+      state.brd.release = "FY26 Q1 / Sprint 12";
+      state.brd.summary = "Digitize MSME renewal to reduce manual processing, improve SLA, and ensure complete audit + governance.";
+      state.brd.freezeNote = "Finalized scope, rules, NFR, and sign-off route after stakeholder calls; ready for digital sign.";
+      state.brd.sections.problem =
+`• Current renewal is manual and slow; high operational overhead
+• Limited visibility into approvals and audit trail
+• Inconsistent rule application across branches`;
+      state.brd.sections.objectives =
+`• Reduce renewal TAT to < 2 minutes for eligible customers
+• Standardize eligibility via policy rules (FOIR, DPD, vintage)
+• Provide maker-checker + evidence for audit & compliance`;
+      state.brd.sections.scopeIn =
+`• Online renewal request capture
+• Eligibility and limit computation
+• Maker-checker approvals for exceptions
+• Audit log + reporting dashboard`;
+      state.brd.sections.scopeOut =
+`• New loan origination
+• Complex restructuring workflows (future phase)
+• Cross-sell journeys (future phase)`;
+      state.brd.sections.fr =
+`• System should fetch customer profile, bureau, and cashflow summary
+• System should compute eligibility using FOIR, DPD, vintage rules
+• For eligible cases, auto-approve; else route to maker-checker
+• Provide approval comments, attachments, and decision reasons
+• Generate renewal letter and store as document evidence`;
+      state.brd.sections.nfr =
+`• SLA: decisioning < 120 seconds for standard cases
+• Availability: 99.9% monthly
+• Audit: immutable event trail for requirement, approvals, and changes
+• Security: encryption in transit/at rest; role-based access and SoD`;
+      state.brd.sections.rules =
+`• FOIR threshold: configurable per segment
+• DPD cutoff: configurable; blocks if above threshold
+• Vintage: min months since disbursement required
+• Exception handling: manual override requires dual approval`;
+      state.brd.sections.deps =
+`• Bureau and banking integrations availability
+• Policy rule engine configuration
+• IAM integration for roles and SoD`;
+      state.brd.sections.edges =
+`• Missing bureau report fallback
+• API timeouts and retries
+• Duplicate renewal requests handling
+• Override for urgent cases with audit evidence`;
+      state.brd.sections.risks =
+`• Risk of rule bypass via overrides → dual approval + alerts
+• Fraud risk → anomaly checks + audit review
+• Data quality risk → validation rules and reconciliation`;
+      state.brd.sections.data =
+`• Customer & party master
+• Bureau score and tradelines summary
+• Bank statement summary / bounce indicators
+• Renewal decision record and documents`;
+      state.brd.sections.audit =
+`• Store who/when/what for every decision and data change
+• Keep version history of BRD and CR
+• Exportable audit report for regulators/internal audit`;
+      state.brd.sections.ac =
+`• Given eligible customer, system returns decision within 120 seconds
+• Given DPD above threshold, system blocks and records reason
+• Maker-checker approvals recorded with timestamp and approver identity
+• Audit trail can reconstruct end-to-end decisioning and approvals`;
+
+      audit("Loaded sample", "Sample BRD content populated for demo");
+      write();
+      syncStateToForm();
+      setPreview();
+    }
+
+    // --- Reset ---
+    function resetAll(){
+      if(!confirm("Reset this page data (localStorage)?")) return;
+      localStorage.removeItem(KEY);
+      state = baseState();
+      write();
+      syncStateToForm();
+      setPreview();
+      alert("Reset done.");
+    }
+
+    // --- Init & wire ---
+    function init(){
+      // Wire modal
+      $("#modal").addEventListener("click",(e)=>{ if(e.target===$("#modal")) closeModal(); });
+      $$("#modal [data-close]").forEach(b=>b.addEventListener("click", closeModal));
+      $("#mCopy").addEventListener("click", copyModal);
+      $("#mOk").addEventListener("click", closeModal);
+
+      // Buttons
+      $("#btnRunChecks").addEventListener("click", runChecks);
+      $("#btnFreeze").addEventListener("click", freezeVersion);
+      $("#btnRequestSign").addEventListener("click", requestSignatures);
+      $("#btnFinalize").addEventListener("click", finalizeBRD);
+
+      $("#btnAIReview").addEventListener("click", aiReview);
+      $("#btnExport").addEventListener("click", exportJSON);
+      $("#btnExportPrint").addEventListener("click", exportPrintableHTML);
+      $("#btnOpenPack").addEventListener("click", openSignedPack);
+      $("#btnAutoFill").addEventListener("click", loadSample);
+      $("#btnReset").addEventListener("click", resetAll);
+
+      // Keep preview in sync
+      ["fTitle","fTenant","fPriority","fId","fVer","fRelease","fFreezeNote"].forEach(id=>{
+        $("#"+id).addEventListener("change", ()=>{ syncFormToState(); audit("Metadata updated", `${id} changed`); setPreview(); });
+      });
+
+      // Initial sync
+      syncStateToForm();
+      setPreview();
+    }
+
+    init();
+  </script>
+</body>
+</html>

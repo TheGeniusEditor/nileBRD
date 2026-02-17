@@ -1,0 +1,255 @@
+.page {
+  --background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  --foreground: #fff;
+
+  --text-primary: #000;
+  --text-secondary: #666;
+
+  --button-primary-hover: #383838;
+  --button-secondary-hover: #f2f2f2;
+  --button-secondary-border: #ebebeb;
+
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 40px 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  font-family: var(--font-geist-sans);
+  background: var(--background);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 40px 32px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.hero div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hero h1 {
+  font-size: 48px;
+  margin: 0;
+  background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  color: #666;
+  max-width: 600px;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+.portalGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.portalCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 24px;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  background: #ffffff;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 8px rgba(15, 118, 110, 0.08);
+  cursor: pointer;
+  text-align: center;
+}
+
+.portalCard:hover:not(.portalDisabled) {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.15);
+  border-color: rgba(15, 118, 110, 0.3);
+}
+
+.portalCard h2 {
+  font-size: 24px;
+  margin: 0;
+  color: #000;
+  font-weight: 700;
+}
+
+.portalCard p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.6;
+  min-height: 60px;
+}
+
+.portalIcon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.portal_ba {
+  border-color: #0f766e;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+}
+
+.portal_ba:hover {
+  border-color: #0d9488;
+}
+
+.portal_ba h2 {
+  color: #0f766e;
+}
+
+.portal_stakeholder {
+  border-color: #2563eb;
+  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+}
+
+.portal_stakeholder:hover {
+  border-color: #1d4ed8;
+}
+
+.portal_stakeholder h2 {
+  color: #1e40af;
+}
+
+.portal_it {
+  border-color: #7c3aed;
+  background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+}
+
+.portal_it:hover {
+  border-color: #6d28d9;
+}
+
+.portal_it h2 {
+  color: #6d28d9;
+}
+
+.portalDisabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: #f5f5f5 !important;
+  border-color: #ddd !important;
+  position: relative;
+}
+
+.portalDisabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.portalDisabled h2 {
+  color: #999 !important;
+}
+
+.comingSoon {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 1024px) {
+  .page {
+    padding: 32px 24px;
+    gap: 24px;
+  }
+
+  .hero {
+    padding: 32px 24px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+  }
+
+  .portalGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .portalCard {
+    padding: 24px 20px;
+  }
+
+  .portalIcon {
+    font-size: 40px;
+  }
+
+  .portalCard h2 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 24px 16px;
+    gap: 20px;
+  }
+
+  .hero {
+    padding: 24px 16px;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .portalGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .portalCard {
+    padding: 20px 16px;
+    gap: 12px;
+  }
+
+  .portalIcon {
+    font-size: 32px;
+  }
+
+  .portalCard h2 {
+    font-size: 18px;
+  }
+
+  .portalCard p {
+    font-size: 13px;
+    min-height: auto;
+  }
+}

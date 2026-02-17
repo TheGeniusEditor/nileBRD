@@ -1,0 +1,1414 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BRD Portal • Compliance Workspace (sanjay.compliance@nbfc.com)</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --border2:#f1f5f9;
+      --shadow: 0 10px 28px rgba(2,6,23,.08);
+      --r:16px;
+
+      --primary:#2563eb;   /* approve */
+      --success:#16a34a;   /* accept */
+      --warning:#f59e0b;   /* request updates */
+      --danger:#ef4444;    /* reject */
+      --indigo:#4f46e5;    /* export */
+      --slate:#334155;     /* neutral */
+      --pink:#db2777;      /* AI */
+      --teal:#0d9488;      /* add */
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:var(--font); background:var(--bg); color:var(--text)}
+    a{color:inherit; text-decoration:none}
+
+    .topbar{position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--border)}
+    .topbar-inner{max-width:1480px; margin:0 auto; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px}
+    .brand{display:flex; align-items:center; gap:10px}
+    .logo{width:36px; height:36px; border-radius:14px; background:linear-gradient(135deg,var(--indigo),#60a5fa); box-shadow:0 10px 20px rgba(79,70,229,.18)}
+    .brand h1{margin:0; font-size:15px; letter-spacing:-.2px}
+    .brand .sub{margin:4px 0 0; font-size:12px; color:var(--muted)}
+    .right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:13px}
+    .dot{width:8px; height:8px; border-radius:999px; background:#16a34a}
+    .kbd{font-family:var(--mono); font-size:12px; padding:2px 6px; border:1px solid var(--border); border-bottom-width:2px; border-radius:8px; color:var(--muted); background:#fff}
+
+    .wrap{max-width:1480px; margin:0 auto; padding:16px}
+    .layout{display:grid; grid-template-columns:360px 1fr; gap:14px; align-items:start}
+    .card{border:1px solid var(--border); border-radius:var(--r); background:#fff; box-shadow:var(--shadow); overflow:hidden}
+    .card.noshadow{box-shadow:none}
+    .card-head{padding:14px 14px 10px; border-bottom:1px solid var(--border2); display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+    .card-head h3{margin:0; font-size:14px}
+    .card-head p{margin:6px 0 0; font-size:12.5px; color:var(--muted); line-height:1.35}
+    .card-body{padding:14px}
+    .hr{height:1px; background:var(--border2); margin:12px 0}
+
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:9px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:850;
+      display:inline-flex; align-items:center; gap:8px;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      user-select:none;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow); border-color:#d1d5db}
+    .btn:active{transform:translateY(0)}
+    .btn.small{padding:7px 10px; border-radius:10px; font-size:13px}
+    .btn.primary{background:linear-gradient(135deg,var(--primary),#60a5fa); color:#fff; border-color:transparent}
+    .btn.success{background:linear-gradient(135deg,var(--success),#22c55e); color:#fff; border-color:transparent}
+    .btn.warn{background:linear-gradient(135deg,var(--warning),#fbbf24); color:#111827; border-color:transparent}
+    .btn.danger{background:linear-gradient(135deg,var(--danger),#fb7185); color:#fff; border-color:transparent}
+    .btn.export{background:linear-gradient(135deg,var(--indigo),#7c3aed); color:#fff; border-color:transparent}
+    .btn.ai{background:linear-gradient(135deg,var(--pink),#f472b6); color:#fff; border-color:transparent}
+    .btn.add{background:linear-gradient(135deg,var(--teal),#22c55e); color:#fff; border-color:transparent}
+    .btn.neutral{background:linear-gradient(135deg,var(--slate),#64748b); color:#fff; border-color:transparent}
+
+    .nav{display:flex; flex-direction:column; gap:6px}
+    .nav a{
+      padding:10px 10px; border-radius:12px;
+      border:1px solid transparent; color:var(--muted);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      font-weight:900;
+    }
+    .nav a.active{background:rgba(79,70,229,.08); border-color:rgba(79,70,229,.20); color:var(--text)}
+    .nav a:hover{background:#f8fafc; border-color:var(--border); color:var(--text)}
+    .badge{font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); background:#fff}
+    .mono{font-family:var(--mono)}
+
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .span-12{grid-column:span 12}
+    .span-8{grid-column:span 8}
+    .span-6{grid-column:span 6}
+    .span-4{grid-column:span 4}
+    .title{font-size:20px; margin:0; letter-spacing:-.3px}
+    .subtext{margin:6px 0 0; font-size:13px; color:var(--muted)}
+
+    label{font-size:12px; color:var(--muted); font-weight:900}
+    input[type="text"], input[type="number"], input[type="date"], textarea, select{
+      width:100%;
+      border:1px solid var(--border);
+      padding:10px 12px;
+      border-radius:12px;
+      outline:none;
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+    }
+    textarea{min-height:110px; resize:vertical}
+    .inputs{display:grid; grid-template-columns:repeat(12,1fr); gap:10px}
+    .field{grid-column:span 6; display:flex; flex-direction:column; gap:6px}
+    .field.full{grid-column:span 12}
+    .field.third{grid-column:span 4}
+    .help{font-size:12.5px; color:var(--muted); line-height:1.35}
+    .note{border:1px dashed #d1d5db; background:#f8fafc; border-radius:12px; padding:10px; color:var(--muted); font-size:12.5px; line-height:1.35; white-space:pre-wrap}
+
+    .table{
+      width:100%;
+      border-collapse:collapse;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .table th,.table td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--border2);
+      text-align:left;
+      vertical-align:top;
+      font-size:13px;
+    }
+    .table th{background:#f8fafc; color:var(--muted); font-weight:900}
+    .table tr:last-child td{border-bottom:none}
+
+    .chip{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; font-size:12px; font-weight:900; color:var(--muted)}
+    .chip.red{border-color:rgba(239,68,68,.25); background:rgba(239,68,68,.06); color:#b91c1c}
+    .chip.amber{border-color:rgba(245,158,11,.25); background:rgba(245,158,11,.07); color:#92400e}
+    .chip.green{border-color:rgba(22,163,74,.25); background:rgba(22,163,74,.07); color:#166534}
+
+    /* Modal */
+    .backdrop{
+      position:fixed; inset:0; z-index:60;
+      background: rgba(2,6,23,.45);
+      display:none;
+      align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .modal{
+      width:min(1180px, 100%);
+      max-height:92vh;
+      overflow:auto;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:0 25px 70px rgba(2,6,23,.25);
+    }
+    .modal-head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border2);
+      display:flex; align-items:center; justify-content:space-between; gap:10px
+    }
+    .modal-head h3{margin:0; font-size:14px}
+    .modal-body{padding:14px}
+
+    /* Toast */
+    .toast-wrap{position:fixed; right:16px; bottom:16px; z-index:80; display:flex; flex-direction:column; gap:10px}
+    .toast{
+      width:min(460px, calc(100vw - 32px));
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      padding:10px;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .ticon{width:26px; height:26px; border-radius:10px; background:rgba(79,70,229,.10); display:flex; align-items:center; justify-content:center; flex:0 0 auto}
+    .toast h4{margin:0; font-size:13px}
+    .toast p{margin:4px 0 0; font-size:12.5px; color:var(--muted)}
+
+    /* Page Switcher */
+    .page-switcher{
+      padding:8px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      color:var(--text);
+      font-size:13px;
+      font-family:var(--font);
+      cursor:pointer;
+      font-weight:700;
+    }
+    .page-switcher:hover{border-color:#d1d5db; background:#f8fafc}
+
+    @media (max-width:1180px){
+      .layout{grid-template-columns:1fr}
+      .span-8,.span-6,.span-4{grid-column:span 12}
+      .field,.field.third{grid-column:span 12}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>Compliance Workspace • BRD Automation</h1>
+          <div class="sub">Signed in as <span class="mono">sanjay.compliance@nbfc.com</span> • Role: Compliance</div>
+        </div>
+      </div>
+      <select class="page-switcher" id="pageSwitcher">
+        <option value="Admin.html">Admin</option>
+        <option value="BA.html">BA Workspace</option>
+        <option value="Compliance.html" selected>Compliance</option>
+        <option value="In Take 1.html">Intake Tracker</option>
+        <option value="Infosec.html">InfoSec</option>
+        <option value="IT.html">IT</option>
+        <option value="Risk.html">Risk</option>
+        <option value="SME.html">SME</option>
+        <option value="User Management 1.html">User Management</option>
+      </select>
+      <div class="right">
+        <div class="pill"><span class="dot"></span><span id="activeBrdPill">No BRD selected</span></div>
+        <div class="pill"><span class="mono">Compliance Review</span> <span class="kbd">ON</span></div>
+        <button class="btn small neutral" id="resetBtn" title="Clears local data">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="layout">
+      <!-- LEFT -->
+      <aside class="card">
+        <div class="card-head">
+          <div>
+            <h3>Compliance Navigation</h3>
+            <p>Map regulatory obligations to requirements and validate audit evidence, retention, approvals, and disclosures.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="nav" id="nav">
+            <a href="#" data-view="inbox" class="active">Compliance Inbox <span class="badge" id="inboxBadge">0</span></a>
+            <a href="#" data-view="obligations">Obligations Map <span class="badge">RBI/SEBI/IRDA</span></a>
+            <a href="#" data-view="kyc">KYC / AML Checks <span class="badge">Workflows</span></a>
+            <a href="#" data-view="privacy">Privacy & Consent <span class="badge">PII</span></a>
+            <a href="#" data-view="retention">Retention & Audit <span class="badge">Records</span></a>
+            <a href="#" data-view="disclosures">Customer Disclosures <span class="badge">Notices</span></a>
+            <a href="#" data-view="evidence">Evidence Pack <span class="badge">Artifacts</span></a>
+            <a href="#" data-view="decision">Compliance Decision <span class="badge">Sign-off</span></a>
+            <a href="#" data-view="audit">Audit Trail <span class="badge">Evidence</span></a>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="note">
+            <b>Compliance checklist:</b><br/>
+            • Which regulator obligations apply (RBI, PMLA, FIU-IND, etc.)?<br/>
+            • KYC/CKYC, AML screening, adverse media, sanctions checks defined?<br/>
+            • Consent + privacy notices + data minimization captured?<br/>
+            • Retention policies + audit logs + record immutability defined?<br/>
+            • Customer communications/disclosures clear (rejection reasons, fees, T&amp;C)?
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
+            <button class="btn ai" id="aiComplianceBtn">✨ AI Compliance Scan</button>
+            <button class="btn export" id="exportPackBtn">Export Compliance Pack</button>
+          </div>
+          <div class="help" style="margin-top:8px">Exports obligations map + evidence list + decision log (JSON).</div>
+        </div>
+      </aside>
+
+      <!-- RIGHT -->
+      <main class="grid">
+        <!-- INBOX -->
+        <section class="card span-12" id="view-inbox">
+          <div class="card-head">
+            <div>
+              <h3>Compliance Inbox</h3>
+              <p>BRDs awaiting compliance mapping and sign-off.</p>
+            </div>
+            <div class="right">
+              <div style="min-width:260px">
+                <label>Search</label>
+                <input id="searchInbox" type="text" placeholder="Search by ID/title/domain…" />
+              </div>
+              <div style="min-width:220px">
+                <label>Filter</label>
+                <select id="filterInbox">
+                  <option value="ALL">All</option>
+                  <option value="In Review">In Review</option>
+                  <option value="Changes Requested">Changes Requested</option>
+                  <option value="Approved">Approved</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>BRD</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                  <th>Compliance Score</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="inboxTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- OBLIGATIONS -->
+        <section class="card span-12" id="view-obligations" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Obligations Map</h3>
+              <p>Map obligations → BRD sections/requirements → evidence. Use placeholders (OBL-...) if exact circular not captured yet.</p>
+            </div>
+            <div class="right">
+              <span class="badge">Status: <b id="statusText">—</b></span>
+              <button class="btn add" id="addOblBtn">+ Add Obligation</button>
+              <button class="btn ai" id="aiOblBtn">✨ AI: Suggest Obligations</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="grid">
+              <div class="span-12">
+                <h2 class="title" id="brdTitle">No BRD selected</h2>
+                <div class="subtext" id="brdMeta">—</div>
+              </div>
+              <div class="span-12">
+                <div class="help" id="scoreText">—</div>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Obligation ID</th>
+                  <th>Regulator/Source</th>
+                  <th>Obligation</th>
+                  <th>Mapped to</th>
+                  <th>Evidence</th>
+                  <th>Owner</th>
+                  <th>Due</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="oblTable"></tbody>
+            </table>
+
+            <div class="note" style="margin-top:12px">
+              Suggested categories: KYC/CKYC, AML screening, sanctions, adverse media, customer communications, record retention,
+              grievance redressal, outsourcing/vendor risk, data privacy, reporting (FIU/returns), audit logs.
+            </div>
+          </div>
+        </section>
+
+        <!-- KYC/AML -->
+        <section class="card span-12" id="view-kyc" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>KYC / AML Checks</h3>
+              <p>Define compliance checkpoints, escalation flow, and audit evidence (screening logs, case IDs).</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addKycBtn">+ Add Checkpoint</button>
+              <button class="btn ai" id="aiKycBtn">✨ AI: Suggest Checkpoints</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Checkpoint ID</th>
+                  <th>Check</th>
+                  <th>When</th>
+                  <th>Failure Action</th>
+                  <th>Escalation</th>
+                  <th>Evidence</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="kycTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- PRIVACY -->
+        <section class="card span-12" id="view-privacy" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Privacy & Consent (PII)</h3>
+              <p>Capture personal data fields, purpose limitation, consent mechanism, and access controls.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addPiiBtn">+ Add PII Item</button>
+              <button class="btn ai" id="aiPrivacyBtn">✨ AI: Suggest Controls</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>PII ID</th>
+                  <th>Data Field</th>
+                  <th>Purpose</th>
+                  <th>Consent / Notice</th>
+                  <th>Retention</th>
+                  <th>Access Control</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="piiTable"></tbody>
+            </table>
+
+            <div class="note" style="margin-top:12px">
+              Include: PAN, Aadhaar/VID, DOB, address, phone/email, bank details, bureau pulls, device signals, biometrics (if any),
+              and ensure purpose+consent is defined.
+            </div>
+          </div>
+        </section>
+
+        <!-- RETENTION -->
+        <section class="card span-12" id="view-retention" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Retention & Audit Records</h3>
+              <p>Record types, retention period, storage, immutability, and retrieval for audits.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addRetBtn">+ Add Record Type</button>
+              <button class="btn ai" id="aiRetBtn">✨ AI: Suggest Retention</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Record ID</th>
+                  <th>Record Type</th>
+                  <th>Retention</th>
+                  <th>Storage</th>
+                  <th>Immutability</th>
+                  <th>Audit Retrieval</th>
+                  <th>Owner</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="retTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- DISCLOSURES -->
+        <section class="card span-12" id="view-disclosures" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Customer Disclosures</h3>
+              <p>Messages, notices, and reasons (approval/rejection/fees). Ensure consistent and compliant communication.</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addDiscBtn">+ Add Disclosure</button>
+              <button class="btn ai" id="aiDiscBtn">✨ AI: Draft Messages</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Disclosure ID</th>
+                  <th>When shown</th>
+                  <th>Channel</th>
+                  <th>Message</th>
+                  <th>References</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="discTable"></tbody>
+            </table>
+
+            <div class="note" style="margin-top:12px">
+              Include: consent notice, fee/charges disclosure, adverse action/rejection reasons (where applicable),
+              data sharing statement, grievance contact details.
+            </div>
+          </div>
+        </section>
+
+        <!-- EVIDENCE -->
+        <section class="card span-12" id="view-evidence" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Evidence Pack</h3>
+              <p>List artifacts required for audit (policies, logs, reports, approvals, screenshots, vendor contracts).</p>
+            </div>
+            <div class="right">
+              <button class="btn add" id="addEvBtn">+ Add Evidence</button>
+              <button class="btn ai" id="aiEvBtn">✨ AI: Suggest Evidence</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Evidence ID</th>
+                  <th>Artifact</th>
+                  <th>Owner</th>
+                  <th>Where stored</th>
+                  <th>Retention</th>
+                  <th>Readiness</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="evTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- DECISION -->
+        <section class="card span-12" id="view-decision" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Compliance Decision (Sign-off)</h3>
+              <p>Approve / Request Updates / Reject. Adds compliance sign-off entry to approvals log.</p>
+            </div>
+            <div class="right">
+              <button class="btn success" id="approveBtn">Approve (Compliance)</button>
+              <button class="btn warn" id="updatesBtn">Request Updates</button>
+              <button class="btn danger" id="rejectBtn">Reject</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="inputs">
+              <div class="field full">
+                <label>Decision Notes (visible to BA + reviewers)</label>
+                <textarea id="decisionNotes" placeholder="Summarize compliance gaps, mapped obligations, and required evidence."></textarea>
+              </div>
+              <div class="field third">
+                <label>Compliance rating</label>
+                <select id="rating">
+                  <option value="Low">Low risk</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </select>
+              </div>
+              <div class="field third">
+                <label>Update due (days)</label>
+                <input id="dueDays" type="number" min="1" value="5"/>
+              </div>
+              <div class="field third">
+                <label>Evidence ref</label>
+                <input id="evidenceRef" type="text" placeholder="Policy doc / ticket / repository ref"/>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <h3 style="margin:0; font-size:14px">Approvals log (read)</h3>
+            <table class="table" style="margin-top:10px">
+              <thead><tr><th>Stage</th><th>Decision</th><th>By</th><th>At</th><th>Notes</th></tr></thead>
+              <tbody id="apTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- AUDIT -->
+        <section class="card span-12" id="view-audit" style="display:none">
+          <div class="card-head">
+            <div>
+              <h3>Audit Trail (read)</h3>
+              <p>Append-only events (prototype stored in localStorage).</p>
+            </div>
+            <div class="right">
+              <div style="min-width:280px">
+                <label>Search</label>
+                <input id="auditSearch" type="text" placeholder="Filter by action/user/id…"/>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead><tr><th>At</th><th>User</th><th>Action</th><th>Entity</th><th>ID</th><th>Meta</th></tr></thead>
+              <tbody id="auditTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- AI MODAL -->
+  <div class="backdrop" id="aiModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>AI Compliance Scan (offline mock)</h3>
+        <button class="btn small neutral" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid" style="grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px">
+          <button class="btn ai" id="aiOblRun">Suggest Obligations</button>
+          <button class="btn ai" id="aiKycRun">Suggest KYC/AML Checks</button>
+          <button class="btn ai" id="aiEvRun">Suggest Evidence Pack</button>
+        </div>
+        <div class="grid">
+          <section class="card span-6 noshadow">
+            <div class="card-head"><div><h3>Obligations</h3><p>Auto suggestions.</p></div></div>
+            <div class="card-body" id="aiOblOut"><div class="note">Run “Suggest Obligations”.</div></div>
+          </section>
+          <section class="card span-6 noshadow">
+            <div class="card-head"><div><h3>KYC/AML</h3><p>Checkpoints.</p></div></div>
+            <div class="card-body" id="aiKycOut"><div class="note">Run “Suggest KYC/AML Checks”.</div></div>
+          </section>
+          <section class="card span-12 noshadow">
+            <div class="card-head"><div><h3>Evidence pack</h3><p>Audit artifacts.</p></div></div>
+            <div class="card-body" id="aiEvOut"><div class="note">Run “Suggest Evidence Pack”.</div></div>
+          </section>
+        </div>
+        <div class="hr"></div>
+        <div class="note"><b>Production:</b> Replace mock AI with citations to circulars/policies; store outputs with evidence IDs.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    /***********************
+     * Compliance Workspace (offline functional)
+     * - reads shared BRDs from localStorage store
+     * - maintains compliance pack per BRD
+     * - maps obligations + evidence and records compliance decision to approvals log
+     ***********************/
+    const C_EMAIL = "sanjay.compliance@nbfc.com";
+    const Store = { KEY:"brd_ba_workspace_v1", SELECTED:"brd_ba_selected_v1" };
+    const Status = { DRAFT:"Draft", IN_REVIEW:"In Review", CHANGES:"Changes Requested", APPROVED:"Approved", PUBLISHED:"Published", ARCHIVED:"Archived" };
+
+    const nowISO = () => new Date().toISOString();
+    const fmt = (ts) => { try{ return new Date(ts).toLocaleString(undefined,{year:"numeric",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"}); }catch{ return ts; } };
+    const safeParse = (s, fb) => { try{return JSON.parse(s);}catch{return fb;} };
+    const escapeHtml = (s) => String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    const uid = (p="ID") => `${p}-${Math.random().toString(16).slice(2,10)}-${Math.random().toString(16).slice(2,10)}`.toUpperCase();
+
+    const $ = (q) => document.querySelector(q);
+    const $$ = (q) => Array.from(document.querySelectorAll(q));
+
+    function toast(title, msg){
+      const wrap = $("#toastWrap");
+      const el = document.createElement("div");
+      el.className="toast";
+      el.innerHTML = `<div class="ticon">✓</div><div><h4>${escapeHtml(title)}</h4><p>${escapeHtml(msg)}</p></div>`;
+      wrap.appendChild(el);
+      setTimeout(()=>{ el.style.opacity="0"; el.style.transform="translateY(6px)"; }, 2400);
+      setTimeout(()=> el.remove(), 3000);
+    }
+
+    function readDB(){
+      const raw = localStorage.getItem(Store.KEY);
+      return raw ? safeParse(raw, { brds:[], audit:[] }) : { brds:[], audit:[] };
+    }
+    function writeDB(db){ localStorage.setItem(Store.KEY, JSON.stringify(db)); }
+    function addAudit(action, entityId, meta={}){
+      const db = readDB();
+      db.audit.unshift({ at: nowISO(), by: C_EMAIL, action, entity:"BRD", id: entityId, meta });
+      writeDB(db);
+    }
+
+    let db, selectedId;
+
+    function getSelected(){
+      if(!selectedId) selectedId = localStorage.getItem(Store.SELECTED) || db.brds[0]?.id;
+      return db.brds.find(b=>b.id===selectedId) || db.brds[0];
+    }
+    function setSelected(id){
+      selectedId = id;
+      localStorage.setItem(Store.SELECTED, id);
+      renderAll();
+    }
+
+    function setActiveNav(view){
+      $$("#nav a").forEach(a=> a.classList.toggle("active", a.dataset.view===view));
+      const map = {
+        inbox:"#view-inbox",
+        obligations:"#view-obligations",
+        kyc:"#view-kyc",
+        privacy:"#view-privacy",
+        retention:"#view-retention",
+        disclosures:"#view-disclosures",
+        evidence:"#view-evidence",
+        decision:"#view-decision",
+        audit:"#view-audit"
+      };
+      Object.values(map).forEach(sel => $(sel).style.display="none");
+      $(map[view]).style.display="block";
+    }
+
+    function openModal(id){ $(id).style.display="flex"; }
+    function closeModal(id){ $(id).style.display="none"; }
+    function wireModalClose(id){
+      const back = $(id);
+      back.addEventListener("click",(e)=>{ if(e.target===back) closeModal(id); });
+      back.querySelectorAll("[data-close]").forEach(b=> b.addEventListener("click", ()=> closeModal(id)));
+    }
+
+    function ensurePack(brd){
+      brd.reviews = brd.reviews || {};
+      brd.reviews.compliance = brd.reviews.compliance || {
+        updatedAt:null,
+        obligations:[], // {id,source,obligation,mappedTo,evidence,owner,due,status}
+        kyc:[],         // {id,check,when,failure,escalation,evidence}
+        pii:[],         // {id,field,purpose,consent,retention,access}
+        retention:[],   // {id,record,period,storage,immutability,retrieval,owner}
+        disclosures:[], // {id,when,channel,message,refs}
+        evidence:[]     // {id,artifact,owner,where,retention,readiness}
+      };
+      return brd.reviews.compliance;
+    }
+
+    function complianceScore(pack){
+      // Simple heuristic: obligations coverage + evidence readiness
+      const ob = pack.obligations.length;
+      const mapped = pack.obligations.filter(o=> (o.mappedTo||"").trim().length>2).length;
+      const ev = pack.evidence.length;
+      const ready = pack.evidence.filter(e=>e.readiness==="Ready").length;
+      const k = pack.kyc.length, p = pack.pii.length, r = pack.retention.length, d = pack.disclosures.length;
+
+      let score = 0;
+      score += Math.min(30, ob*5);
+      score += ob ? Math.round((mapped/ob)*20) : 0;
+      score += Math.min(15, ev*3);
+      score += ev ? Math.round((ready/ev)*15) : 0;
+      score += Math.min(8, k*2);
+      score += Math.min(6, p*2);
+      score += Math.min(6, r*2);
+      score += Math.min(6, d*2);
+      return Math.max(0, Math.min(100, score));
+    }
+    function chip(score){
+      if(score>=75) return {cls:"green", label:"Strong"};
+      if(score>=45) return {cls:"amber", label:"Medium"};
+      return {cls:"red", label:"Weak"};
+    }
+
+    function appendApproval(brd, decision, notes){
+      brd.approvals = brd.approvals || [];
+      brd.approvals.unshift({ stage:"Compliance Review", decision, by:C_EMAIL, at:nowISO(), notes });
+      addAudit("COMPLIANCE_DECISION", brd.id, {decision});
+    }
+
+    function doDecision(kind){
+      const brd = getSelected(); if(!brd) return;
+      const rating = $("#rating").value;
+      const due = parseInt($("#dueDays").value,10) || 5;
+      const evRef = ($("#evidenceRef").value||"").trim();
+      const notes = ($("#decisionNotes").value||"").trim();
+
+      const pack = ensurePack(brd);
+      pack.updatedAt = nowISO();
+
+      const packNotes = [
+        `Compliance rating: ${rating}`,
+        kind==="Updates" ? `Updates due: ${due} days` : null,
+        evRef ? `Evidence ref: ${evRef}` : null,
+        notes ? `Notes: ${notes}` : "Notes: —"
+      ].filter(Boolean).join(" | ");
+
+      if(kind==="Approve"){
+        appendApproval(brd, "Approved", packNotes);
+        brd.status = Status.IN_REVIEW;
+        toast("Approved","Compliance approval recorded (BRD remains In Review for remaining sign-offs).");
+      } else if(kind==="Updates"){
+        appendApproval(brd, "Updates Requested", packNotes);
+        brd.status = Status.CHANGES;
+        toast("Updates","Updates requested. BRD moved to Changes Requested.");
+      } else if(kind==="Reject"){
+        appendApproval(brd, "Rejected", packNotes);
+        brd.status = Status.CHANGES;
+        toast("Rejected","Compliance rejection recorded. BRD moved to Changes Requested.");
+      }
+
+      brd.updatedAt = nowISO();
+      writeDB(db);
+      renderAll();
+      setActiveNav("decision");
+    }
+
+    // CRUD (prompt-based)
+    function addObligation(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+
+      const source = prompt("Regulator/Source (e.g., RBI, PMLA, FIU-IND, Internal Policy) ?") || "RBI";
+      const obligation = prompt("Obligation text (what must system/process do)?"); if(!obligation) return;
+      const mappedTo = prompt("Mapped to (BRD section/REQ IDs)?") || "";
+      const evidence = prompt("Evidence (policy/log/report)?") || "";
+      const owner = prompt("Owner (role/team)?") || "Compliance";
+      const due = prompt("Due date (YYYY-MM-DD) or blank") || "";
+      const status = prompt("Status (Open/In Progress/Done)?") || "Open";
+
+      pack.obligations.unshift({id:uid("OBL"), source, obligation, mappedTo, evidence, owner, due, status, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("COMP_ADD_OBLIGATION", brd.id, {});
+      toast("Added","Obligation added.");
+      renderAll();
+    }
+    function delObl(id){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      pack.obligations = pack.obligations.filter(o=>o.id!==id);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("COMP_DEL_OBLIGATION", brd.id, {id});
+      toast("Deleted","Obligation removed.");
+      renderAll();
+    }
+
+    function addKyc(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      const check = prompt("Check (e.g., CKYC pull, sanctions screening, adverse media) ?"); if(!check) return;
+      const when = prompt("When (onboarding/pre-disbursal/periodic)?") || "Onboarding";
+      const failure = prompt("Failure action (hold/reject/step-up)?") || "Hold & step-up verification";
+      const escalation = prompt("Escalation (team + SLA)?") || "AML team within 24h";
+      const evidence = prompt("Evidence (logs/case ID/report)?") || "Case ticket + screening logs";
+      pack.kyc.unshift({id:uid("KYC"), check, when, failure, escalation, evidence, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("COMP_ADD_KYC", brd.id, {});
+      toast("Added","KYC/AML checkpoint added.");
+      renderAll();
+    }
+    function delKyc(id){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      pack.kyc = pack.kyc.filter(k=>k.id!==id);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("COMP_DEL_KYC", brd.id, {id});
+      toast("Deleted","Checkpoint removed.");
+      renderAll();
+    }
+
+    function addPii(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      const field = prompt("PII field (e.g., PAN, Aadhaar, bank account) ?"); if(!field) return;
+      const purpose = prompt("Purpose (why needed)?") || "KYC/Eligibility";
+      const consent = prompt("Consent/Notice (how captured)?") || "Consent checkbox + privacy notice link";
+      const retention = prompt("Retention (e.g., 7 years) ?") || "7 years";
+      const access = prompt("Access control (RBAC, masking)?") || "RBAC + masking + audit access logs";
+      pack.pii.unshift({id:uid("PII"), field, purpose, consent, retention, access, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("COMP_ADD_PII", brd.id, {});
+      toast("Added","PII item added.");
+      renderAll();
+    }
+    function delPii(id){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      pack.pii = pack.pii.filter(p=>p.id!==id);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("COMP_DEL_PII", brd.id, {id});
+      toast("Deleted","PII item removed.");
+      renderAll();
+    }
+
+    function addRetention(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      const record = prompt("Record type (e.g., KYC docs, audit log, screening results) ?"); if(!record) return;
+      const period = prompt("Retention period?") || "7 years";
+      const storage = prompt("Storage (DMS/S3/DB/Archive)?") || "DMS + archive";
+      const imm = prompt("Immutability (WORM, append-only logs)?") || "Append-only logs + WORM archive";
+      const retrieval = prompt("Audit retrieval (how to search/export)?") || "Search by customerID/loanID + export bundle";
+      const owner = prompt("Owner (team)?") || "Compliance/IT";
+      pack.retention.unshift({id:uid("REC"), record, period, storage, immutability:imm, retrieval, owner, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("COMP_ADD_RETENTION", brd.id, {});
+      toast("Added","Retention record added.");
+      renderAll();
+    }
+    function delRetention(id){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      pack.retention = pack.retention.filter(r=>r.id!==id);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("COMP_DEL_RETENTION", brd.id, {id});
+      toast("Deleted","Record removed.");
+      renderAll();
+    }
+
+    function addDisclosure(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      const when = prompt("When shown (e.g., consent, rejection, fee disclosure)?"); if(!when) return;
+      const channel = prompt("Channel (Web/App/SMS/Email) ?") || "Web/App";
+      const message = prompt("Message text (short) ?") || "";
+      const refs = prompt("References (policy/circular IDs) ?") || "";
+      pack.disclosures.unshift({id:uid("DISC"), when, channel, message, refs, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("COMP_ADD_DISCLOSURE", brd.id, {});
+      toast("Added","Disclosure added.");
+      renderAll();
+    }
+    function delDisclosure(id){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      pack.disclosures = pack.disclosures.filter(d=>d.id!==id);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("COMP_DEL_DISCLOSURE", brd.id, {id});
+      toast("Deleted","Disclosure removed.");
+      renderAll();
+    }
+
+    function addEvidence(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      const artifact = prompt("Artifact (e.g., KYC policy, sanctions logs, override report) ?"); if(!artifact) return;
+      const owner = prompt("Owner?") || "Compliance";
+      const where = prompt("Where stored? (repo/link) ?") || "GRC repository";
+      const retention = prompt("Retention?") || "7 years";
+      const readiness = prompt("Readiness (Not Ready/In Progress/Ready) ?") || "In Progress";
+      pack.evidence.unshift({id:uid("EVD"), artifact, owner, where, retention, readiness, at:nowISO()});
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("COMP_ADD_EVIDENCE", brd.id, {});
+      toast("Added","Evidence added.");
+      renderAll();
+    }
+    function delEvidence(id){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      pack.evidence = pack.evidence.filter(e=>e.id!==id);
+      pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+      writeDB(db); addAudit("COMP_DEL_EVIDENCE", brd.id, {id});
+      toast("Deleted","Evidence removed.");
+      renderAll();
+    }
+
+    // AI mock generators
+    function aiObligations(){
+      return [
+        {source:"RBI", obligation:"Maintain audit logs for all policy and limit changes (who/what/when/why)", mappedTo:"NFR.Audit + REQ-*", evidence:"Audit log export", owner:"IT/Compliance", due:"", status:"Open"},
+        {source:"PMLA/FIU-IND", obligation:"Perform sanctions screening and record screening results & case outcomes", mappedTo:"KYC/AML flow + REQ-*", evidence:"Screening logs + case IDs", owner:"AML", due:"", status:"Open"},
+        {source:"RBI", obligation:"Capture explicit customer consent for data sharing and disclose purposes", mappedTo:"Privacy/Consent + UI screens", evidence:"Consent logs + notice versioning", owner:"Compliance", due:"", status:"Open"},
+        {source:"Internal Policy", obligation:"Retention of KYC and decision artifacts for minimum defined period", mappedTo:"Retention section", evidence:"Retention policy + storage proof", owner:"Compliance/IT", due:"", status:"Open"},
+        {source:"RBI", obligation:"Maker-checker for overrides and disbursal readiness approvals", mappedTo:"Workflow approvals", evidence:"Approval logs", owner:"Ops", due:"", status:"Open"}
+      ];
+    }
+    function aiKycChecks(){
+      return [
+        {check:"CKYC lookup and KYC document validation", when:"Onboarding", failure:"Hold application; request re-KYC", escalation:"KYC ops within 24h", evidence:"CKYC response + doc validation logs"},
+        {check:"Sanctions/PEP screening", when:"Onboarding + pre-disbursal", failure:"Block/hold; escalate to AML", escalation:"AML within 4h", evidence:"Screening report + case ticket"},
+        {check:"Adverse media check (where applicable)", when:"Onboarding", failure:"Enhanced due diligence", escalation:"AML within 24h", evidence:"Adverse media evidence"},
+        {check:"Periodic rescreening for active customers", when:"Monthly/Quarterly", failure:"Flag + case management", escalation:"AML within 48h", evidence:"Rescreening batch logs"}
+      ];
+    }
+    function aiEvidencePack(){
+      return [
+        {artifact:"KYC/AML policy + SOP", owner:"Compliance", where:"GRC repo", retention:"7 years", readiness:"In Progress"},
+        {artifact:"Sanctions screening logs + case IDs", owner:"AML", where:"Case mgmt tool", retention:"7 years", readiness:"Not Ready"},
+        {artifact:"Consent log + privacy notice version history", owner:"IT/Compliance", where:"App logs/DB", retention:"7 years", readiness:"In Progress"},
+        {artifact:"Override register + monthly review report", owner:"Ops/Risk", where:"Reports folder", retention:"7 years", readiness:"In Progress"},
+        {artifact:"Audit log export (append-only)", owner:"IT", where:"SIEM/log store", retention:"7 years", readiness:"Not Ready"}
+      ];
+    }
+
+    function aiScan(){
+      const brd = getSelected(); if(!brd){ toast("Select BRD","Open a BRD first."); return; }
+      openModal("#aiModal");
+
+      $("#aiOblRun").onclick = ()=>{
+        const pack = ensurePack(brd);
+        const sug = aiObligations();
+        sug.forEach(o=> pack.obligations.unshift({id:uid("OBL"), ...o, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_COMP_ADD_OBLIGATIONS", brd.id, {count:sug.length});
+        $("#aiOblOut").innerHTML = `<div class="note"><ul>${sug.map(o=>`<li><b>${escapeHtml(o.source)}:</b> ${escapeHtml(o.obligation)}</li>`).join("")}</ul></div>`;
+        toast("AI","Obligations added.");
+        renderAll();
+      };
+
+      $("#aiKycRun").onclick = ()=>{
+        const pack = ensurePack(brd);
+        const sug = aiKycChecks();
+        sug.forEach(k=> pack.kyc.unshift({id:uid("KYC"), ...k, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_COMP_ADD_KYC", brd.id, {count:sug.length});
+        $("#aiKycOut").innerHTML = `<div class="note"><ul>${sug.map(k=>`<li><b>${escapeHtml(k.check)}:</b> ${escapeHtml(k.when)} → ${escapeHtml(k.failure)}</li>`).join("")}</ul></div>`;
+        toast("AI","KYC/AML checks added.");
+        renderAll();
+      };
+
+      $("#aiEvRun").onclick = ()=>{
+        const pack = ensurePack(brd);
+        const sug = aiEvidencePack();
+        sug.forEach(e=> pack.evidence.unshift({id:uid("EVD"), ...e, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_COMP_ADD_EVIDENCE", brd.id, {count:sug.length});
+        $("#aiEvOut").innerHTML = `<div class="note"><ul>${sug.map(e=>`<li><b>${escapeHtml(e.artifact)}:</b> ${escapeHtml(e.readiness)}</li>`).join("")}</ul></div>`;
+        toast("AI","Evidence pack items added.");
+        renderAll();
+      };
+    }
+
+    // Rendering
+    function renderInbox(){
+      const q = ($("#searchInbox").value||"").trim().toLowerCase();
+      const f = $("#filterInbox").value || "ALL";
+      let items = db.brds || [];
+      items = items.filter(b => b.status !== Status.ARCHIVED);
+
+      if(f!=="ALL") items = items.filter(b => b.status === f);
+
+      if(q){
+        items = items.filter(b =>
+          (b.id||"").toLowerCase().includes(q) ||
+          (b.master?.title||"").toLowerCase().includes(q) ||
+          (b.master?.domain||"").toLowerCase().includes(q) ||
+          (b.master?.product||"").toLowerCase().includes(q)
+        );
+      }
+
+      $("#inboxBadge").textContent = String(items.filter(b=>b.status===Status.IN_REVIEW).length);
+
+      $("#inboxTable").innerHTML = items.map(b=>{
+        const pack = ensurePack(b);
+        const sc = complianceScore(pack);
+        const c = chip(sc);
+        return `
+          <tr>
+            <td class="mono">${b.id}</td>
+            <td>
+              <div style="display:flex; flex-direction:column; gap:4px">
+                <a href="#" data-open="${b.id}" style="font-weight:900">${escapeHtml(b.master?.title||"(untitled)")}</a>
+                <div class="help">${escapeHtml(b.master?.domain||"—")} • ${escapeHtml(b.master?.product||"—")}</div>
+              </div>
+            </td>
+            <td>${escapeHtml(b.status)}</td>
+            <td>${fmt(b.updatedAt)}</td>
+            <td><span class="chip ${c.cls}">${c.label} • ${sc}/100</span></td>
+            <td style="white-space:nowrap">
+              <button class="btn small primary" data-open="${b.id}">Open</button>
+              <button class="btn small" data-go="decision" data-open="${b.id}">Decide</button>
+            </td>
+          </tr>
+        `;
+      }).join("") || `<tr><td colspan="6" class="mono">No BRDs found.</td></tr>`;
+
+      $("#inboxTable").querySelectorAll("[data-open]").forEach(el=>{
+        el.addEventListener("click",(e)=>{
+          e.preventDefault();
+          const id = el.dataset.open;
+          const go = el.dataset.go || "obligations";
+          setSelected(id);
+          setActiveNav(go);
+          renderAll();
+        });
+      });
+    }
+
+    function renderHeader(){
+      const brd = getSelected();
+      if(!brd){
+        $("#activeBrdPill").textContent = "No BRD selected";
+        $("#brdTitle").textContent = "No BRD selected";
+        $("#brdMeta").textContent = "Open a BRD from Inbox.";
+        $("#statusText").textContent = "—";
+        $("#scoreText").textContent = "—";
+        return;
+      }
+      const pack = ensurePack(brd);
+      const sc = complianceScore(pack);
+      const c = chip(sc);
+
+      $("#activeBrdPill").textContent = `${brd.master?.title || brd.id} • ${brd.status}`;
+      $("#brdTitle").textContent = brd.master?.title || "(untitled)";
+      $("#brdMeta").innerHTML = `<span class="mono">${brd.id}</span> • Owner: <span class="mono">${brd.ownerEmail||"—"}</span> • Updated: ${fmt(brd.updatedAt)}`;
+      $("#statusText").textContent = brd.status;
+
+      $("#scoreText").innerHTML = `Compliance score: <b>${sc}/100</b> • ${c.label} • Obligations: ${pack.obligations.length} • Evidence: ${pack.evidence.length} • Updated: ${pack.updatedAt ? fmt(pack.updatedAt) : "—"}`;
+    }
+
+    function renderObligations(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      $("#oblTable").innerHTML = pack.obligations.map(o=>`
+        <tr>
+          <td class="mono">${o.id}</td>
+          <td>${escapeHtml(o.source||"—")}</td>
+          <td><b>${escapeHtml(o.obligation||"—")}</b></td>
+          <td class="mono">${escapeHtml(o.mappedTo||"—")}</td>
+          <td class="mono">${escapeHtml(o.evidence||"—")}</td>
+          <td>${escapeHtml(o.owner||"—")}</td>
+          <td class="mono">${escapeHtml(o.due||"—")}</td>
+          <td>${escapeHtml(o.status||"—")}</td>
+          <td style="white-space:nowrap">
+            <button class="btn small danger" data-del="${o.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="9" class="mono">No obligations yet. Add or use AI Compliance Scan.</td></tr>`;
+
+      $("#oblTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delObl(b.dataset.del)));
+    }
+
+    function renderKyc(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      $("#kycTable").innerHTML = pack.kyc.map(k=>`
+        <tr>
+          <td class="mono">${k.id}</td>
+          <td><b>${escapeHtml(k.check||"—")}</b></td>
+          <td>${escapeHtml(k.when||"—")}</td>
+          <td>${escapeHtml(k.failure||"—")}</td>
+          <td>${escapeHtml(k.escalation||"—")}</td>
+          <td class="mono">${escapeHtml(k.evidence||"—")}</td>
+          <td style="white-space:nowrap">
+            <button class="btn small danger" data-del="${k.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="7" class="mono">No checkpoints yet.</td></tr>`;
+
+      $("#kycTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delKyc(b.dataset.del)));
+    }
+
+    function renderPrivacy(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      $("#piiTable").innerHTML = pack.pii.map(p=>`
+        <tr>
+          <td class="mono">${p.id}</td>
+          <td><b>${escapeHtml(p.field||"—")}</b></td>
+          <td>${escapeHtml(p.purpose||"—")}</td>
+          <td>${escapeHtml(p.consent||"—")}</td>
+          <td>${escapeHtml(p.retention||"—")}</td>
+          <td>${escapeHtml(p.access||"—")}</td>
+          <td style="white-space:nowrap">
+            <button class="btn small danger" data-del="${p.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="7" class="mono">No PII items yet.</td></tr>`;
+
+      $("#piiTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delPii(b.dataset.del)));
+    }
+
+    function renderRetention(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      $("#retTable").innerHTML = pack.retention.map(r=>`
+        <tr>
+          <td class="mono">${r.id}</td>
+          <td><b>${escapeHtml(r.record||"—")}</b></td>
+          <td>${escapeHtml(r.period||"—")}</td>
+          <td>${escapeHtml(r.storage||"—")}</td>
+          <td>${escapeHtml(r.immutability||"—")}</td>
+          <td>${escapeHtml(r.retrieval||"—")}</td>
+          <td>${escapeHtml(r.owner||"—")}</td>
+          <td style="white-space:nowrap"><button class="btn small danger" data-del="${r.id}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="8" class="mono">No retention records yet.</td></tr>`;
+
+      $("#retTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delRetention(b.dataset.del)));
+    }
+
+    function renderDisclosures(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      $("#discTable").innerHTML = pack.disclosures.map(d=>`
+        <tr>
+          <td class="mono">${d.id}</td>
+          <td><b>${escapeHtml(d.when||"—")}</b></td>
+          <td>${escapeHtml(d.channel||"—")}</td>
+          <td>${escapeHtml(d.message||"—")}</td>
+          <td class="mono">${escapeHtml(d.refs||"—")}</td>
+          <td style="white-space:nowrap"><button class="btn small danger" data-del="${d.id}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No disclosures yet.</td></tr>`;
+
+      $("#discTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delDisclosure(b.dataset.del)));
+    }
+
+    function renderEvidence(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      $("#evTable").innerHTML = pack.evidence.map(e=>`
+        <tr>
+          <td class="mono">${e.id}</td>
+          <td><b>${escapeHtml(e.artifact||"—")}</b></td>
+          <td>${escapeHtml(e.owner||"—")}</td>
+          <td class="mono">${escapeHtml(e.where||"—")}</td>
+          <td>${escapeHtml(e.retention||"—")}</td>
+          <td>${escapeHtml(e.readiness||"—")}</td>
+          <td style="white-space:nowrap"><button class="btn small danger" data-del="${e.id}">Delete</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="7" class="mono">No evidence items yet.</td></tr>`;
+
+      $("#evTable").querySelectorAll("[data-del]").forEach(b=> b.addEventListener("click",()=>delEvidence(b.dataset.del)));
+    }
+
+    function renderApprovals(){
+      const brd = getSelected(); if(!brd) return;
+      $("#apTable").innerHTML = (brd.approvals||[]).map(a=>`
+        <tr>
+          <td>${escapeHtml(a.stage)}</td>
+          <td>${escapeHtml(a.decision)}</td>
+          <td class="mono">${escapeHtml(a.by)}</td>
+          <td>${fmt(a.at)}</td>
+          <td>${escapeHtml(a.notes||"—")}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="mono">No approvals yet.</td></tr>`;
+    }
+
+    function renderAudit(){
+      const q = ($("#auditSearch").value||"").trim().toLowerCase();
+      let items = [...(db.audit||[])];
+      if(q){
+        items = items.filter(a =>
+          (a.action||"").toLowerCase().includes(q) ||
+          (a.by||"").toLowerCase().includes(q) ||
+          (a.id||"").toLowerCase().includes(q) ||
+          JSON.stringify(a.meta||{}).toLowerCase().includes(q)
+        );
+      }
+      $("#auditTable").innerHTML = items.slice(0,450).map(a=>`
+        <tr>
+          <td>${fmt(a.at)}</td>
+          <td class="mono">${escapeHtml(a.by)}</td>
+          <td>${escapeHtml(a.action)}</td>
+          <td>${escapeHtml(a.entity)}</td>
+          <td class="mono">${escapeHtml(a.id)}</td>
+          <td class="mono">${escapeHtml(JSON.stringify(a.meta||{}))}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="mono">No audit entries.</td></tr>`;
+    }
+
+    function exportPack(){
+      const brd = getSelected(); if(!brd) return;
+      const pack = ensurePack(brd);
+      const payload = {
+        brdId: brd.id,
+        brdTitle: brd.master?.title || "",
+        complianceEmail: C_EMAIL,
+        exportedAt: nowISO(),
+        compliancePack: pack,
+        approvals: brd.approvals || []
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${brd.id}_COMPLIANCE_PACK.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      addAudit("EXPORT_COMPLIANCE_PACK", brd.id, {});
+      toast("Exported","Compliance pack downloaded.");
+    }
+
+    function renderAll(){
+      db = readDB();
+      renderInbox();
+      renderHeader();
+      renderObligations();
+      renderKyc();
+      renderPrivacy();
+      renderRetention();
+      renderDisclosures();
+      renderEvidence();
+      renderApprovals();
+      renderAudit();
+
+      const brd = getSelected();
+      if(brd) $("#activeBrdPill").textContent = `${brd.master?.title || brd.id} • ${brd.status}`;
+      else $("#activeBrdPill").textContent = "No BRD selected";
+    }
+
+    function wire(){
+      db = readDB();
+      selectedId = localStorage.getItem(Store.SELECTED) || db.brds[0]?.id;
+
+      $$("#nav a").forEach(a=>{
+        a.addEventListener("click",(e)=>{
+          e.preventDefault();
+          setActiveNav(a.dataset.view);
+          renderAll();
+        });
+      });
+
+      $("#searchInbox").addEventListener("input", renderInbox);
+      $("#filterInbox").addEventListener("change", renderInbox);
+
+      $("#addOblBtn").addEventListener("click", addObligation);
+      $("#aiOblBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensurePack(brd);
+        const sug = aiObligations();
+        sug.forEach(o=> pack.obligations.unshift({id:uid("OBL"), ...o, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_COMP_ADD_OBLIGATIONS", brd.id, {count:sug.length});
+        toast("AI","Obligations suggested & added.");
+        renderAll();
+      });
+
+      $("#addKycBtn").addEventListener("click", addKyc);
+      $("#aiKycBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensurePack(brd);
+        const sug = aiKycChecks();
+        sug.forEach(k=> pack.kyc.unshift({id:uid("KYC"), ...k, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_COMP_ADD_KYC", brd.id, {count:sug.length});
+        toast("AI","KYC/AML checkpoints added.");
+        renderAll();
+        setActiveNav("kyc");
+      });
+
+      $("#addPiiBtn").addEventListener("click", addPii);
+      $("#aiPrivacyBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensurePack(brd);
+        const sug = [
+          {field:"PAN", purpose:"Identity verification + bureau pull", consent:"Consent captured at onboarding; privacy notice v1", retention:"7 years", access:"RBAC + masking"},
+          {field:"Aadhaar/VID (if collected)", purpose:"KYC verification", consent:"Explicit consent; alternative ID supported", retention:"7 years", access:"Encrypted + restricted access"},
+          {field:"Bank account details", purpose:"Disbursement + repayment setup", consent:"T&C acceptance", retention:"7 years", access:"Tokenized + audit access"},
+          {field:"Device fingerprint", purpose:"Fraud prevention", consent:"Privacy notice includes device signals", retention:"2 years", access:"Security team only"}
+        ];
+        sug.forEach(p=> pack.pii.unshift({id:uid("PII"), ...p, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_COMP_ADD_PRIVACY", brd.id, {count:sug.length});
+        toast("AI","Privacy/PII items added.");
+        renderAll();
+        setActiveNav("privacy");
+      });
+
+      $("#addRetBtn").addEventListener("click", addRetention);
+      $("#aiRetBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensurePack(brd);
+        const sug = [
+          {record:"KYC documents + CKYC responses", period:"7 years", storage:"DMS + archive", immutability:"WORM archive", retrieval:"Search/export bundle", owner:"Compliance/IT"},
+          {record:"Sanctions screening results + AML cases", period:"7 years", storage:"Case management", immutability:"Append-only case log", retrieval:"Case ID export", owner:"AML"},
+          {record:"Policy/limits change logs", period:"7 years", storage:"Log store/SIEM", immutability:"Append-only", retrieval:"Filter by changeID", owner:"IT"},
+          {record:"Customer consent logs + notice versions", period:"7 years", storage:"DB + backups", immutability:"Append-only events", retrieval:"Customer ID export", owner:"IT/Compliance"}
+        ];
+        sug.forEach(r=> pack.retention.unshift({id:uid("REC"), ...r, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_COMP_ADD_RETENTION", brd.id, {count:sug.length});
+        toast("AI","Retention records added.");
+        renderAll();
+        setActiveNav("retention");
+      });
+
+      $("#addDiscBtn").addEventListener("click", addDisclosure);
+      $("#aiDiscBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensurePack(brd);
+        const sug = [
+          {when:"Data sharing consent", channel:"Web/App", message:"By proceeding, you consent to verification checks (KYC, bureau, AML) and agree to the privacy notice.", refs:"OBL-*"},
+          {when:"Fee/charges disclosure", channel:"Web/App", message:"Applicable processing fees and charges will be shown before confirmation. No hidden charges.", refs:"Internal Policy"},
+          {when:"Application rejection", channel:"Web/App + SMS", message:"Your application could not be approved based on our assessment. You may re-apply after addressing the noted criteria.", refs:"Policy/Reg"}
+        ];
+        sug.forEach(d=> pack.disclosures.unshift({id:uid("DISC"), ...d, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_COMP_ADD_DISCLOSURES", brd.id, {count:sug.length});
+        toast("AI","Disclosure drafts added.");
+        renderAll();
+        setActiveNav("disclosures");
+      });
+
+      $("#addEvBtn").addEventListener("click", addEvidence);
+      $("#aiEvBtn").addEventListener("click", ()=>{
+        const brd = getSelected(); if(!brd) return;
+        const pack = ensurePack(brd);
+        const sug = aiEvidencePack();
+        sug.forEach(e=> pack.evidence.unshift({id:uid("EVD"), ...e, at:nowISO()}));
+        pack.updatedAt = nowISO(); brd.updatedAt = nowISO();
+        writeDB(db); addAudit("AI_COMP_ADD_EVIDENCE", brd.id, {count:sug.length});
+        toast("AI","Evidence pack suggested & added.");
+        renderAll();
+        setActiveNav("evidence");
+      });
+
+      $("#approveBtn").addEventListener("click", ()=> doDecision("Approve"));
+      $("#updatesBtn").addEventListener("click", ()=> doDecision("Updates"));
+      $("#rejectBtn").addEventListener("click", ()=> doDecision("Reject"));
+
+      $("#aiComplianceBtn").addEventListener("click", aiScan);
+      $("#exportPackBtn").addEventListener("click", exportPack);
+
+      $("#auditSearch").addEventListener("input", renderAudit);
+
+      $("#resetBtn").addEventListener("click", ()=>{
+        if(!confirm("Reset shared workspace data (localStorage)?")) return;
+        localStorage.removeItem(Store.KEY);
+        localStorage.removeItem(Store.SELECTED);
+        location.reload();
+      });
+
+      wireModalClose("#aiModal");
+
+      setActiveNav("inbox");
+      renderAll();
+    }
+
+    wire();
+
+    // Page switcher
+    document.getElementById("pageSwitcher").addEventListener("change", (e)=>{
+      window.location.href = e.target.value;
+    });
+  </script>
+</body>
+</html>
