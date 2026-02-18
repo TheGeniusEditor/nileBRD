@@ -3,15 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import styles from "./request.module.css";
+import styles from "./detail.module.css";
 import {
   ConversationThread,
   StakeholderRequest,
+  buildPHLTemplateBRD,
   getRequests,
   saveRequests,
 } from "@/lib/workflow";
 
-const NOTES_KEY_PREFIX = "baConversationNotes";
 const avatarColors = ["#ec4899", "#10b981", "#f59e0b", "#2563eb", "#8b5cf6", "#ef4444"];
 
 const getInitials = (participants?: string) => {
@@ -77,13 +77,12 @@ const buildMockConversations = (request: StakeholderRequest): ConversationThread
   },
 ];
 
-export default function RequestWorkspacePage() {
+export default function StakeholderReviewDetailPage() {
   const params = useParams<{ id: string }>();
   const requestId = params?.id;
 
-  const [request, setRequest] = useState<StakeholderRequest | null>(null);
-  const [conversationPoints, setConversationPoints] = useState("");
-  const [savedAt, setSavedAt] = useState("");
+  const [selected, setSelected] = useState<StakeholderRequest | null>(null);
+  const [reviewComment, setReviewComment] = useState("");
   const [searchText, setSearchText] = useState("");
   const [reply, setReply] = useState("");
 
@@ -94,23 +93,23 @@ export default function RequestWorkspacePage() {
 
     const all = getRequests();
     const found = all.find((item) => item.id === requestId) || null;
-    setRequest(found);
-
-    if (found && typeof window !== "undefined") {
-      const savedNotes = window.localStorage.getItem(`${NOTES_KEY_PREFIX}:${found.id}`) || "";
-      setConversationPoints(savedNotes);
-      setSavedAt("");
+    if (found && (found.status === "sent" || found.status === "approved" || found.status === "changes_requested")) {
+      setSelected(found);
+      setReviewComment(found.reviewerComment || "");
+      return;
     }
+
+    setSelected(null);
   }, [requestId]);
 
   const persistRequest = (updater: (item: StakeholderRequest) => StakeholderRequest) => {
-    if (!request) {
+    if (!selected) {
       return;
     }
 
     const all = getRequests();
     const next = all.map((item) => {
-      if (item.id !== request.id) {
+      if (item.id !== selected.id) {
         return item;
       }
 
@@ -119,51 +118,38 @@ export default function RequestWorkspacePage() {
 
     saveRequests(next);
 
-    const refreshed = next.find((item) => item.id === request.id) || null;
-    setRequest(refreshed);
+    const refreshed = next.find((item) => item.id === selected.id) || null;
+    setSelected(refreshed);
   };
 
-  const saveConversationPoints = () => {
-    if (!request || typeof window === "undefined") {
+  const templateDoc = useMemo(() => {
+    if (!selected || !selected.brdMaster) {
+      return "";
+    }
+
+    return buildPHLTemplateBRD(selected, selected.brdMaster);
+  }, [selected]);
+
+  const submitDecision = (status: "approved" | "changes_requested") => {
+    if (!selected) {
       return;
     }
 
-    window.localStorage.setItem(`${NOTES_KEY_PREFIX}:${request.id}`, conversationPoints.trim());
-    setSavedAt(new Date().toLocaleTimeString());
-  };
-
-  const sendReply = () => {
-    if (!request || !reply.trim()) {
-      return;
-    }
-
-    const text = reply.trim();
     persistRequest((item) => ({
       ...item,
-      status: item.status === "approved" ? "approved" : "in_progress",
-      threads: [
-        ...(item.threads || []),
-        {
-          id: `${item.id}-msg-${Date.now()}`,
-          title: "BA Follow-up",
-          date: new Date().toLocaleString(),
-          participants: "BA Team",
-          notes: text,
-        },
-      ],
+      status,
+      reviewerComment: reviewComment,
     }));
-
-    setReply("");
   };
 
   const initiateTeamsMeeting = () => {
-    if (!request) {
+    if (!selected) {
       return;
     }
 
-    const subject = encodeURIComponent(`BRD working session: ${request.reqTitle}`);
+    const subject = encodeURIComponent(`BRD working session: ${selected.reqTitle}`);
     const content = encodeURIComponent(
-      `Discussion context: ${request.reqType} (${request.priority}) for ${request.tenant}`
+      `Discussion context: ${selected.reqType} (${selected.priority}) for ${selected.tenant}`
     );
 
     window.open(
@@ -173,36 +159,40 @@ export default function RequestWorkspacePage() {
     );
   };
 
-  const summaryItems = useMemo(() => {
-    if (!request) {
-      return [] as Array<{ label: string; value: string }>;
+  const sendReply = () => {
+    if (!selected || !reply.trim()) {
+      return;
     }
 
-    const items: Array<{ label: string; value: string }> = [
-      { label: "Request Created", value: request.createdAt },
-      { label: "Current Status", value: request.status.replace("_", " ") },
-      { label: "Owner", value: request.owner || "Unassigned" },
-      { label: "Tenant", value: request.tenant },
-    ];
+    const text = reply.trim();
+    persistRequest((item) => ({
+      ...item,
+      threads: [
+        ...(item.threads || []),
+        {
+          id: `${item.id}-msg-${Date.now()}`,
+          title: "Stakeholder Follow-up",
+          date: new Date().toLocaleString(),
+          participants: "Stakeholder Team",
+          notes: text,
+        },
+      ],
+    }));
 
-    if (request.aiGeneratedAt) {
-      items.push({ label: "AI Generated", value: request.aiGeneratedAt });
-    }
-
-    return items;
-  }, [request]);
+    setReply("");
+  };
 
   const chatThreads = useMemo(() => {
-    if (!request) {
+    if (!selected) {
       return [] as ConversationThread[];
     }
 
-    if ((request.threads || []).length > 0) {
-      return request.threads;
+    if ((selected.threads || []).length > 0) {
+      return selected.threads;
     }
 
-    return buildMockConversations(request);
-  }, [request]);
+    return buildMockConversations(selected);
+  }, [selected]);
 
   const filteredThreads = useMemo(() => {
     if (!searchText.trim()) {
@@ -216,14 +206,14 @@ export default function RequestWorkspacePage() {
     });
   }, [chatThreads, searchText]);
 
-  if (!request) {
+  if (!selected) {
     return (
-      <div className={styles.notFoundWrap}>
+      <div className={styles.container}>
         <div className={styles.notFoundCard}>
           <h1>Request not found</h1>
-          <p>This stakeholder request was not found in local data.</p>
-          <Link href="/ba-portal/requests" className={styles.backBtn}>
-            Back to Requests
+          <p>This BRD request was not found in the review queue.</p>
+          <Link href="/role/sme/review" className={styles.backBtn}>
+            Back to BRD Sent by BA
           </Link>
         </div>
       </div>
@@ -231,49 +221,43 @@ export default function RequestWorkspacePage() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={styles.container}>
       <header className={styles.header}>
         <div>
-          <Link href="/ba-portal/requests" className={styles.backLink}>
-            ← Back to Requests
+          <Link href="/role/sme/review" className={styles.backLink}>
+            ← Back to BRD Sent by BA
           </Link>
-          <h1>{request.reqTitle}</h1>
-          <p>{request.reqType} • {request.priority} • {request.tenant}</p>
+          <h1>BRD Review</h1>
+          <p>{selected.reqTitle}</p>
         </div>
       </header>
 
-      <div className={styles.workspace}>
-        <section className={styles.notesPanel}>
-          <div className={styles.panelCard}>
-            <div className={styles.cardHeader}>
-              <h2>Conversation Points</h2>
-              <button className={styles.inlineBtn} onClick={saveConversationPoints}>
-                Save Notes
-              </button>
-            </div>
-            <p className={styles.cardHint}>Capture key decisions, open questions, assumptions, and action items before BRD drafting.</p>
-            <textarea
-              rows={16}
-              value={conversationPoints}
-              onChange={(event) => setConversationPoints(event.target.value)}
-              placeholder="Example:\n• Decision: Keep phase-1 scope to onboarding and maker-checker only\n• Open question: Need final retention period from Compliance\n• Action: Ops to share cutover window by Friday"
-              className={styles.notesInput}
-            />
-            <div className={styles.saveMeta}>{savedAt ? `Saved at ${savedAt}` : "Not saved yet"}</div>
-          </div>
+      <div className={styles.layout}>
+        <section className={styles.reviewCard}>
+          {!selected.brdMaster ? (
+            <p className={styles.muted}>BRD not generated yet for this request.</p>
+          ) : (
+            <>
+              <h2>{selected.reqTitle}</h2>
+              <p className={styles.muted}>Current Status: {selected.status.replace("_", " ")}</p>
+              <pre className={styles.pre}>{templateDoc}</pre>
 
-          <div className={styles.panelCard}>
-            <h3>Request Snapshot</h3>
-            <p className={styles.brief}>{request.brief || "No brief provided."}</p>
-            <div className={styles.summaryGrid}>
-              {summaryItems.map((item) => (
-                <div key={item.label} className={styles.summaryItem}>
-                  <span>{item.label}</span>
-                  <strong>{item.value}</strong>
-                </div>
-              ))}
-            </div>
-          </div>
+              <label className={styles.reviewLabel}>
+                Reviewer Comment
+                <textarea
+                  rows={3}
+                  value={reviewComment}
+                  onChange={(event) => setReviewComment(event.target.value)}
+                  placeholder="Enter approval note or required changes"
+                />
+              </label>
+
+              <div className={styles.actions}>
+                <button className={styles.approveBtn} onClick={() => submitDecision("approved")}>Approve</button>
+                <button className={styles.changeBtn} onClick={() => submitDecision("changes_requested")}>Make Changes</button>
+              </div>
+            </>
+          )}
         </section>
 
         <aside className={styles.chatPanel}>
@@ -320,15 +304,15 @@ export default function RequestWorkspacePage() {
           </div>
 
           <div className={styles.quickReplyRow}>
-            <button className={styles.quickBtn} onClick={() => setReply("Please confirm final scope for phase-1 sign-off.")}>Ask scope confirmation</button>
-            <button className={styles.quickBtn} onClick={() => setReply("Sharing BRD input updates. Please confirm any missing assumptions.")}>Share update prompt</button>
+            <button className={styles.quickBtn} onClick={() => setReply("Please share updated BRD draft with highlighted deltas.")}>Request revision summary</button>
+            <button className={styles.quickBtn} onClick={() => setReply("Sharing stakeholder review notes. Please confirm closure plan.")}>Share review notes</button>
           </div>
 
           <div className={styles.replyWrap}>
             <textarea
               value={reply}
               onChange={(event) => setReply(event.target.value)}
-              placeholder="Add BA response, decision note, or follow-up question"
+              placeholder="Add stakeholder response, decision note, or follow-up question"
               className={styles.replyInput}
               rows={3}
             />
@@ -337,16 +321,6 @@ export default function RequestWorkspacePage() {
             </button>
           </div>
         </aside>
-      </div>
-
-      <div className={styles.footerCta}>
-        <div>
-          <h3>Ready to draft the BRD?</h3>
-          <p>After capturing discussion points, continue to the input parameter page to generate BRD with AI.</p>
-        </div>
-        <Link href={`/ba-portal/requests/${request.id}/input`} className={styles.initiateBtn}>
-          Initiate BRD
-        </Link>
       </div>
     </div>
   );

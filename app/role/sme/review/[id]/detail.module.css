@@ -1,11 +1,13 @@
-.page {
-  min-height: 100vh;
+.container {
+  max-width: 1300px;
+  margin: 0 auto;
   padding: 24px;
+  min-height: 100vh;
   background: #f8fafc;
 }
 
 .header {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .backLink {
@@ -16,103 +18,90 @@
 }
 
 .header h1 {
-  margin: 8px 0 4px;
+  margin: 8px 0 6px;
   color: #0f172a;
-  font-size: 28px;
 }
 
 .header p {
   margin: 0;
   color: #64748b;
-  font-size: 14px;
 }
 
-.editorContainer {
+.layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 420px;
-  gap: 16px;
-  align-items: start;
+  gap: 14px;
 }
 
-.paper {
+.reviewCard {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
-  padding: 24px;
+  padding: 14px;
 }
 
-.paperHeader {
-  border-bottom: 2px solid #e2e8f0;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-}
-
-.paperHeader label {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  color: #334155;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.titleInput {
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 18px;
-  font-weight: 700;
+.reviewCard h2 {
+  margin: 0 0 10px;
   color: #0f172a;
 }
 
-.metaRow {
-  display: flex;
-  gap: 16px;
-  margin-top: 10px;
-  color: #64748b;
-  font-size: 12px;
+.pre {
+  margin: 10px 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8fafc;
+  white-space: pre-wrap;
+  font-family: inherit;
+  max-height: 520px;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.formGrid label {
+.reviewLabel {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
   color: #334155;
-  font-size: 12px;
-  font-weight: 700;
 }
 
-.formGrid input,
-.formGrid select,
-.formGrid textarea {
+.reviewLabel textarea {
   border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 10px;
-  font-size: 14px;
   font-family: inherit;
-  color: #0f172a;
-  background: #ffffff;
-}
-
-.fullWidth {
-  grid-column: 1 / -1;
 }
 
 .actions {
   display: flex;
-  justify-content: flex-end;
   gap: 10px;
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
+  margin-top: 10px;
+}
+
+.approveBtn,
+.changeBtn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.approveBtn {
+  background: #15803d;
+}
+
+.changeBtn {
+  background: #b91c1c;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 13px;
 }
 
 .chatPanel {
@@ -310,38 +299,6 @@
   cursor: not-allowed;
 }
 
-.primaryBtn,
-.secondaryBtn {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.primaryBtn {
-  background: #111827;
-  color: #ffffff;
-}
-
-.primaryBtn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.secondaryBtn {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-.notFoundWrap {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: #f8fafc;
-}
-
 .notFoundCard {
   width: min(520px, 100%);
   background: #ffffff;
@@ -369,29 +326,12 @@
   font-weight: 700;
 }
 
-@media (max-width: 900px) {
-  .page {
-    padding: 16px;
-  }
-
-  .editorContainer {
+@media (max-width: 1000px) {
+  .layout {
     grid-template-columns: 1fr;
   }
 
   .chatPanel {
     max-height: none;
-  }
-
-  .formGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .actions {
-    flex-direction: column;
-  }
-
-  .primaryBtn,
-  .secondaryBtn {
-    width: 100%;
   }
 }

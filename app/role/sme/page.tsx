@@ -79,6 +79,18 @@ export default function SmeWorkspace() {
             </div>
           </div>
         </Link>
+
+        <Link href="/role/sme/approved" className={styles.actionCard}>
+          <div className={styles.actionIcon}>📄</div>
+          <div className={styles.actionContent}>
+            <h2>Approved BRDs</h2>
+            <p>View all stakeholder-approved BRDs in one place.</p>
+            <div className={styles.actionMeta}>
+              <strong>{requests.filter((item) => item.status === "approved").length} approved</strong>
+              <span>Open Approved List →</span>
+            </div>
+          </div>
+        </Link>
       </div>
     </div>
   );
