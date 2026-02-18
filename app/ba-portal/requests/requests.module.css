@@ -124,6 +124,12 @@
   transition: all 0.2s;
 }
 
+.requestCardLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
 .requestCard:hover {
   border-color: #0f766e;
   transform: translateY(-2px);
@@ -200,11 +206,21 @@
 .requestFooter {
   padding-top: 12px;
   border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .createdDate {
   font-size: 11px;
   color: #999;
+}
+
+.requestAction {
+  font-size: 12px;
+  color: #0f766e;
+  font-weight: 700;
 }
 
 .emptyDetails {

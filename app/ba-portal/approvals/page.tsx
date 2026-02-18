@@ -1,94 +1,84 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import styles from "../styles.module.css";
 import approvalStyles from "./approvals.module.css";
+import { StakeholderRequest, getRequests } from "@/lib/workflow";
 
-type ApprovalRecord = {
-  id: string;
-  brdName: string;
-  sentDate: string;
-  stakeholder: string;
-  role: string;
-  status: "pending" | "approved" | "rejected" | "commented";
-  dueDate: string;
-  feedback?: string;
+type ITStage =
+  | "it_review"
+  | "internal_feasibility"
+  | "final_cost_approval"
+  | "timeline_shared"
+  | "ba_follow_up"
+  | "sit"
+  | "uat_delivery";
+
+type ITWorkflowStatus = "not_started" | "in_progress" | "done";
+
+type ITWorkflowState = {
+  requestId: string;
+  stages: Record<ITStage, ITWorkflowStatus>;
+  timeline?: string;
+  sitNotes?: string;
 };
 
-const mockApprovals: ApprovalRecord[] = [
-  {
-    id: "1",
-    brdName: "Renewal Automation - Phase 1",
-    sentDate: "2024-02-15",
-    stakeholder: "John Smith",
-    role: "Business Lead",
-    status: "approved",
-    dueDate: "2024-02-22",
-    feedback: "Looks good. Approved for IT review.",
-  },
-  {
-    id: "2",
-    brdName: "Renewal Automation - Phase 1",
-    sentDate: "2024-02-15",
-    stakeholder: "Sarah Johnson",
-    role: "Risk Manager",
-    status: "approved",
-    dueDate: "2024-02-22",
-  },
-  {
-    id: "3",
-    brdName: "Renewal Automation - Phase 1",
-    sentDate: "2024-02-15",
-    stakeholder: "Mike Chen",
-    role: "Compliance Officer",
-    status: "commented",
-    dueDate: "2024-02-22",
-    feedback: "Need more details on audit trail requirements.",
-  },
-  {
-    id: "4",
-    brdName: "Renewal Automation - Phase 1",
-    sentDate: "2024-02-15",
-    stakeholder: "Emma Wilson",
-    role: "Ops Manager",
-    status: "pending",
-    dueDate: "2024-02-22",
-  },
-  {
-    id: "5",
-    brdName: "Customer Data Enhancement",
-    sentDate: "2024-02-12",
-    stakeholder: "David Brown",
-    role: "IT Head",
-    status: "approved",
-    dueDate: "2024-02-19",
-  },
+const IT_WORKFLOW_KEY = "itWorkflowState";
+
+const workflowOrder: ITStage[] = [
+  "it_review",
+  "internal_feasibility",
+  "final_cost_approval",
+  "timeline_shared",
+  "ba_follow_up",
+  "sit",
+  "uat_delivery",
 ];
 
-const getStatusColor = (status: string) => {
+const stageLabels: Record<ITStage, string> = {
+  it_review: "IT Review",
+  internal_feasibility: "Internal Feasibility",
+  final_cost_approval: "Final Cost Approval",
+  timeline_shared: "Timeline Shared",
+  ba_follow_up: "BA Follow-up",
+  sit: "SIT",
+  uat_delivery: "UAT Delivery",
+};
+
+const loadWorkflowMap = () => {
+  if (typeof window === "undefined") {
+    return {} as Record<string, ITWorkflowState>;
+  }
+
+  try {
+    const stored = window.localStorage.getItem(IT_WORKFLOW_KEY);
+    return stored ? (JSON.parse(stored) as Record<string, ITWorkflowState>) : {};
+  } catch {
+    return {} as Record<string, ITWorkflowState>;
+  }
+};
+
+const getStatusColor = (status: StakeholderRequest["status"]) => {
   switch (status) {
     case "approved":
       return { bg: "#d1fae5", text: "#047857", icon: "✓" };
-    case "pending":
+    case "sent":
       return { bg: "#fef3c7", text: "#b45309", icon: "⏱" };
-    case "rejected":
-      return { bg: "#fee2e2", text: "#991b1b", icon: "✗" };
-    case "commented":
+    case "changes_requested":
       return { bg: "#dbeafe", text: "#0369a1", icon: "💬" };
     default:
       return { bg: "#f3f4f6", text: "#374151", icon: "?" };
   }
 };
 
-const getStatusProgressValue = (status: string) => {
+const getStatusProgressValue = (status: StakeholderRequest["status"]) => {
   switch (status) {
     case "approved":
       return 100;
-    case "rejected":
-      return 0;
-    case "commented":
+    case "changes_requested":
       return 50;
-    case "pending":
+    case "sent":
       return 25;
     default:
       return 0;
@@ -96,23 +86,36 @@ const getStatusProgressValue = (status: string) => {
 };
 
 export default function ApprovalsPage() {
-  // Group by BRD
-  const brdGroups = mockApprovals.reduce(
-    (groups, approval) => {
-      const key = approval.brdName;
-      if (!groups[key]) {
-        groups[key] = [];
-      }
-      groups[key].push(approval);
-      return groups;
-    },
-    {} as Record<string, ApprovalRecord[]>
-  );
+  const [requests, setRequests] = useState<StakeholderRequest[]>([]);
+  const [workflowMap, setWorkflowMap] = useState<Record<string, ITWorkflowState>>({});
 
-  const calculateApprovalPercentage = (approvals: ApprovalRecord[]) => {
-    const approved = approvals.filter((a) => a.status === "approved").length;
-    return Math.round((approved / approvals.length) * 100);
-  };
+  useEffect(() => {
+    const all = getRequests();
+    const reviewItems = all.filter(
+      (item) =>
+        item.createdBy !== "ba" &&
+        (item.status === "sent" || item.status === "approved" || item.status === "changes_requested")
+    );
+    setRequests(reviewItems);
+    setWorkflowMap(loadWorkflowMap());
+  }, []);
+
+  const itSummary = useMemo(() => {
+    const workflows = requests
+      .filter((request) => request.status === "approved")
+      .map((request) => workflowMap[request.id])
+      .filter((workflow): workflow is ITWorkflowState => Boolean(workflow));
+
+    const inProgress = workflows.filter((workflow) =>
+      workflowOrder.some((stage) => workflow.stages[stage] === "in_progress")
+    ).length;
+
+    const delivered = workflows.filter(
+      (workflow) => workflow.stages.uat_delivery === "done"
+    ).length;
+
+    return { inProgress, delivered };
+  }, [requests, workflowMap]);
 
   return (
     <div className={styles.container}>
@@ -122,86 +125,128 @@ export default function ApprovalsPage() {
             ← Back to Dashboard
           </Link>
           <h1>Approval Tracking</h1>
-          <p>Monitor stakeholder reviews and approvals for all BRDs</p>
+          <p>Monitor stakeholder approvals and IT execution progress for all BRDs</p>
         </div>
       </header>
 
-      {Object.entries(brdGroups).map(([brdName, approvals]) => {
-        const approvalPercentage = calculateApprovalPercentage(approvals);
+      {requests.map((request) => {
+        const statusColor = getStatusColor(request.status);
+        const statusProgress = getStatusProgressValue(request.status);
+        const itWorkflow = workflowMap[request.id];
+        const completedStages = itWorkflow
+          ? workflowOrder.filter((stage) => itWorkflow.stages[stage] === "done").length
+          : 0;
+        const currentStage = itWorkflow
+          ? workflowOrder.find((stage) => itWorkflow.stages[stage] === "in_progress") ||
+            (itWorkflow.stages.uat_delivery === "done" ? "uat_delivery" : undefined)
+          : undefined;
+        const itProgress = Math.round((completedStages / workflowOrder.length) * 100);
+
         return (
-          <div key={brdName} className={approvalStyles.brdSection}>
+          <div key={request.id} className={approvalStyles.brdSection}>
             <div className={approvalStyles.brdHeader}>
               <div>
-                <h2>{brdName}</h2>
-                <p>{approvals.length} stakeholders reviewing</p>
+                <h2>{request.reqTitle}</h2>
+                <p>Owner: {request.owner || "Stakeholder Team"}</p>
               </div>
               <div className={approvalStyles.progressContainer}>
                 <div className={approvalStyles.progressBar}>
                   <div
                     className={approvalStyles.progressFill}
-                    style={{ width: `${approvalPercentage}%` }}
+                    style={{ width: `${statusProgress}%` }}
                   />
                 </div>
                 <div className={approvalStyles.progressText}>
-                  {approvalPercentage}% Complete
+                  Approval: {statusProgress}%
                 </div>
               </div>
             </div>
 
             <div className={approvalStyles.approvalsGrid}>
-              {approvals.map((approval) => {
-                const statusColor = getStatusColor(approval.status);
-                const statusProgress = getStatusProgressValue(approval.status);
-
-                return (
-                  <div key={approval.id} className={approvalStyles.approvalCard}>
-                    <div className={approvalStyles.cardHeader}>
-                      <div className={approvalStyles.stakeholderInfo}>
-                        <div className={approvalStyles.name}>{approval.stakeholder}</div>
-                        <div className={approvalStyles.role}>{approval.role}</div>
-                      </div>
-                      <span
-                        className={approvalStyles.statusBadge}
-                        style={{
-                          backgroundColor: statusColor.bg,
-                          color: statusColor.text,
-                        }}
-                      >
-                        {statusColor.icon}{" "}
-                        {approval.status.charAt(0).toUpperCase() +
-                          approval.status.slice(1)}
-                      </span>
-                    </div>
-
-                    <div className={approvalStyles.dueDate}>
-                      Due: {approval.dueDate}
-                    </div>
-
-                    {approval.feedback && (
-                      <div className={approvalStyles.feedback}>
-                        <strong>Feedback:</strong>
-                        <p>{approval.feedback}</p>
-                      </div>
-                    )}
-
-                    <div className={approvalStyles.miniProgress}>
-                      <div
-                        className={approvalStyles.miniProgressBar}
-                        style={{
-                          width: `${statusProgress}%`,
-                          backgroundColor: statusColor.text,
-                        }}
-                      />
-                    </div>
+              <div className={approvalStyles.approvalCard}>
+                <div className={approvalStyles.cardHeader}>
+                  <div className={approvalStyles.stakeholderInfo}>
+                    <div className={approvalStyles.name}>{request.owner || "Stakeholder Team"}</div>
+                    <div className={approvalStyles.role}>Stakeholder Approval</div>
                   </div>
-                );
-              })}
+                  <span
+                    className={approvalStyles.statusBadge}
+                    style={{
+                      backgroundColor: statusColor.bg,
+                      color: statusColor.text,
+                    }}
+                  >
+                    {statusColor.icon} {request.status.replace("_", " ")}
+                  </span>
+                </div>
+
+                <div className={approvalStyles.dueDate}>
+                  Sent: {request.sentAt || "Not sent yet"}
+                </div>
+
+                {request.reviewerComment && (
+                  <div className={approvalStyles.feedback}>
+                    <strong>Feedback:</strong>
+                    <p>{request.reviewerComment}</p>
+                  </div>
+                )}
+
+                <div className={approvalStyles.miniProgress}>
+                  <div
+                    className={approvalStyles.miniProgressBar}
+                    style={{
+                      width: `${statusProgress}%`,
+                      backgroundColor: statusColor.text,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {request.status === "approved" && (
+                <div className={approvalStyles.itCard}>
+                  <div className={approvalStyles.cardHeader}>
+                    <div className={approvalStyles.stakeholderInfo}>
+                      <div className={approvalStyles.name}>IT Workflow</div>
+                      <div className={approvalStyles.role}>Post-approval execution</div>
+                    </div>
+                    <span className={approvalStyles.itBadge}>{itProgress}%</span>
+                  </div>
+
+                  {!itWorkflow ? (
+                    <p className={approvalStyles.itMuted}>IT workflow not started yet by IT portal.</p>
+                  ) : (
+                    <>
+                      <div className={approvalStyles.itMeta}>
+                        <span>
+                          Current Stage: {currentStage ? stageLabels[currentStage] : "Not started"}
+                        </span>
+                        <span>
+                          Done: {completedStages}/{workflowOrder.length}
+                        </span>
+                      </div>
+                      <div className={approvalStyles.miniProgress}>
+                        <div
+                          className={approvalStyles.miniProgressBar}
+                          style={{ width: `${itProgress}%`, backgroundColor: "#0f766e" }}
+                        />
+                      </div>
+
+                      {itWorkflow.timeline && (
+                        <div className={approvalStyles.feedback}>
+                          <strong>Development Timeline</strong>
+                          <p>{itWorkflow.timeline}</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         );
       })}
 
-      {Object.keys(brdGroups).length === 0 && (
+      {requests.length === 0 && (
         <div className={approvalStyles.empty}>
           <div className={approvalStyles.emptyIcon}>📋</div>
           <h3>No BRDs sent for approval yet</h3>
@@ -219,25 +264,33 @@ export default function ApprovalsPage() {
           <div className={approvalStyles.statBox}>
             <div className={approvalStyles.statLabel}>Total Approvals Pending</div>
             <div className={approvalStyles.statValue}>
-              {mockApprovals.filter((a) => a.status === "pending").length}
+              {requests.filter((item) => item.status === "sent").length}
             </div>
           </div>
           <div className={approvalStyles.statBox}>
             <div className={approvalStyles.statLabel}>Approved</div>
             <div className={approvalStyles.statValue}>
-              {mockApprovals.filter((a) => a.status === "approved").length}
+              {requests.filter((item) => item.status === "approved").length}
             </div>
           </div>
           <div className={approvalStyles.statBox}>
             <div className={approvalStyles.statLabel}>Pending Feedback</div>
             <div className={approvalStyles.statValue}>
-              {mockApprovals.filter((a) => a.status === "commented").length}
+              {requests.filter((item) => item.status === "changes_requested").length}
             </div>
+          </div>
+          <div className={approvalStyles.statBox}>
+            <div className={approvalStyles.statLabel}>IT In Progress</div>
+            <div className={approvalStyles.statValue}>{itSummary.inProgress}</div>
+          </div>
+          <div className={approvalStyles.statBox}>
+            <div className={approvalStyles.statLabel}>Delivered for UAT</div>
+            <div className={approvalStyles.statValue}>{itSummary.delivered}</div>
           </div>
           <div className={approvalStyles.statBox}>
             <div className={approvalStyles.statLabel}>Total</div>
             <div className={approvalStyles.statValue}>
-              {mockApprovals.length}
+              {requests.length}
             </div>
           </div>
         </div>

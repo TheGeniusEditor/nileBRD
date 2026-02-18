@@ -1,5 +1,5 @@
 .container {
-  max-width: 1440px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 24px;
   min-height: 100vh;
@@ -43,11 +43,82 @@
   font-weight: 600;
 }
 
+.actionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.actionCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  text-decoration: none;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.actionCard:hover {
+  transform: translateY(-2px);
+  border-color: #0f766e;
+  box-shadow: 0 8px 22px rgba(15, 118, 110, 0.12);
+}
+
+.actionIcon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  font-size: 22px;
+  background: #ecfeff;
+  border: 1px solid #99f6e4;
+  flex-shrink: 0;
+}
+
+.actionContent {
+  flex: 1;
+}
+
+.actionCard h2 {
+  margin: 0;
+  color: #0b1220;
+  font-size: 22px;
+}
+
+.actionCard p {
+  margin: 6px 0 10px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.actionMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.actionMeta strong {
+  color: #0b1220;
+  font-size: 13px;
+}
+
+.actionMeta span {
+  color: #0f766e;
+  font-weight: 700;
+  font-size: 14px;
+}
+
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .statCard {
@@ -59,227 +130,31 @@
 
 .statCard h3 {
   margin: 0;
-  font-size: 13px;
   color: #64748b;
+  font-size: 12px;
   font-weight: 600;
 }
 
 .statCard p {
-  margin: 8px 0 0;
+  margin: 8px 0 2px;
   font-size: 28px;
   font-weight: 700;
-}
-
-.layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  align-items: start;
-}
-
-.card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.cardHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 16px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.cardHeader h2 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.badge {
-  background: #ecfeff;
-  color: #0f766e;
-  border: 1px solid #99f6e4;
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.cardBody {
-  padding: 16px;
-}
-
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.formGrid label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  color: #334155;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.formGrid input,
-.formGrid select,
-.formGrid textarea,
-.full textarea {
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 10px;
-  font-size: 14px;
-  font-family: inherit;
-}
-
-.full {
-  grid-column: 1 / -1;
-}
-
-.subCard {
-  margin-top: 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px;
-}
-
-.subCard h3 {
-  margin: 0 0 12px;
-  font-size: 15px;
-}
-
-.threadList {
-  margin: 10px 0 0;
-  padding-left: 18px;
-  color: #334155;
-}
-
-.primaryBtn,
-.secondaryBtn,
-.approveBtn,
-.rejectBtn {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 12px;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.primaryBtn {
-  margin-top: 12px;
-  width: 100%;
-  background: #0f766e;
-  color: #ffffff;
-}
-
-.secondaryBtn {
-  margin-top: 10px;
-  background: #e2e8f0;
   color: #0b1220;
 }
 
-.reviewLayout {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 12px;
-}
-
-.queueList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.queueItem {
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  border-radius: 8px;
-  text-align: left;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  cursor: pointer;
-}
-
-.queueItem span {
+.statCard span {
+  color: #64748b;
   font-size: 12px;
-  color: #64748b;
 }
 
-.activeQueue {
-  border-color: #0f766e;
-  background: #ecfeff;
-}
-
-.reviewPanel {
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 12px;
-}
-
-.reviewPanel h3 {
-  margin: 0;
-}
-
-.muted {
-  color: #64748b;
-  font-size: 13px;
-}
-
-.summaryGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin: 12px 0;
-}
-
-.summaryGrid h4 {
-  margin: 0 0 4px;
-  font-size: 13px;
-  color: #0f766e;
-}
-
-.summaryGrid p,
-.summaryGrid pre {
-  margin: 0;
-  padding: 8px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  white-space: pre-wrap;
-  font-family: inherit;
-  font-size: 13px;
-}
-
-.reviewActions {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.approveBtn {
-  background: #15803d;
-  color: #ffffff;
-}
-
-.rejectBtn {
-  background: #b91c1c;
-  color: #ffffff;
-}
-
-@media (max-width: 1100px) {
-  .layout,
+@media (max-width: 900px) {
   .statsGrid,
-  .reviewLayout,
-  .summaryGrid,
-  .formGrid {
+  .actionGrid {
     grid-template-columns: 1fr;
+  }
+
+  .actionMeta {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

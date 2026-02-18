@@ -21,9 +21,8 @@ const portals = [
     name: "IT Portal",
     icon: "⚙️",
     description: "Review BRD feasibility, estimate costs, plan development timelines, and track IT delivery progress.",
-    href: "#",
+    href: "/role/it",
     color: "it",
-    disabled: true,
   },
 ];
 
