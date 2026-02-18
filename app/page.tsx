@@ -2,7 +2,16 @@
 
 import styles from "./page.module.css";
 
-const portals = [
+type Portal = {
+  name: string;
+  icon: string;
+  description: string;
+  href: string;
+  color: string;
+  disabled?: boolean;
+};
+
+const portals: Portal[] = [
   {
     name: "BA Portal",
     icon: "📋",
