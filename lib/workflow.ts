@@ -49,6 +49,33 @@ export type RequestStatus =
   | "approved"
   | "changes_requested";
 
+export type FeasibilityStatus = "pending" | "feasible" | "needs_info" | "not_feasible";
+
+export type FeasibilityState = {
+  requestId: string;
+  status: FeasibilityStatus;
+  notes: string;
+  updatedAt?: string;
+};
+
+export type ITStage =
+  | "it_review"
+  | "internal_feasibility"
+  | "final_cost_approval"
+  | "timeline_shared"
+  | "ba_follow_up"
+  | "sit"
+  | "uat_delivery";
+
+export type ITWorkflowStatus = "not_started" | "in_progress" | "done";
+
+export type ITWorkflowState = {
+  requestId: string;
+  stages: Record<ITStage, ITWorkflowStatus>;
+  timeline?: string;
+  sitNotes?: string;
+};
+
 export type StakeholderRequest = {
   id: string;
   reqType: string;
@@ -68,6 +95,8 @@ export type StakeholderRequest = {
 };
 
 const REQUESTS_KEY = "allRequests";
+export const IT_FEASIBILITY_KEY = "itFeasibilityState";
+export const IT_WORKFLOW_KEY = "itWorkflowState";
 
 export const createId = () => `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 
@@ -85,6 +114,25 @@ const safeParse = <T,>(value: string | null, fallback: T): T => {
   }
 };
 
+export const defaultFeasibilityState = (requestId: string): FeasibilityState => ({
+  requestId,
+  status: "pending",
+  notes: "",
+});
+
+export const defaultITWorkflowState = (requestId: string): ITWorkflowState => ({
+  requestId,
+  stages: {
+    it_review: "done",
+    internal_feasibility: "in_progress",
+    final_cost_approval: "not_started",
+    timeline_shared: "not_started",
+    ba_follow_up: "not_started",
+    sit: "not_started",
+    uat_delivery: "not_started",
+  },
+});
+
 export const getRequests = (): StakeholderRequest[] => {
   if (typeof window === "undefined") {
     return [];
@@ -99,6 +147,38 @@ export const saveRequests = (requests: StakeholderRequest[]) => {
   }
 
   window.localStorage.setItem(REQUESTS_KEY, JSON.stringify(requests));
+};
+
+export const loadFeasibilityMap = (): Record<string, FeasibilityState> => {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  return safeParse<Record<string, FeasibilityState>>(window.localStorage.getItem(IT_FEASIBILITY_KEY), {});
+};
+
+export const saveFeasibilityMap = (map: Record<string, FeasibilityState>) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(IT_FEASIBILITY_KEY, JSON.stringify(map));
+};
+
+export const loadITWorkflowMap = (): Record<string, ITWorkflowState> => {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  return safeParse<Record<string, ITWorkflowState>>(window.localStorage.getItem(IT_WORKFLOW_KEY), {});
+};
+
+export const saveITWorkflowMap = (map: Record<string, ITWorkflowState>) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(IT_WORKFLOW_KEY, JSON.stringify(map));
 };
 
 export const defaultBRDMasterFromRequest = (request: StakeholderRequest): BRDMasterData => ({

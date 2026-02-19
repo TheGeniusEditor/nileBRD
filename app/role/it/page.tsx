@@ -3,61 +3,58 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
-import { StakeholderRequest, getRequests } from "@/lib/workflow";
-
-type FeasibilityStatus = "pending" | "feasible" | "needs_info" | "not_feasible";
-
-type FeasibilityState = {
-  requestId: string;
-  status: FeasibilityStatus;
-  notes: string;
-  updatedAt?: string;
-};
-
-const IT_FEASIBILITY_KEY = "itFeasibilityState";
-
-const loadFeasibilityMap = (): Record<string, FeasibilityState> => {
-  if (typeof window === "undefined") {
-    return {};
-  }
-
-  try {
-    const stored = window.localStorage.getItem(IT_FEASIBILITY_KEY);
-    if (!stored) {
-      return {};
-    }
-    return JSON.parse(stored) as Record<string, FeasibilityState>;
-  } catch {
-    return {};
-  }
-};
+import {
+  StakeholderRequest,
+  getRequests,
+  loadFeasibilityMap,
+  loadITWorkflowMap,
+} from "@/lib/workflow";
 
 export default function ItWorkspace() {
   const [requests, setRequests] = useState<StakeholderRequest[]>([]);
-  const [feasibilityMap, setFeasibilityMap] = useState<Record<string, FeasibilityState>>({});
+
+  const feasibilityMap = useMemo(() => loadFeasibilityMap(), [requests]);
+  const workflowMap = useMemo(() => loadITWorkflowMap(), [requests]);
 
   useEffect(() => {
     const allRequests = getRequests();
     const approvedRequests = allRequests.filter((item) => item.status === "approved");
     setRequests(approvedRequests);
-    setFeasibilityMap(loadFeasibilityMap());
   }, []);
 
   const approvedCount = useMemo(() => requests.length, [requests.length]);
+
   const statusCounts = useMemo(() => {
     const counts = {
       pending: 0,
       feasible: 0,
       needs_info: 0,
       not_feasible: 0,
-    } as Record<FeasibilityStatus, number>;
+    } as Record<"pending" | "feasible" | "needs_info" | "not_feasible", number>;
 
-    Object.values(feasibilityMap).forEach((item) => {
-      counts[item.status] += 1;
+    requests.forEach((request) => {
+      const entry = feasibilityMap[request.id];
+      if (!entry) {
+        counts.pending += 1;
+        return;
+      }
+
+      counts[entry.status] += 1;
     });
 
     return counts;
-  }, [feasibilityMap]);
+  }, [feasibilityMap, requests]);
+
+  const financialHeadQueue = useMemo(() => {
+    return requests.filter((request) => {
+      const feasibility = feasibilityMap[request.id];
+      const workflow = workflowMap[request.id];
+      if (!workflow) {
+        return false;
+      }
+      return feasibility?.status === "feasible" && workflow.stages.final_cost_approval === "in_progress";
+    });
+  }, [requests, feasibilityMap, workflowMap]);
 
   return (
     <div className={styles.container}>
@@ -93,6 +90,10 @@ export default function ItWorkspace() {
           <h3>Not Feasible</h3>
           <p>{statusCounts.not_feasible}</p>
         </article>
+        <article className={styles.statCard}>
+          <h3>Financial Head Pending</h3>
+          <p>{financialHeadQueue.length}</p>
+        </article>
       </section>
 
       <section className={styles.listCard}>
@@ -112,6 +113,29 @@ export default function ItWorkspace() {
                   <p>{request.reqType} • {request.priority} • {request.tenant}</p>
                 </div>
                 <span>Open Review →</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className={styles.listCard}>
+        <div className={styles.listHead}>
+          <h2>Financial Head Approval Queue</h2>
+          <span>{financialHeadQueue.length} item(s)</span>
+        </div>
+
+        {financialHeadQueue.length === 0 ? (
+          <p className={styles.muted}>No BRDs have reached Financial Head approval stage yet.</p>
+        ) : (
+          <div className={styles.queueList}>
+            {financialHeadQueue.map((request) => (
+              <Link key={request.id} href={`/role/it/${request.id}?mode=financial`} className={styles.queueLink}>
+                <div>
+                  <strong>{request.reqTitle}</strong>
+                  <p>{request.reqType} • {request.priority} • {request.tenant}</p>
+                </div>
+                <span>Open Financial Approval →</span>
               </Link>
             ))}
           </div>

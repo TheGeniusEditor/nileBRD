@@ -2,58 +2,25 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import styles from "./detail.module.css";
 import {
   ConversationThread,
+  FeasibilityState,
+  FeasibilityStatus,
   StakeholderRequest,
   buildPHLTemplateBRD,
+  defaultFeasibilityState,
+  defaultITWorkflowState,
   getRequests,
+  loadFeasibilityMap,
+  loadITWorkflowMap,
+  saveFeasibilityMap,
+  saveITWorkflowMap,
   saveRequests,
 } from "@/lib/workflow";
 
-type FeasibilityStatus = "pending" | "feasible" | "needs_info" | "not_feasible";
-
-type FeasibilityState = {
-  requestId: string;
-  status: FeasibilityStatus;
-  notes: string;
-  updatedAt?: string;
-};
-
-const IT_FEASIBILITY_KEY = "itFeasibilityState";
-
 const avatarColors = ["#ec4899", "#10b981", "#f59e0b", "#2563eb", "#8b5cf6", "#ef4444"];
-
-const defaultFeasibilityState = (requestId: string): FeasibilityState => ({
-  requestId,
-  status: "pending",
-  notes: "",
-});
-
-const loadFeasibilityMap = (): Record<string, FeasibilityState> => {
-  if (typeof window === "undefined") {
-    return {};
-  }
-
-  try {
-    const stored = window.localStorage.getItem(IT_FEASIBILITY_KEY);
-    if (!stored) {
-      return {};
-    }
-    return JSON.parse(stored) as Record<string, FeasibilityState>;
-  } catch {
-    return {};
-  }
-};
-
-const saveFeasibilityMap = (map: Record<string, FeasibilityState>) => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(IT_FEASIBILITY_KEY, JSON.stringify(map));
-};
 
 const statusLabel = (status: FeasibilityStatus) => status.replace("_", " ");
 
@@ -122,7 +89,9 @@ const buildMockConversations = (request: StakeholderRequest): ConversationThread
 
 export default function ItFeasibilityDetailPage() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const requestId = params?.id;
+  const isFinancialMode = searchParams.get("mode") === "financial";
 
   const [selected, setSelected] = useState<StakeholderRequest | null>(null);
   const [searchText, setSearchText] = useState("");
@@ -165,15 +134,84 @@ export default function ItFeasibilityDetailPage() {
   };
 
   const updateStatus = (status: FeasibilityStatus) => {
-    if (!feasibility) {
+    if (!feasibility || !selected) {
       return;
     }
 
-    persistFeasibility((current) => ({
-      ...current,
+    const nextFeasibility = {
+      ...feasibility,
       status,
       updatedAt: new Date().toLocaleString(),
-    }));
+    };
+
+    persistFeasibility(() => nextFeasibility);
+
+    const workflowMap = loadITWorkflowMap();
+    const currentWorkflow = workflowMap[selected.id] || defaultITWorkflowState(selected.id);
+    const nextWorkflow = {
+      ...currentWorkflow,
+      stages: { ...currentWorkflow.stages },
+    };
+
+    nextWorkflow.stages.it_review = "done";
+
+    if (status === "feasible") {
+      nextWorkflow.stages.internal_feasibility = "done";
+      nextWorkflow.stages.final_cost_approval = "in_progress";
+    } else if (status === "needs_info") {
+      nextWorkflow.stages.internal_feasibility = "in_progress";
+      nextWorkflow.stages.final_cost_approval = "not_started";
+    } else if (status === "not_feasible") {
+      nextWorkflow.stages.internal_feasibility = "done";
+      nextWorkflow.stages.final_cost_approval = "not_started";
+      nextWorkflow.stages.ba_follow_up = "in_progress";
+    } else {
+      nextWorkflow.stages.internal_feasibility = "in_progress";
+      nextWorkflow.stages.final_cost_approval = "not_started";
+    }
+
+    saveITWorkflowMap({
+      ...workflowMap,
+      [selected.id]: nextWorkflow,
+    });
+
+    const all = getRequests();
+    const notePrefix = status === "feasible"
+      ? "IT feasibility approved. Moved to Financial Head approval in IT portal."
+      : status === "not_feasible"
+        ? "IT feasibility marked not feasible. Sent back to BA track status for rework."
+        : status === "needs_info"
+          ? "IT feasibility needs more information from BA/stakeholders."
+          : "IT feasibility moved back to pending review.";
+
+    const noteText = nextFeasibility.notes?.trim()
+      ? `${notePrefix} Notes: ${nextFeasibility.notes.trim()}`
+      : notePrefix;
+
+    const nextRequests = all.map((item) => {
+      if (item.id !== selected.id) {
+        return item;
+      }
+
+      return {
+        ...item,
+        status: status === "not_feasible" ? "changes_requested" : item.status,
+        reviewerComment: noteText,
+        threads: [
+          ...(item.threads || []),
+          {
+            id: `${item.id}-it-feasibility-${Date.now()}`,
+            title: "IT Feasibility Decision",
+            date: new Date().toLocaleString(),
+            participants: "IT Team",
+            notes: noteText,
+          },
+        ],
+      };
+    });
+
+    saveRequests(nextRequests);
+    setSelected(nextRequests.find((item) => item.id === selected.id) || null);
   };
 
   const updateNotes = (notes: string) => {
@@ -185,6 +223,58 @@ export default function ItFeasibilityDetailPage() {
       ...current,
       notes,
     }));
+  };
+
+  const updateFinancialDecision = (decision: "approved" | "disapproved") => {
+    if (!selected) {
+      return;
+    }
+
+    const workflowMap = loadITWorkflowMap();
+    const currentWorkflow = workflowMap[selected.id] || defaultITWorkflowState(selected.id);
+    const nextWorkflow = {
+      ...currentWorkflow,
+      stages: { ...currentWorkflow.stages },
+    };
+
+    nextWorkflow.stages.final_cost_approval = "done";
+    nextWorkflow.stages.timeline_shared = decision === "approved" ? "in_progress" : "not_started";
+    nextWorkflow.stages.ba_follow_up = decision === "approved" ? "not_started" : "in_progress";
+
+    saveITWorkflowMap({
+      ...workflowMap,
+      [selected.id]: nextWorkflow,
+    });
+
+    const noteText = decision === "approved"
+      ? "Financially approved by Financial Head in IT portal."
+      : "Financially disapproved by Financial Head in IT portal. Returned for BA/IT follow-up.";
+
+    const all = getRequests();
+    const nextRequests = all.map((item) => {
+      if (item.id !== selected.id) {
+        return item;
+      }
+
+      return {
+        ...item,
+        status: decision === "approved" ? item.status : "changes_requested",
+        reviewerComment: noteText,
+        threads: [
+          ...(item.threads || []),
+          {
+            id: `${item.id}-financial-${Date.now()}`,
+            title: "Financial Head Decision",
+            date: new Date().toLocaleString(),
+            participants: "Financial Head",
+            notes: noteText,
+          },
+        ],
+      };
+    });
+
+    saveRequests(nextRequests);
+    setSelected(nextRequests.find((item) => item.id === selected.id) || null);
   };
 
   const templateDoc = useMemo(() => {
@@ -289,7 +379,7 @@ export default function ItFeasibilityDetailPage() {
           <Link href="/role/it" className={styles.backLink}>
             ← Back to IT Portal
           </Link>
-          <h1>Internal Feasibility Review</h1>
+          <h1>{isFinancialMode ? "Financial Approval" : "Internal Feasibility Review"}</h1>
           <p>{selected.reqTitle}</p>
         </div>
       </header>
@@ -313,19 +403,32 @@ export default function ItFeasibilityDetailPage() {
               </div>
 
               <div className={styles.actionRow}>
-                <button className={styles.primaryBtn} onClick={() => updateStatus("feasible")}>
-                  Mark Feasible
-                </button>
-                <button className={styles.secondaryBtn} onClick={() => updateStatus("needs_info")}>
-                  Needs Info
-                </button>
-                <button className={styles.dangerBtn} onClick={() => updateStatus("not_feasible")}>
-                  Not Feasible
-                </button>
+                {isFinancialMode ? (
+                  <>
+                    <button className={styles.primaryBtn} onClick={() => updateFinancialDecision("approved")}>
+                      Approve Financially
+                    </button>
+                    <button className={styles.dangerBtn} onClick={() => updateFinancialDecision("disapproved")}>
+                      Disapprove Financially
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className={styles.primaryBtn} onClick={() => updateStatus("feasible")}>
+                      Mark Feasible
+                    </button>
+                    <button className={styles.secondaryBtn} onClick={() => updateStatus("needs_info")}>
+                      Needs Info
+                    </button>
+                    <button className={styles.dangerBtn} onClick={() => updateStatus("not_feasible")}>
+                      Not Feasible
+                    </button>
+                  </>
+                )}
               </div>
 
               <label className={styles.fullWidthLabel}>
-                Internal Review Notes
+                {isFinancialMode ? "Financial Approval Notes" : "Internal Review Notes"}
                 <textarea
                   rows={4}
                   value={feasibility.notes}

@@ -77,6 +77,28 @@ const buildMockConversations = (request: StakeholderRequest): ConversationThread
   },
 ];
 
+const buildConversationPointList = (content: string): string[] => {
+  const deduped = new Set<string>();
+
+  const lines = content
+    .split(/\n+|(?<=[.!?])\s+/)
+    .map((item) => item.replace(/^[\-•\d.\s]+/, "").trim())
+    .filter((item) => item.length >= 20);
+
+  for (const line of lines) {
+    const normalized = line.toLowerCase();
+    if (!deduped.has(normalized)) {
+      deduped.add(normalized);
+    }
+
+    if (deduped.size >= 10) {
+      break;
+    }
+  }
+
+  return Array.from(deduped).map((line) => line[0].toUpperCase() + line.slice(1));
+};
+
 export default function RequestWorkspacePage() {
   const params = useParams<{ id: string }>();
   const requestId = params?.id;
@@ -86,6 +108,7 @@ export default function RequestWorkspacePage() {
   const [savedAt, setSavedAt] = useState("");
   const [searchText, setSearchText] = useState("");
   const [reply, setReply] = useState("");
+  const [isSummarizing, setIsSummarizing] = useState(false);
 
   useEffect(() => {
     if (!requestId) {
@@ -216,6 +239,31 @@ export default function RequestWorkspacePage() {
     });
   }, [chatThreads, searchText]);
 
+  const summarizeToConversationPoints = async () => {
+    const content = chatThreads
+      .map((thread) => `${thread.title}. ${thread.notes || ""}. ${thread.transcript || ""}`)
+      .join("\n");
+
+    if (!content.trim()) {
+      return;
+    }
+
+    setIsSummarizing(true);
+    await new Promise((resolve) => setTimeout(resolve, 650));
+
+    const points = buildConversationPointList(content);
+    const formatted = points.map((point) => `• ${point}`).join("\n");
+    setConversationPoints((prev) => {
+      if (!prev.trim()) {
+        return formatted;
+      }
+
+      return `${prev.trim()}\n\n${formatted}`;
+    });
+    setSavedAt("");
+    setIsSummarizing(false);
+  };
+
   if (!request) {
     return (
       <div className={styles.notFoundWrap}>
@@ -278,13 +326,19 @@ export default function RequestWorkspacePage() {
 
         <aside className={styles.chatPanel}>
           <div className={styles.chatTop}>
-            <h2>Discussion</h2>
-            <span>{filteredThreads.length} items</span>
+            <div>
+              <h2>Discussion</h2>
+              <p>Live thread history with decisions and follow-ups</p>
+            </div>
+            <span className={styles.countPill}>{filteredThreads.length} items</span>
           </div>
 
           <div className={styles.chatActions}>
             <button className={styles.teamsBtn} onClick={initiateTeamsMeeting}>
               Initiate Teams Meeting
+            </button>
+            <button className={styles.aiBtn} onClick={summarizeToConversationPoints} disabled={isSummarizing}>
+              {isSummarizing ? "Summarizing..." : "AI: Add Conversation Points"}
             </button>
           </div>
 

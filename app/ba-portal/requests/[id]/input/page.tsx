@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import styles from "./input.module.css";
@@ -15,6 +15,101 @@ import {
 } from "@/lib/workflow";
 
 const avatarColors = ["#ec4899", "#10b981", "#f59e0b", "#2563eb", "#8b5cf6", "#ef4444"];
+
+type TranscriptAlternative = {
+  transcript: string;
+};
+
+type TranscriptResult = {
+  [index: number]: TranscriptAlternative;
+  length: number;
+};
+
+type TranscriptResultList = {
+  [index: number]: TranscriptResult;
+  length: number;
+};
+
+type SpeechRecognitionEventLike = {
+  resultIndex: number;
+  results: TranscriptResultList;
+};
+
+type SpeechRecognitionErrorEventLike = {
+  error?: string;
+};
+
+type SpeechRecognitionLike = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
+
+const buildConversationPoints = (content: string): string[] => {
+  const unique = new Set<string>();
+  const sentences = content
+    .split(/\n+|(?<=[.!?])\s+/)
+    .map((line) => line.replace(/^[\-•\d.\s]+/, "").trim())
+    .filter((line) => line.length >= 18);
+
+  for (const sentence of sentences) {
+    const normalized = sentence.toLowerCase();
+    if (!unique.has(normalized)) {
+      unique.add(normalized);
+    }
+    if (unique.size >= 8) {
+      break;
+    }
+  }
+
+  return Array.from(unique).map((point) => point[0].toUpperCase() + point.slice(1));
+};
+
+const buildMasterFromConversationPoints = (
+  current: BRDMasterData,
+  points: string[],
+  request: StakeholderRequest
+): BRDMasterData => {
+  const joined = points.join("\n- ");
+  const lowerPoints = points.map((point) => point.toLowerCase());
+  const pickMatches = (keywords: string[]) =>
+    points.filter((point, index) => keywords.some((keyword) => lowerPoints[index].includes(keyword)));
+
+  const assumptions = pickMatches(["assum", "depend", "expect", "consider", "if "]);
+  const constraints = pickMatches(["constraint", "limit", "cannot", "must", "deadline", "budget"]);
+  const kpis = pickMatches(["kpi", "%", "target", "sla", "turnaround", "time", "metric"]);
+  const scopeOut = pickMatches(["out of scope", "later", "future", "exclude", "phase 2"]);
+  const security = pickMatches(["security", "compliance", "risk", "audit", "privacy", "pii"]);
+  const integrations = pickMatches(["integrat", "source", "consumer", "api", "system", "data"]);
+
+  return {
+    ...current,
+    objective: points[0] || current.objective,
+    process: `Meeting conversation points:\n- ${joined || "No key points captured yet."}`,
+    scopeIn: points.slice(0, 4).join("\n") || current.scopeIn,
+    scopeOut: scopeOut.length > 0 ? scopeOut.join("\n") : current.scopeOut,
+    assumptions: assumptions.length > 0 ? assumptions.join("\n") : current.assumptions,
+    constraints: constraints.length > 0 ? constraints.join("\n") : current.constraints,
+    kpis: kpis.length > 0 ? kpis.join("\n") : current.kpis,
+    sources: integrations.length > 0 ? integrations.join("\n") : current.sources,
+    consumers: integrations.length > 1 ? integrations.slice(1).join("\n") : current.consumers,
+    securityControls:
+      security.length > 0
+        ? security.join("\n")
+        : current.securityControls,
+    regMap:
+      security.length > 0
+        ? `${current.regMap}\nDiscussion emphasis: ${request.reqType} governance and control checkpoints.`
+        : current.regMap,
+  };
+};
 
 const getInitials = (participants?: string) => {
   if (!participants) {
@@ -87,8 +182,22 @@ export default function RequestInputPage() {
   const [request, setRequest] = useState<StakeholderRequest | null>(null);
   const [master, setMaster] = useState<BRDMasterData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isApplyingPoints, setIsApplyingPoints] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [reply, setReply] = useState("");
+  const [meetingTranscript, setMeetingTranscript] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingError, setRecordingError] = useState("");
+  const [conversationPoints, setConversationPoints] = useState<string[]>([]);
+  const speechRecognitionRef = useRef<SpeechRecognitionLike | null>(null);
+
+  const getMeetingContextText = () => {
+    const threadText = chatThreads
+      .map((thread) => `${thread.title}. ${thread.notes || ""}. ${thread.transcript || ""}`)
+      .join("\n");
+    return `${request?.brief || ""}\n${threadText}\n${meetingTranscript}`;
+  };
 
   useEffect(() => {
     if (!requestId) {
@@ -135,6 +244,14 @@ export default function RequestInputPage() {
       });
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (speechRecognitionRef.current) {
+        speechRecognitionRef.current.stop();
+      }
+    };
+  }, []);
 
   const setField = (key: keyof BRDMasterData, value: string) => {
     setMaster((prev) => {
@@ -188,6 +305,121 @@ export default function RequestInputPage() {
       "_blank",
       "noopener,noreferrer"
     );
+  };
+
+  const startTranscriptRecording = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const speechWindow = window as Window & {
+      SpeechRecognition?: SpeechRecognitionCtor;
+      webkitSpeechRecognition?: SpeechRecognitionCtor;
+    };
+    const RecognitionCtor = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
+
+    if (!RecognitionCtor) {
+      setRecordingError("Live recording is not supported in this browser. Paste transcript manually below.");
+      return;
+    }
+
+    const recognition = new RecognitionCtor();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event: SpeechRecognitionEventLike) => {
+      let partial = "";
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        partial += event.results[index][0].transcript;
+      }
+
+      if (!partial.trim()) {
+        return;
+      }
+
+      setMeetingTranscript((prev) => `${prev}${prev.trim() ? " " : ""}${partial.trim()}`);
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
+      setRecordingError(event?.error ? `Recorder error: ${event.error}` : "Unable to record transcript.");
+      setIsRecording(false);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognition.start();
+    speechRecognitionRef.current = recognition;
+    setIsRecording(true);
+    setRecordingError("");
+  };
+
+  const stopTranscriptRecording = () => {
+    if (speechRecognitionRef.current) {
+      speechRecognitionRef.current.stop();
+    }
+    setIsRecording(false);
+  };
+
+  const saveTranscriptToChat = () => {
+    if (!request || !meetingTranscript.trim()) {
+      return;
+    }
+
+    const transcript = meetingTranscript.trim();
+    persistRequest((item) => ({
+      ...item,
+      status: item.status === "approved" ? "approved" : "in_progress",
+      threads: [
+        ...(item.threads || []),
+        {
+          id: `${item.id}-transcript-${Date.now()}`,
+          title: "Meeting Transcript",
+          date: new Date().toLocaleString(),
+          participants: "BA Meeting",
+          transcript,
+          notes: transcript.slice(0, 260),
+        },
+      ],
+    }));
+
+    setMeetingTranscript("");
+  };
+
+  const summarizeConversationPoints = async () => {
+    const context = getMeetingContextText();
+    if (!context.trim()) {
+      return;
+    }
+
+    setIsSummarizing(true);
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    const points = buildConversationPoints(context);
+    setConversationPoints(points);
+    setIsSummarizing(false);
+  };
+
+  const fillParametersFromConversationPoints = async () => {
+    if (!request || !master) {
+      return;
+    }
+
+    setIsApplyingPoints(true);
+    await new Promise((resolve) => setTimeout(resolve, 700));
+
+    const points =
+      conversationPoints.length > 0
+        ? conversationPoints
+        : buildConversationPoints(getMeetingContextText());
+
+    if (points.length > 0) {
+      setConversationPoints(points);
+      setMaster((prev) => (prev ? buildMasterFromConversationPoints(prev, points, request) : prev));
+    }
+
+    setIsApplyingPoints(false);
   };
 
   const chatThreads = useMemo(() => {
@@ -371,8 +603,11 @@ export default function RequestInputPage() {
 
         <aside className={styles.chatPanel}>
           <div className={styles.chatTop}>
-            <h2>Discussion</h2>
-            <span>{filteredThreads.length} items</span>
+            <div>
+              <h2>Discussion</h2>
+              <p>Live thread history with decisions and follow-ups</p>
+            </div>
+            <span className={styles.countPill}>{filteredThreads.length} items</span>
           </div>
 
           <div className={styles.chatActions}>
@@ -380,6 +615,52 @@ export default function RequestInputPage() {
               Initiate Teams Meeting
             </button>
           </div>
+
+          <div className={styles.transcriptWrap}>
+            <div className={styles.transcriptHead}>
+              <h3>Meeting Transcript</h3>
+              <span>{isRecording ? "Recording..." : "Ready"}</span>
+            </div>
+            <div className={styles.transcriptActions}>
+              <button className={styles.quickBtn} onClick={startTranscriptRecording} disabled={isRecording}>
+                Start recording
+              </button>
+              <button className={styles.quickBtn} onClick={stopTranscriptRecording} disabled={!isRecording}>
+                Stop
+              </button>
+              <button className={styles.quickBtn} onClick={saveTranscriptToChat} disabled={!meetingTranscript.trim()}>
+                Save transcript
+              </button>
+            </div>
+            <textarea
+              className={styles.transcriptInput}
+              rows={4}
+              value={meetingTranscript}
+              onChange={(event) => setMeetingTranscript(event.target.value)}
+              placeholder="Record or paste meeting transcript here"
+            />
+            {recordingError ? <p className={styles.recordingError}>{recordingError}</p> : null}
+          </div>
+
+          <div className={styles.aiActions}>
+            <button className={styles.aiBtn} onClick={summarizeConversationPoints} disabled={isSummarizing}>
+              {isSummarizing ? "Summarizing..." : "AI: Summarize Conversation Points"}
+            </button>
+            <button className={styles.aiBtn} onClick={fillParametersFromConversationPoints} disabled={isApplyingPoints}>
+              {isApplyingPoints ? "Filling..." : "AI: Fill Input Parameters"}
+            </button>
+          </div>
+
+          {conversationPoints.length > 0 ? (
+            <div className={styles.pointsWrap}>
+              <h3>Conversation Points</h3>
+              <ul>
+                {conversationPoints.map((point, index) => (
+                  <li key={`${point}-${index}`}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           <div className={styles.searchWrap}>
             <input

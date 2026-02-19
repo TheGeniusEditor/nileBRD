@@ -4,27 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import styles from "../styles.module.css";
 import approvalStyles from "./approvals.module.css";
-import { StakeholderRequest, getRequests } from "@/lib/workflow";
-
-type ITStage =
-  | "it_review"
-  | "internal_feasibility"
-  | "final_cost_approval"
-  | "timeline_shared"
-  | "ba_follow_up"
-  | "sit"
-  | "uat_delivery";
-
-type ITWorkflowStatus = "not_started" | "in_progress" | "done";
-
-type ITWorkflowState = {
-  requestId: string;
-  stages: Record<ITStage, ITWorkflowStatus>;
-  timeline?: string;
-  sitNotes?: string;
-};
-
-const IT_WORKFLOW_KEY = "itWorkflowState";
+import {
+  ITStage,
+  ITWorkflowState,
+  StakeholderRequest,
+  getRequests,
+  loadFeasibilityMap,
+  loadITWorkflowMap,
+} from "@/lib/workflow";
 
 const workflowOrder: ITStage[] = [
   "it_review",
@@ -44,19 +31,6 @@ const stageLabels: Record<ITStage, string> = {
   ba_follow_up: "BA Follow-up",
   sit: "SIT",
   uat_delivery: "UAT Delivery",
-};
-
-const loadWorkflowMap = () => {
-  if (typeof window === "undefined") {
-    return {} as Record<string, ITWorkflowState>;
-  }
-
-  try {
-    const stored = window.localStorage.getItem(IT_WORKFLOW_KEY);
-    return stored ? (JSON.parse(stored) as Record<string, ITWorkflowState>) : {};
-  } catch {
-    return {} as Record<string, ITWorkflowState>;
-  }
 };
 
 const getStatusColor = (status: StakeholderRequest["status"]) => {
@@ -88,6 +62,7 @@ const getStatusProgressValue = (status: StakeholderRequest["status"]) => {
 export default function ApprovalsPage() {
   const [requests, setRequests] = useState<StakeholderRequest[]>([]);
   const [workflowMap, setWorkflowMap] = useState<Record<string, ITWorkflowState>>({});
+  const [feasibilityMap, setFeasibilityMap] = useState(loadFeasibilityMap());
 
   useEffect(() => {
     const all = getRequests();
@@ -97,7 +72,8 @@ export default function ApprovalsPage() {
         (item.status === "sent" || item.status === "approved" || item.status === "changes_requested")
     );
     setRequests(reviewItems);
-    setWorkflowMap(loadWorkflowMap());
+    setWorkflowMap(loadITWorkflowMap());
+    setFeasibilityMap(loadFeasibilityMap());
   }, []);
 
   const itSummary = useMemo(() => {
@@ -133,6 +109,7 @@ export default function ApprovalsPage() {
         const statusColor = getStatusColor(request.status);
         const statusProgress = getStatusProgressValue(request.status);
         const itWorkflow = workflowMap[request.id];
+        const feasibility = feasibilityMap[request.id];
         const completedStages = itWorkflow
           ? workflowOrder.filter((stage) => itWorkflow.stages[stage] === "done").length
           : 0;
@@ -141,6 +118,10 @@ export default function ApprovalsPage() {
             (itWorkflow.stages.uat_delivery === "done" ? "uat_delivery" : undefined)
           : undefined;
         const itProgress = Math.round((completedStages / workflowOrder.length) * 100);
+        const latestITUpdate = [...(request.threads || [])]
+          .reverse()
+          .find((thread) => (thread.participants || "").toLowerCase().includes("it"));
+        const showITCard = request.status === "approved" || request.status === "changes_requested" || Boolean(itWorkflow) || Boolean(feasibility);
 
         return (
           <div key={request.id} className={approvalStyles.brdSection}>
@@ -202,7 +183,7 @@ export default function ApprovalsPage() {
                 </div>
               </div>
 
-              {request.status === "approved" && (
+              {showITCard && (
                 <div className={approvalStyles.itCard}>
                   <div className={approvalStyles.cardHeader}>
                     <div className={approvalStyles.stakeholderInfo}>
@@ -212,10 +193,17 @@ export default function ApprovalsPage() {
                     <span className={approvalStyles.itBadge}>{itProgress}%</span>
                   </div>
 
-                  {!itWorkflow ? (
+                  {!itWorkflow && !feasibility ? (
                     <p className={approvalStyles.itMuted}>IT workflow not started yet by IT portal.</p>
                   ) : (
                     <>
+                      {feasibility && (
+                        <div className={approvalStyles.itMeta}>
+                          <span>Feasibility: {feasibility.status.replace("_", " ")}</span>
+                          <span>{feasibility.updatedAt || "Awaiting update"}</span>
+                        </div>
+                      )}
+
                       <div className={approvalStyles.itMeta}>
                         <span>
                           Current Stage: {currentStage ? stageLabels[currentStage] : "Not started"}
@@ -235,6 +223,23 @@ export default function ApprovalsPage() {
                         <div className={approvalStyles.feedback}>
                           <strong>Development Timeline</strong>
                           <p>{itWorkflow.timeline}</p>
+                        </div>
+                      )}
+
+                      {request.status === "changes_requested" && (
+                        <div className={approvalStyles.feedback}>
+                          <strong>Returned to BA</strong>
+                          <p>
+                            {request.reviewerComment ||
+                              "IT marked this BRD as not feasible and sent it back for BA updates."}
+                          </p>
+                        </div>
+                      )}
+
+                      {latestITUpdate && (
+                        <div className={approvalStyles.feedback}>
+                          <strong>Latest IT Update</strong>
+                          <p>{latestITUpdate.notes || latestITUpdate.transcript || "No details shared."}</p>
                         </div>
                       )}
                     </>
