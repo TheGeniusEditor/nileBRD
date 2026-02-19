@@ -124,6 +124,43 @@
   color: #0b1220;
 }
 
+.helper {
+  margin: 0 0 10px;
+  color: #475569;
+}
+
+.error {
+  margin: 0 0 10px;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.pdfFrame {
+  width: 100%;
+  height: 78vh;
+  border: 1px solid #dbe4ef;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.pdfActions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.openLink {
+  color: #0f766e;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.openLink:hover {
+  text-decoration: underline;
+}
+
 .emptyCard {
   background: #ffffff;
   border: 1px solid #e2e8f0;
