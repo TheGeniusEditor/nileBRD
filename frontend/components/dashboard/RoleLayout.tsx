@@ -14,13 +14,13 @@ type RoleLayoutProps = {
 
 export function RoleLayout({ title, userName, navItems, children }: RoleLayoutProps) {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-blue-50">
       <PortalSidebar title={title} navItems={navItems} />
       <div className="ml-0 min-h-screen lg:ml-72">
         <PortalHeader userName={userName} />
-        <main className="px-4 py-5 sm:px-6 animate-fade-in">
+        <main className="px-6 py-8 sm:px-8 animate-fade-in max-w-7xl mx-auto">
           <Breadcrumbs />
-          {children}
+          <div className="space-y-6">{children}</div>
         </main>
       </div>
     </div>
