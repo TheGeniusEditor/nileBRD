@@ -1,0 +1,76 @@
+# Environment variables - NEVER commit these
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.staging
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.env.swp
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Backend specific
+backend/node_modules/
+backend/dist/
+backend/.env
+backend/.env.local
+
+# Frontend specific
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+frontend/.env.local
+frontend/.env.production.local
+
+# Database
+*.sqlite
+*.db
+*.sql
+
+# IDE workspace settings
+.vscode/settings.json
+.vscode/launch.json

@@ -23,6 +23,19 @@ CREATE TABLE IF NOT EXISTS auth_logs (
   user_agent TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Admin audit logs table for tracking admin actions
+CREATE TABLE IF NOT EXISTS admin_audit_logs (
+  id SERIAL PRIMARY KEY,
+  admin_id VARCHAR(255),
+  action VARCHAR(100) NOT NULL,
+  details JSONB,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index on admin_id and timestamp for faster queries
+CREATE INDEX IF NOT EXISTS idx_admin_audit_logs_admin_id ON admin_audit_logs(admin_id);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_logs_timestamp ON admin_audit_logs(timestamp DESC);
 `;
 
 async function migrate() {

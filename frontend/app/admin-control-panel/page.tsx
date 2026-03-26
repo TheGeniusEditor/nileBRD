@@ -31,49 +31,104 @@ export default function AdminPanel() {
   const [creatingUser, setCreatingUser] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Check if already authenticated
+  // Check if already authenticated on component mount
   useEffect(() => {
     const adminToken = localStorage.getItem("adminToken");
-    const adminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || "ADMIN_SECRET_KEY_123";
     
-    if (adminToken && adminToken === adminKey) {
-      setIsAuthenticated(true);
-      fetchUsers();
+    if (adminToken) {
+      // Verify token is still valid
+      verifyAdminToken(adminToken);
     }
     setIsInitialized(true);
   }, []);
 
+  const verifyAdminToken = async (token: string) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001"}/api/admin/verify`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        setIsAuthenticated(true);
+        fetchUsers();
+      } else {
+        // Token invalid or expired
+        localStorage.removeItem("adminToken");
+        setIsAuthenticated(false);
+      }
+    } catch (err) {
+      console.error("Token verification error:", err);
+      localStorage.removeItem("adminToken");
+      setIsAuthenticated(false);
+    }
+  };
+
   const fetchUsers = async () => {
     try {
-      const response = await fetch("/api/admin/users");
+      const token = localStorage.getItem("adminToken");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001"}/api/admin/users`,
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        }
+      );
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users);
+      } else if (response.status === 401) {
+        // Unauthorized - token expired
+        localStorage.removeItem("adminToken");
+        setIsAuthenticated(false);
       }
     } catch (err) {
       console.error("Error fetching users:", err);
     }
   };
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Simple admin authentication - check against environment variable
-    // In production, this would use a backend verification
-    const adminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || "ADMIN_SECRET_KEY_123";
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001"}/api/admin/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: adminPassword }),
+        }
+      );
 
-    if (adminPassword === adminKey) {
-      localStorage.setItem("adminToken", adminPassword);
-      setIsAuthenticated(true);
-      setAdminPassword("");
-      fetchUsers();
-    } else {
-      setError("Invalid admin password");
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Invalid admin password");
+        if (response.status === 429) {
+          setError("Too many login attempts. Please try again later.");
+        }
+      } else {
+        // Store the JWT token
+        localStorage.setItem("adminToken", data.token);
+        setIsAuthenticated(true);
+        setAdminPassword("");
+        await fetchUsers();
+      }
+    } catch (err) {
+      setError("Error connecting to admin service");
+      console.error("Login error:", err);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -88,15 +143,22 @@ export default function AdminPanel() {
     }
 
     try {
-      const response = await fetch("/api/admin/create-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: newEmail,
-          password: newPassword,
-          role: selectedRole,
-        }),
-      });
+      const token = localStorage.getItem("adminToken");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001"}/api/admin/create-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            email: newEmail,
+            password: newPassword,
+            role: selectedRole,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -118,11 +180,26 @@ export default function AdminPanel() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    setIsAuthenticated(false);
-    setAdminPassword("");
-    setUsers([]);
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("adminToken");
+      await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001"}/api/admin/logout`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      localStorage.removeItem("adminToken");
+      setIsAuthenticated(false);
+      setAdminPassword("");
+      setUsers([]);
+    }
   };
 
   // Not authenticated - show login form
