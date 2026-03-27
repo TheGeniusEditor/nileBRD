@@ -66,7 +66,7 @@ export default function BADiscussionsPage() {
       {/* Request list */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-800">Assigned Request Chats</h2>
+          <h2 className="text-base font-bold text-slate-800">Stakeholder Requests</h2>
           <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-700">{requests.length}</span>
         </div>
 
