@@ -74,6 +74,18 @@ ALTER TABLE request_attachments ADD COLUMN IF NOT EXISTS s3_key VARCHAR(500);
 
 CREATE INDEX IF NOT EXISTS idx_requests_ba ON requests(assigned_ba_id);
 CREATE INDEX IF NOT EXISTS idx_requests_stakeholder ON requests(stakeholder_id);
+
+-- Real-time chat messages per request
+CREATE TABLE IF NOT EXISTS request_messages (
+  id SERIAL PRIMARY KEY,
+  request_id INTEGER REFERENCES requests(id) ON DELETE CASCADE,
+  sender_id INTEGER REFERENCES users(id),
+  message TEXT NOT NULL,
+  reply_to_id INTEGER REFERENCES request_messages(id) ON DELETE SET NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_messages_request ON request_messages(request_id, created_at);
 `;
 
 async function migrate() {

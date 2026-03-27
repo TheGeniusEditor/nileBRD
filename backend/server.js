@@ -1,25 +1,35 @@
 import "dotenv/config.js";
 import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admin.js";
 import requestRoutes from "./routes/requests.js";
+import discussionRoutes from "./routes/discussions.js";
 import pool from "./config/db.js";
+import { initChat } from "./socket/chat.js";
 
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+
+// Socket.io — attached to the same HTTP server
+const io = new Server(httpServer, {
+  cors: { origin: FRONTEND_URL, methods: ["GET", "POST"], credentials: true },
+});
+initChat(io);
 
 // Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
-  credentials: true,
-}));
+app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/requests", requestRoutes);
+app.use("/api/discussions", discussionRoutes);
 
 // Health check
 app.get("/health", async (req, res) => {
@@ -31,13 +41,12 @@ app.get("/health", async (req, res) => {
   }
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: "Internal server error", error: err.message });
 });
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || "http://localhost:3000"}`);
+  console.log(`🔗 Frontend URL: ${FRONTEND_URL}`);
 });
