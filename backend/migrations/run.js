@@ -7,9 +7,13 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   role VARCHAR(50) NOT NULL CHECK (role IN ('stakeholder', 'ba', 'it')),
+  name VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Add name column to existing users table if it doesn't exist
+ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(255);
 
 -- Create index on email for faster lookups
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);

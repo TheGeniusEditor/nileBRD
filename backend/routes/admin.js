@@ -1,5 +1,5 @@
 import express from "express";
-import { getAllUsers, createAdminUser } from "../services/adminService.js";
+import { getAllUsers, createAdminUser, updateUserName } from "../services/adminService.js";
 import { 
   authenticateAdmin, 
   adminLoginLimiter, 
@@ -73,7 +73,7 @@ router.get("/users", authenticateAdmin, async (req, res) => {
 // Create user (admin endpoint) - protected by admin authentication
 router.post("/create-user", authenticateAdmin, async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password, role, name } = req.body;
 
     // Validate input
     if (!email || !password || !role) {
@@ -91,10 +91,10 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
       return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
-    const result = await createAdminUser(email, password, role);
-    
+    const result = await createAdminUser(email, password, role, name || null);
+
     // Log successful user creation
-    await logAdminAction(req.admin.id, "CREATE_USER", { email, role });
+    await logAdminAction(req.admin.id, "CREATE_USER", { email, role, name: name || null });
 
     res.status(201).json({
       message: "User created successfully",
@@ -104,6 +104,22 @@ router.post("/create-user", authenticateAdmin, async (req, res) => {
     console.error("Create user error:", error);
     await logAdminAction(req.admin.id, "CREATE_USER_ERROR", { error: error.message });
     res.status(400).json({ message: error.message });
+  }
+});
+
+// Update user display name - protected by admin authentication
+router.patch("/users/:id/name", authenticateAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    const user = await updateUserName(parseInt(id, 10), name);
+    await logAdminAction(req.admin.id, "UPDATE_USER_NAME", { userId: id, name });
+
+    res.json({ message: "Name updated", user });
+  } catch (error) {
+    console.error("Update name error:", error);
+    res.status(error.message === "User not found" ? 404 : 500).json({ message: error.message });
   }
 });
 

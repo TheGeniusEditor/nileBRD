@@ -4,7 +4,7 @@ import bcryptjs from "bcryptjs";
 export async function getAllUsers() {
   try {
     const result = await pool.query(
-      "SELECT id, email, role, created_at FROM users ORDER BY created_at DESC"
+      "SELECT id, email, role, name, created_at FROM users ORDER BY created_at DESC"
     );
     return result.rows;
   } catch (error) {
@@ -12,9 +12,8 @@ export async function getAllUsers() {
   }
 }
 
-export async function createAdminUser(email, password, role) {
+export async function createAdminUser(email, password, role, name = null) {
   try {
-    // Check if email already exists
     const existingUser = await pool.query(
       "SELECT id FROM users WHERE email = $1",
       [email]
@@ -24,24 +23,36 @@ export async function createAdminUser(email, password, role) {
       throw new Error("Email already exists");
     }
 
-    // Hash password
     const hashedPassword = await bcryptjs.hash(password, 10);
 
-    // Create user
     const result = await pool.query(
-      "INSERT INTO users (email, password_hash, role, created_at) VALUES ($1, $2, $3, NOW()) RETURNING id, email, role, created_at",
-      [email, hashedPassword, role]
+      "INSERT INTO users (email, password_hash, role, name, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING id, email, role, name, created_at",
+      [email, hashedPassword, role, name || null]
     );
 
     const user = result.rows[0];
 
-    // Log the action
     await pool.query(
       "INSERT INTO auth_logs (user_id, action) VALUES ($1, $2)",
       [user.id, "ADMIN_CREATE"]
     );
 
     return { user };
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function updateUserName(id, name) {
+  try {
+    const result = await pool.query(
+      "UPDATE users SET name = $1, updated_at = NOW() WHERE id = $2 RETURNING id, email, role, name, created_at",
+      [name || null, id]
+    );
+    if (result.rows.length === 0) {
+      throw new Error("User not found");
+    }
+    return result.rows[0];
   } catch (error) {
     throw error;
   }

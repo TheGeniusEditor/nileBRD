@@ -35,6 +35,7 @@ interface User {
   id: number;
   email: string;
   role: UserRole;
+  name: string | null;
   created_at: string;
 }
 
@@ -116,13 +117,16 @@ function InlineNameEditor({
 }: {
   userId: number;
   name: string;
-  onSave: (id: number, name: string) => void;
+  onSave: (id: number, name: string) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState(name);
 
-  const save = () => {
-    onSave(userId, draft.trim());
+  const save = async () => {
+    setSaving(true);
+    await onSave(userId, draft.trim());
+    setSaving(false);
     setEditing(false);
   };
 
@@ -142,8 +146,8 @@ function InlineNameEditor({
           className="w-36 rounded-lg border border-slate-500 bg-slate-700 px-2 py-1 text-sm text-white placeholder:text-slate-500 focus:border-red-400 focus:outline-none"
           placeholder="Display name..."
         />
-        <button onClick={save} className="text-emerald-400 hover:text-emerald-300 transition-colors">
-          <Check className="size-4" />
+        <button onClick={save} disabled={saving} className="text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50">
+          {saving ? <RefreshCw className="size-4 animate-spin" /> : <Check className="size-4" />}
         </button>
         <button onClick={cancel} className="text-slate-500 hover:text-slate-300 transition-colors">
           <X className="size-4" />
@@ -176,7 +180,6 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState<Tab>("users");
   const [users, setUsers] = useState<User[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [userNames, setUserNames] = useState<Record<number, string>>({});
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
 
@@ -193,10 +196,6 @@ export default function AdminPanel() {
   const API = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
   useEffect(() => {
-    const stored = localStorage.getItem("adminUserNames");
-    if (stored) {
-      try { setUserNames(JSON.parse(stored)); } catch {}
-    }
     const token = localStorage.getItem("adminToken");
     if (token) {
       verifyAdminToken(token);
@@ -205,10 +204,17 @@ export default function AdminPanel() {
     }
   }, []);
 
-  const saveUserName = (id: number, name: string) => {
-    const updated = { ...userNames, [id]: name };
-    setUserNames(updated);
-    localStorage.setItem("adminUserNames", JSON.stringify(updated));
+  const saveUserName = async (id: number, name: string) => {
+    const token = localStorage.getItem("adminToken");
+    const res = await fetch(`${API}/api/admin/users/${id}/name`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, name: data.user.name } : u)));
+    }
   };
 
   const verifyAdminToken = async (token: string) => {
@@ -295,16 +301,12 @@ export default function AdminPanel() {
       const res = await fetch(`${API}/api/admin/create-user`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ email: newEmail, password: newPassword, role: selectedRole }),
+        body: JSON.stringify({ email: newEmail, password: newPassword, role: selectedRole, name: newName.trim() || null }),
       });
       const data = await res.json();
       if (!res.ok) {
         setCreateError(data.message || "Failed to create user");
       } else {
-        // Save name locally if provided
-        if (newName.trim() && data.user?.id) {
-          saveUserName(data.user.id, newName.trim());
-        }
         setSuccessMessage(`Account created for ${newEmail}`);
         setNewName(""); setNewEmail(""); setNewPassword(""); setSelectedRole("stakeholder");
         await fetchUsers();
@@ -335,7 +337,7 @@ export default function AdminPanel() {
 
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
-      const name = userNames[u.id] || "";
+      const name = u.name || "";
       const matchSearch =
         !search ||
         u.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -343,7 +345,7 @@ export default function AdminPanel() {
       const matchRole = roleFilter === "all" || u.role === roleFilter;
       return matchSearch && matchRole;
     });
-  }, [users, search, roleFilter, userNames]);
+  }, [users, search, roleFilter]);
 
   const stats = useMemo(() => ({
     total: users.length,
@@ -561,7 +563,7 @@ export default function AdminPanel() {
                   </thead>
                   <tbody>
                     {filteredUsers.map((user, i) => {
-                      const name = userNames[user.id] || "";
+                      const name = user.name || "";
                       const role = roleConfig[user.role];
                       return (
                         <tr
