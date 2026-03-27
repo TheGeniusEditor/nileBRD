@@ -74,17 +74,13 @@ function RequestCard({ request }: { request: AssignedRequest }) {
     setDownloading(att.id);
     try {
       const token = localStorage.getItem("authToken");
+      // Server returns a presigned R2/S3 URL — browser downloads directly from storage
       const res = await fetch(`${API}/api/requests/attachment/${att.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Download failed");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = att.original_name;
-      a.click();
-      URL.revokeObjectURL(url);
+      if (!res.ok) throw new Error("Failed to get download link");
+      const { url } = await res.json();
+      window.open(url, "_blank");
     } catch (err) {
       console.error(err);
     } finally {

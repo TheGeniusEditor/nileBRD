@@ -57,16 +57,20 @@ CREATE TABLE IF NOT EXISTS requests (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Request attachments table (stores file data as bytea)
+-- Request attachments table (stores S3/R2 object key, not file bytes)
 CREATE TABLE IF NOT EXISTS request_attachments (
   id SERIAL PRIMARY KEY,
   request_id INTEGER REFERENCES requests(id) ON DELETE CASCADE,
   original_name VARCHAR(255) NOT NULL,
   mimetype VARCHAR(100),
   size INTEGER,
-  data BYTEA NOT NULL,
+  s3_key VARCHAR(500) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Migrate existing table: drop old bytea column, add s3_key if needed
+ALTER TABLE request_attachments DROP COLUMN IF EXISTS data;
+ALTER TABLE request_attachments ADD COLUMN IF NOT EXISTS s3_key VARCHAR(500);
 
 CREATE INDEX IF NOT EXISTS idx_requests_ba ON requests(assigned_ba_id);
 CREATE INDEX IF NOT EXISTS idx_requests_stakeholder ON requests(stakeholder_id);

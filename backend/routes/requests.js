@@ -1,12 +1,51 @@
 import express from "express";
 import multer from "multer";
+import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import pool from "../config/db.js";
+import { s3, BUCKET } from "../config/storage.js";
 import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
-// GET /api/requests/ba-list — list all BA users (any authenticated user)
+// multer only parses the multipart body — buffer goes straight to R2/S3, never to disk or DB
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB per file
+  fileFilter: (req, file, cb) => {
+    const allowed = ["application/pdf", "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "image/png", "image/jpeg"];
+    cb(null, allowed.includes(file.mimetype));
+  },
+});
+
+// Upload a single file buffer to R2/S3, return the object key
+async function uploadToStorage(buffer, filename, mimetype, requestId) {
+  const key = `bprm-requests/${requestId}/${Date.now()}-${filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+  await s3.send(new PutObjectCommand({
+    Bucket: BUCKET,
+    Key: key,
+    Body: buffer,
+    ContentType: mimetype,
+  }));
+  return key;
+}
+
+// Generate a presigned download URL valid for 15 minutes
+async function getPresignedUrl(s3Key) {
+  return getSignedUrl(
+    s3,
+    new GetObjectCommand({ Bucket: BUCKET, Key: s3Key }),
+    { expiresIn: 900 }
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+// GET /api/requests/ba-list
 router.get("/ba-list", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
@@ -19,9 +58,11 @@ router.get("/ba-list", authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/requests — submit a new request (stakeholder)
+// POST /api/requests — submit a new request with optional file attachments
 router.post("/", authenticateToken, upload.array("attachments", 10), async (req, res) => {
   const client = await pool.connect();
+  const uploadedKeys = []; // track keys so we can roll back S3 uploads on DB failure
+
   try {
     const { title, description, priority, category, assignment_mode, assigned_ba_id } = req.body;
 
@@ -31,7 +72,7 @@ router.post("/", authenticateToken, upload.array("attachments", 10), async (req,
 
     await client.query("BEGIN");
 
-    // Generate req number
+    // Generate request number
     const countResult = await client.query("SELECT COUNT(*) FROM requests");
     const reqNumber = `REQ-${1100 + parseInt(countResult.rows[0].count) + 1}`;
 
@@ -40,7 +81,6 @@ router.post("/", authenticateToken, upload.array("attachments", 10), async (req,
     if (assignment_mode === "manual" && assigned_ba_id) {
       baId = parseInt(assigned_ba_id);
     } else if (assignment_mode === "automatic") {
-      // Pick BA with fewest assigned requests
       const autoResult = await client.query(`
         SELECT u.id FROM users u
         LEFT JOIN requests r ON r.assigned_ba_id = u.id AND r.status != 'Closed'
@@ -61,19 +101,21 @@ router.post("/", authenticateToken, upload.array("attachments", 10), async (req,
 
     const request = reqResult.rows[0];
 
-    // Store attachments
+    // Upload each file to R2/S3, store only the key in DB
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
+        const key = await uploadToStorage(file.buffer, file.originalname, file.mimetype, request.id);
+        uploadedKeys.push(key);
         await client.query(
-          "INSERT INTO request_attachments (request_id, original_name, mimetype, size, data) VALUES ($1,$2,$3,$4,$5)",
-          [request.id, file.originalname, file.mimetype, file.size, file.buffer]
+          "INSERT INTO request_attachments (request_id, original_name, mimetype, size, s3_key) VALUES ($1,$2,$3,$4,$5)",
+          [request.id, file.originalname, file.mimetype, file.size, key]
         );
       }
     }
 
     await client.query("COMMIT");
 
-    // Fetch assigned BA name for response
+    // Fetch assigned BA info for response
     let assignedBa = null;
     if (baId) {
       const baResult = await pool.query("SELECT id, email, name FROM users WHERE id = $1", [baId]);
@@ -83,6 +125,12 @@ router.post("/", authenticateToken, upload.array("attachments", 10), async (req,
     res.status(201).json({ message: "Request submitted", request, assignedBa });
   } catch (error) {
     await client.query("ROLLBACK");
+
+    // Clean up any S3 objects that were already uploaded before the failure
+    for (const key of uploadedKeys) {
+      s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key })).catch(() => {});
+    }
+
     console.error("Submit request error:", error);
     res.status(500).json({ message: "Error submitting request" });
   } finally {
@@ -123,11 +171,12 @@ router.get("/assigned", authenticateToken, async (req, res) => {
   }
 });
 
-// GET /api/requests/attachment/:id — download a file (any authenticated user)
+// GET /api/requests/attachment/:id — returns a presigned download URL (15 min expiry)
+// The client opens this URL directly — no file bytes pass through the server
 router.get("/attachment/:id", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT original_name, mimetype, size, data FROM request_attachments WHERE id = $1",
+      "SELECT original_name, mimetype, size, s3_key FROM request_attachments WHERE id = $1",
       [req.params.id]
     );
 
@@ -135,14 +184,13 @@ router.get("/attachment/:id", authenticateToken, async (req, res) => {
       return res.status(404).json({ message: "Attachment not found" });
     }
 
-    const file = result.rows[0];
-    res.setHeader("Content-Type", file.mimetype || "application/octet-stream");
-    res.setHeader("Content-Disposition", `attachment; filename="${file.original_name}"`);
-    res.setHeader("Content-Length", file.size);
-    res.send(file.data);
+    const { s3_key, original_name } = result.rows[0];
+    const url = await getPresignedUrl(s3_key);
+
+    res.json({ url, filename: original_name });
   } catch (error) {
-    console.error("Download attachment error:", error);
-    res.status(500).json({ message: "Error downloading attachment" });
+    console.error("Presign error:", error);
+    res.status(500).json({ message: "Error generating download link" });
   }
 });
 
