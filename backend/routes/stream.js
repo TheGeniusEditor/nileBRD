@@ -1,6 +1,7 @@
 import express from "express";
 import pool from "../config/db.js";
 import { authenticateToken } from "../middleware/auth.js";
+import { analyseKeyPoints } from "../services/brdAgent.js";
 import {
   upsertStreamUser,
   generateStreamToken,
@@ -219,6 +220,38 @@ router.delete("/channels/:requestId/important/:messageId", authenticateToken, as
   } catch (err) {
     console.error("Unmark important error:", err);
     res.status(500).json({ message: "Failed to unmark message" });
+  }
+});
+
+// POST /api/stream/channels/:requestId/generate-key-points — BA-only AI analysis
+router.post("/channels/:requestId/generate-key-points", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== "ba") return res.status(403).json({ message: "BA only" });
+    const { requestId } = req.params;
+
+    // Fetch request metadata
+    const { rows: reqRows } = await pool.query(
+      `SELECT r.title, r.description, r.category, r.priority, r.status,
+              u.name AS stakeholder_name, u.email AS stakeholder_email
+       FROM requests r
+       LEFT JOIN users u ON u.id = r.stakeholder_id
+       WHERE r.id = $1`,
+      [requestId]
+    );
+    if (!reqRows.length) return res.status(404).json({ message: "Request not found" });
+
+    // Fetch all marked key-point messages
+    const { rows: msgs } = await pool.query(
+      `SELECT stream_message_id, message_text, sender_name, marked_at
+       FROM important_messages WHERE request_id = $1 ORDER BY marked_at ASC`,
+      [requestId]
+    );
+
+    const analysis = analyseKeyPoints(msgs, reqRows[0]);
+    res.json(analysis);
+  } catch (err) {
+    console.error("BRD agent error:", err);
+    res.status(500).json({ message: "Analysis failed" });
   }
 });
 

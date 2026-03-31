@@ -20,6 +20,8 @@ import { MemberManagementPanel } from "./MemberManagementPanel";
 import {
   ArrowLeft, Video, Users, Loader2, MessageSquare, AlertCircle,
   Bookmark, BookmarkCheck, Sparkles, X, ChevronRight,
+  CheckCircle2, XCircle, ClipboardList, ShieldAlert, Zap,
+  Tag, BarChart3, Copy, Check,
 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
@@ -53,6 +55,21 @@ interface ImportantMessage {
   marked_at: string;
 }
 
+interface ReadinessCheck { label: string; pass: boolean; }
+interface BrdReadiness { checks: ReadinessCheck[]; score: number; readinessLevel: string; }
+
+interface Analysis {
+  generated_at: string;
+  request: { title: string; category: string; priority: string; status: string };
+  executive_summary: string;
+  key_requirements: string[];
+  stakeholder_concerns: string[];
+  action_items: string[];
+  keywords: string[];
+  brd_readiness: BrdReadiness;
+  message_count: number;
+}
+
 interface Props {
   request: RequestInfo;
   currentUser: CurrentUser;
@@ -66,7 +83,7 @@ const ImportantCtx = createContext<{
   isBA: boolean;
 }>({ importantIds: new Set(), toggle: () => {}, isBA: false });
 
-// ── Custom message — bookmark button only for BA ───────────────────────────────
+// ── Custom message — bookmark for BA only ─────────────────────────────────────
 function CustomMessage() {
   const { message } = useMessageContext();
   const { importantIds, toggle, isBA } = useContext(ImportantCtx);
@@ -83,7 +100,6 @@ function CustomMessage() {
   return (
     <div className="group relative">
       <MessageSimple />
-      {/* Bookmark only visible to BA */}
       {isBA && message.id && (
         <button
           onClick={handleToggle}
@@ -100,7 +116,6 @@ function CustomMessage() {
           }
         </button>
       )}
-      {/* Non-BA: just show filled bookmark indicator, no button */}
       {!isBA && isImportant && (
         <span className="absolute right-2 top-1 z-10 rounded-lg bg-amber-50 p-1.5">
           <BookmarkCheck className="size-3.5 fill-amber-200 stroke-amber-500" />
@@ -110,22 +125,232 @@ function CustomMessage() {
   );
 }
 
+// ── Analysis Result Modal ─────────────────────────────────────────────────────
+function AnalysisModal({
+  analysis,
+  onClose,
+}: {
+  analysis: Analysis;
+  onClose: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    const text = [
+      `BRD Key Conversation Analysis — ${analysis.request.title}`,
+      `Generated: ${new Date(analysis.generated_at).toLocaleString()}`,
+      "",
+      "EXECUTIVE SUMMARY",
+      analysis.executive_summary,
+      "",
+      "KEY REQUIREMENTS",
+      ...analysis.key_requirements.map((r, i) => `${i + 1}. ${r}`),
+      "",
+      "STAKEHOLDER CONCERNS",
+      ...(analysis.stakeholder_concerns.length
+        ? analysis.stakeholder_concerns.map((c, i) => `${i + 1}. ${c}`)
+        : ["None identified"]),
+      "",
+      "ACTION ITEMS",
+      ...(analysis.action_items.length
+        ? analysis.action_items.map((a, i) => `${i + 1}. ${a}`)
+        : ["None identified"]),
+      "",
+      "KEY TOPICS",
+      analysis.keywords.join(", "),
+      "",
+      "BRD READINESS",
+      analysis.brd_readiness.readinessLevel,
+      ...analysis.brd_readiness.checks.map(c => `${c.pass ? "✓" : "✗"} ${c.label}`),
+    ].join("\n");
+
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const { checks, score, readinessLevel } = analysis.brd_readiness;
+  const readinessColor =
+    score >= 5 ? "text-emerald-600" : score >= 3 ? "text-amber-600" : "text-rose-600";
+  const readinessBg =
+    score >= 5 ? "bg-emerald-50 border-emerald-200" : score >= 3 ? "bg-amber-50 border-amber-200" : "bg-rose-50 border-rose-200";
+
+  return (
+    <div className="absolute inset-0 z-30 flex flex-col bg-white">
+      {/* Accent */}
+      <div className="h-0.5 w-full bg-gradient-to-r from-indigo-500 via-violet-500 to-amber-400 shrink-0" />
+
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-200">
+            <Sparkles className="size-5 text-white" />
+          </div>
+          <div>
+            <p className="text-base font-bold text-slate-800">Key Conversation Analysis</p>
+            <p className="text-[11px] text-slate-400">
+              Based on {analysis.message_count} marked message{analysis.message_count !== 1 ? "s" : ""} ·{" "}
+              {new Date(analysis.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={copyToClipboard}
+            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+          >
+            {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+            {copied ? "Copied!" : "Copy"}
+          </button>
+          <button
+            onClick={onClose}
+            className="flex size-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Scrollable body */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-5">
+
+        {/* Executive Summary */}
+        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-violet-50 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <BarChart3 className="size-4 text-indigo-500" />
+            <p className="text-xs font-bold uppercase tracking-widest text-indigo-600">Executive Summary</p>
+          </div>
+          <p className="text-sm leading-relaxed text-slate-700">{analysis.executive_summary}</p>
+        </div>
+
+        {/* Requirements + Concerns grid */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+          {/* Key Requirements */}
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <ClipboardList className="size-4 text-emerald-500" />
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Key Requirements</p>
+            </div>
+            {analysis.key_requirements.length ? (
+              <ul className="space-y-2">
+                {analysis.key_requirements.map((r, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[9px] font-bold text-emerald-600">
+                      {i + 1}
+                    </span>
+                    <span className="text-xs leading-relaxed text-slate-700">{r}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-slate-400 italic">No specific requirements identified</p>
+            )}
+          </div>
+
+          {/* Stakeholder Concerns */}
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <ShieldAlert className="size-4 text-amber-500" />
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Concerns & Risks</p>
+            </div>
+            {analysis.stakeholder_concerns.length ? (
+              <ul className="space-y-2">
+                {analysis.stakeholder_concerns.map((c, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-amber-100 text-[9px] font-bold text-amber-600">
+                      {i + 1}
+                    </span>
+                    <span className="text-xs leading-relaxed text-slate-700">{c}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-slate-400 italic">No concerns identified</p>
+            )}
+          </div>
+        </div>
+
+        {/* Action Items */}
+        {analysis.action_items.length > 0 && (
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap className="size-4 text-indigo-500" />
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Action Items</p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {analysis.action_items.map((a, i) => (
+                <div key={i} className="flex items-start gap-2 rounded-xl border border-indigo-100 bg-indigo-50/50 px-3 py-2">
+                  <ChevronRight className="mt-0.5 size-3.5 shrink-0 text-indigo-400" />
+                  <span className="text-xs leading-relaxed text-slate-700">{a}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Keywords + BRD Readiness side-by-side */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+          {/* Keywords */}
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <Tag className="size-4 text-violet-500" />
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Key Topics</p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {analysis.keywords.map((kw) => (
+                <span key={kw} className="rounded-full border border-violet-100 bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700">
+                  {kw}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* BRD Readiness */}
+          <div className={`rounded-2xl border p-4 shadow-sm ${readinessBg}`}>
+            <div className="flex items-center gap-2 mb-3">
+              <BarChart3 className={`size-4 ${readinessColor}`} />
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">BRD Readiness</p>
+            </div>
+            <p className={`mb-3 text-sm font-bold ${readinessColor}`}>{readinessLevel}</p>
+            <ul className="space-y-1.5">
+              {checks.map((c) => (
+                <li key={c.label} className="flex items-center gap-2">
+                  {c.pass
+                    ? <CheckCircle2 className="size-3.5 shrink-0 text-emerald-500" />
+                    : <XCircle className="size-3.5 shrink-0 text-slate-300" />
+                  }
+                  <span className={`text-xs ${c.pass ? "text-slate-700" : "text-slate-400"}`}>{c.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Key Points panel ──────────────────────────────────────────────────────────
 function KeyPointsPanel({
   messages,
   isBA,
+  generating,
+  onGenerate,
   onClose,
 }: {
   messages: ImportantMessage[];
   isBA: boolean;
+  generating: boolean;
+  onGenerate: () => void;
   onClose: () => void;
 }) {
   return (
     <div className="absolute inset-y-0 right-0 z-20 flex w-[340px] flex-col bg-white shadow-2xl">
-      {/* Accent bar */}
       <div className="h-0.5 w-full bg-gradient-to-r from-amber-400 via-orange-400 to-amber-300 shrink-0" />
 
-      {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-400 shadow-sm shadow-amber-200">
@@ -138,15 +363,11 @@ function KeyPointsPanel({
             </p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-        >
+        <button onClick={onClose} className="flex size-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
           <X className="size-4" />
         </button>
       </div>
 
-      {/* Body */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-14 text-center px-4">
@@ -156,11 +377,7 @@ function KeyPointsPanel({
             <p className="text-sm font-semibold text-slate-500">No key points yet</p>
             {isBA ? (
               <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
-                Hover over any message and click the{" "}
-                <span className="inline-flex items-center gap-0.5 font-medium text-amber-500">
-                  <Bookmark className="size-3 inline" /> bookmark
-                </span>{" "}
-                icon to mark it as a key point for BRD generation.
+                Hover over any message and click the bookmark icon to mark it as a key point.
               </p>
             ) : (
               <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
@@ -170,10 +387,7 @@ function KeyPointsPanel({
           </div>
         ) : (
           messages.map((msg, i) => (
-            <div
-              key={msg.stream_message_id}
-              className="group rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 transition-colors hover:border-amber-200 hover:bg-amber-50/50"
-            >
+            <div key={msg.stream_message_id} className="group rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 hover:border-amber-200 hover:bg-amber-50/50 transition-colors">
               <div className="flex items-start gap-2.5">
                 <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold text-amber-600">
                   {i + 1}
@@ -194,21 +408,29 @@ function KeyPointsPanel({
         )}
       </div>
 
-      {/* Footer — Generate button for BA only */}
       <div className="shrink-0 border-t border-slate-100 p-4 space-y-2">
-        {isBA && messages.length > 0 && (
+        {isBA && (
           <button
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition-all hover:from-indigo-500 hover:to-violet-500 hover:shadow-md hover:shadow-indigo-200"
+            onClick={onGenerate}
+            disabled={messages.length === 0 || generating}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition-all hover:from-indigo-500 hover:to-violet-500 hover:shadow-md hover:shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Sparkles className="size-4" />
-            Generate BRD Summary
-            <ChevronRight className="size-4 opacity-70" />
+            {generating ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Analysing…
+              </>
+            ) : (
+              <>
+                <Sparkles className="size-4" />
+                Generate Key Conversation Points
+                <ChevronRight className="size-4 opacity-70" />
+              </>
+            )}
           </button>
         )}
         <p className="text-center text-[10px] text-slate-400">
-          {isBA
-            ? "Marked messages will be used by AI to generate BRD key points"
-            : "Only the BA can mark and generate key points"}
+          {isBA ? "Analyses marked messages to extract BRD-ready insights" : "Only the BA can generate the analysis"}
         </p>
       </div>
     </div>
@@ -225,6 +447,8 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
   const [showMembers, setShowMembers] = useState(false);
   const [showKeyPoints, setShowKeyPoints] = useState(false);
   const [importantMessages, setImportantMessages] = useState<ImportantMessage[]>([]);
+  const [generating, setGenerating] = useState(false);
+  const [analysis, setAnalysis] = useState<Analysis | null>(null);
 
   const isBA = currentUser.role === "ba";
   const importantIds = new Set(importantMessages.map((m) => m.stream_message_id));
@@ -242,7 +466,7 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
   }, [request.id]);
 
   const toggleImportant = useCallback(async (msgId: string, text: string, sender: string) => {
-    if (!isBA) return; // guard: only BA can toggle
+    if (!isBA) return;
     const token = localStorage.getItem("authToken");
     if (importantIds.has(msgId)) {
       setImportantMessages((prev) => prev.filter((m) => m.stream_message_id !== msgId));
@@ -251,13 +475,12 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
         headers: { Authorization: `Bearer ${token}` },
       });
     } else {
-      const newMsg: ImportantMessage = {
+      setImportantMessages((prev) => [...prev, {
         stream_message_id: msgId,
         message_text: text,
         sender_name: sender,
         marked_at: new Date().toISOString(),
-      };
-      setImportantMessages((prev) => [...prev, newMsg]);
+      }]);
       await fetch(`${API}/api/stream/channels/${request.id}/important`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -266,23 +489,38 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
     }
   }, [request.id, importantIds, isBA]);
 
+  const generateAnalysis = useCallback(async () => {
+    if (!isBA) return;
+    setGenerating(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(`${API}/api/stream/channels/${request.id}/generate-key-points`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+      setAnalysis(data);
+      setShowKeyPoints(false);
+    } finally {
+      setGenerating(false);
+    }
+  }, [request.id, isBA]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         setLoading(true);
         setError(null);
-
         const { token, userId } = await fetchStreamToken();
         const client = getStreamClient();
-
         if (!client.userID) {
-          await client.connectUser(
-            { id: userId, name: currentUser.name || currentUser.email },
-            token
-          );
+          await client.connectUser({ id: userId, name: currentUser.name || currentUser.email }, token);
         }
-
         if (isBA) {
           const authToken = localStorage.getItem("authToken");
           await fetch(`${API}/api/stream/channels/${request.id}`, {
@@ -290,28 +528,21 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
             headers: { Authorization: `Bearer ${authToken}` },
           });
         }
-
         const ch = client.channel("messaging", `request-${request.id}`);
         await ch.watch();
-
-        if (!cancelled) {
-          setChannel(ch);
-          setLoading(false);
-          fetchImportant();
-        }
+        if (!cancelled) { setChannel(ch); setLoading(false); fetchImportant(); }
       } catch (err: unknown) {
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : String(err);
-          if (msg.includes("Channel not found") || msg.includes("not a member")) {
-            setError("This channel hasn't been set up yet. The assigned BA will initialise it when they open the discussion.");
-          } else {
-            setError("Failed to connect to chat. Please refresh and try again.");
-          }
+          setError(
+            msg.includes("Channel not found") || msg.includes("not a member")
+              ? "This channel hasn't been set up yet. The assigned BA will initialise it when they open the discussion."
+              : "Failed to connect to chat. Please refresh and try again."
+          );
           setLoading(false);
         }
       }
     })();
-
     return () => {
       cancelled = true;
       channel?.stopWatching().catch(() => {});
@@ -325,40 +556,27 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
       const authToken = localStorage.getItem("authToken");
       const res = await fetch(`${API}/api/stream/daily/rooms`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "application/json" },
         body: JSON.stringify({ requestId: request.id }),
       });
       const { url } = await res.json();
       setMeetingUrl(url);
-    } finally {
-      setLoadingMeeting(false);
-    }
+    } finally { setLoadingMeeting(false); }
   }, [request.id]);
 
   return (
     <ImportantCtx.Provider value={{ importantIds, toggle: toggleImportant, isBA }}>
       <div className="relative flex h-full flex-col bg-white">
 
-        {/* ── Header ─────────────────────────────────────────────────────────── */}
+        {/* ── Header ── */}
         <div className="shrink-0 border-b border-slate-100 bg-white">
-          {/* Top accent gradient */}
           <div className="h-0.5 bg-gradient-to-r from-indigo-500 via-violet-500 to-indigo-400" />
-
           <div className="flex items-center gap-4 px-5 py-4">
-            {/* Back button */}
             {onBack && (
-              <button
-                onClick={onBack}
-                className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
-              >
+              <button onClick={onBack} className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600">
                 <ArrowLeft className="size-4" />
               </button>
             )}
-
-            {/* Request info */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-mono text-xs font-semibold text-indigo-400">{request.req_number}</span>
@@ -375,12 +593,9 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
                 </span>
               </div>
             </div>
-
-            {/* Action buttons */}
             <div className="flex shrink-0 items-center gap-2">
-              {/* Key Points */}
               <button
-                onClick={() => { setShowKeyPoints(v => !v); setShowMembers(false); }}
+                onClick={() => { setShowKeyPoints(v => !v); setShowMembers(false); setAnalysis(null); }}
                 className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-semibold transition-all ${
                   showKeyPoints
                     ? "border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700 shadow-sm shadow-amber-100"
@@ -390,15 +605,11 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
                 <Sparkles className={`size-4 ${showKeyPoints ? "text-amber-500" : "text-slate-400"}`} />
                 Key Points
                 {importantMessages.length > 0 && (
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                    showKeyPoints ? "bg-amber-200 text-amber-700" : "bg-slate-100 text-slate-500"
-                  }`}>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${showKeyPoints ? "bg-amber-200 text-amber-700" : "bg-slate-100 text-slate-500"}`}>
                     {importantMessages.length}
                   </span>
                 )}
               </button>
-
-              {/* Members (BA only) */}
               {isBA && (
                 <button
                   onClick={() => { setShowMembers(v => !v); setShowKeyPoints(false); }}
@@ -412,23 +623,19 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
                   Members
                 </button>
               )}
-
-              {/* Video Meeting */}
               <button
                 onClick={startMeeting}
                 disabled={loadingMeeting}
                 className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-600 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-50"
               >
-                {loadingMeeting
-                  ? <Loader2 className="size-4 animate-spin text-indigo-400" />
-                  : <Video className="size-4 text-indigo-400" />}
+                {loadingMeeting ? <Loader2 className="size-4 animate-spin text-indigo-400" /> : <Video className="size-4 text-indigo-400" />}
                 {loadingMeeting ? "Starting…" : "Video Call"}
               </button>
             </div>
           </div>
         </div>
 
-        {/* ── Chat body ──────────────────────────────────────────────────────── */}
+        {/* ── Body ── */}
         <div className="relative flex min-h-0 flex-1 overflow-hidden">
           {loading ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3">
@@ -440,10 +647,7 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
           ) : error ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
               <div className="flex size-14 items-center justify-center rounded-2xl border border-slate-100 bg-slate-50">
-                {error.includes("set up")
-                  ? <MessageSquare className="size-6 text-slate-300" />
-                  : <AlertCircle className="size-6 text-rose-400" />
-                }
+                {error.includes("set up") ? <MessageSquare className="size-6 text-slate-300" /> : <AlertCircle className="size-6 text-rose-400" />}
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-700">Chat unavailable</p>
@@ -464,31 +668,29 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
             </div>
           ) : null}
 
+          {/* Analysis result — full overlay */}
+          {analysis && (
+            <AnalysisModal analysis={analysis} onClose={() => setAnalysis(null)} />
+          )}
+
           {/* Key Points panel */}
-          {showKeyPoints && (
+          {showKeyPoints && !analysis && (
             <KeyPointsPanel
               messages={importantMessages}
               isBA={isBA}
+              generating={generating}
+              onGenerate={generateAnalysis}
               onClose={() => setShowKeyPoints(false)}
             />
           )}
 
           {/* Members panel */}
           {showMembers && isBA && (
-            <MemberManagementPanel
-              requestId={request.id}
-              onClose={() => setShowMembers(false)}
-            />
+            <MemberManagementPanel requestId={request.id} onClose={() => setShowMembers(false)} />
           )}
         </div>
 
-        {/* Video meeting modal */}
-        {meetingUrl && (
-          <VideoMeetingModal
-            roomUrl={meetingUrl}
-            onClose={() => setMeetingUrl(null)}
-          />
-        )}
+        {meetingUrl && <VideoMeetingModal roomUrl={meetingUrl} onClose={() => setMeetingUrl(null)} />}
       </div>
     </ImportantCtx.Provider>
   );

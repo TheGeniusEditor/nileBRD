@@ -10,6 +10,7 @@
     "migrate": "node migrations/run.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.81.0",
     "@aws-sdk/client-s3": "^3.1018.0",
     "@aws-sdk/s3-request-presigner": "^3.1018.0",
     "@supabase/supabase-js": "^2.100.1",
