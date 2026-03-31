@@ -96,6 +96,31 @@ CREATE TABLE IF NOT EXISTS request_read_receipts (
 );
 
 CREATE INDEX IF NOT EXISTS idx_read_receipts ON request_read_receipts(user_id, request_id);
+
+-- Stream Chat channel membership mirror (for fast sidebar queries without hitting Stream API)
+CREATE TABLE IF NOT EXISTS channel_members (
+  request_id  INTEGER REFERENCES requests(id) ON DELETE CASCADE,
+  user_id     INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  stream_role VARCHAR(20) DEFAULT 'member',
+  added_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (request_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_channel_members_user ON channel_members(user_id);
+
+-- Important messages for AI BRD key point generation
+CREATE TABLE IF NOT EXISTS important_messages (
+  id SERIAL PRIMARY KEY,
+  request_id INTEGER REFERENCES requests(id) ON DELETE CASCADE,
+  stream_message_id VARCHAR(255) NOT NULL,
+  message_text TEXT,
+  sender_name VARCHAR(255),
+  marked_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  marked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(request_id, stream_message_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_important_messages_request ON important_messages(request_id);
 `;
 
 async function migrate() {

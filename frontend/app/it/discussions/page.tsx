@@ -13,6 +13,8 @@ interface DiscussionRequest {
   priority: string;
   category: string;
   status: string;
+  ba_name: string | null;
+  ba_email: string | null;
   stakeholder_name: string | null;
   stakeholder_email: string | null;
   unread_count: number;
@@ -55,22 +57,22 @@ function getInitials(name: string | null, email: string | null) {
 }
 
 const avatarPalette = [
-  "bg-violet-500", "bg-blue-500", "bg-teal-500",
-  "bg-amber-500", "bg-rose-500", "bg-indigo-500",
+  "bg-indigo-500", "bg-blue-500", "bg-teal-500",
+  "bg-violet-500", "bg-amber-500", "bg-rose-500",
 ];
 
-export default function BADiscussionsPage() {
-  const [requests, setRequests]     = useState<DiscussionRequest[]>([]);
-  const [selected, setSelected]     = useState<DiscussionRequest | null>(null);
-  const [loading, setLoading]       = useState(true);
-  const [search, setSearch]         = useState("");
+export default function ITDiscussionsPage() {
+  const [requests, setRequests]       = useState<DiscussionRequest[]>([]);
+  const [selected, setSelected]       = useState<DiscussionRequest | null>(null);
+  const [loading, setLoading]         = useState(true);
+  const [search, setSearch]           = useState("");
   const [currentUser, setCurrentUser] = useState<{ id: number; email: string; name: string; role: string } | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (!token) return;
     const decoded = decodeToken(token);
-    if (decoded) setCurrentUser({ id: decoded.id, email: decoded.email, name: decoded.name || decoded.email, role: decoded.role || "ba" });
+    if (decoded) setCurrentUser({ id: decoded.id, email: decoded.email, name: decoded.name || decoded.email, role: decoded.role || "it" });
 
     fetch(`${API}/api/discussions/requests`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
@@ -84,7 +86,7 @@ export default function BADiscussionsPage() {
     return requests.filter(r =>
       r.title.toLowerCase().includes(q) ||
       r.req_number.toLowerCase().includes(q) ||
-      (r.stakeholder_name || r.stakeholder_email || "").toLowerCase().includes(q)
+      (r.ba_name || r.ba_email || "").toLowerCase().includes(q)
     );
   }, [requests, search]);
 
@@ -101,20 +103,20 @@ export default function BADiscussionsPage() {
       <div className="flex w-72 shrink-0 flex-col border-r border-slate-100">
 
         {/* Header */}
-        <div className="px-4 pt-4 pb-3 border-b border-slate-100">
-          <div className="flex items-center justify-between mb-3">
+        <div className="border-b border-slate-100 px-4 pb-3 pt-4">
+          <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-bold text-slate-800">Discussions</h2>
             {requests.length > 0 && (
-              <span className="text-xs text-slate-400 font-medium">{requests.length} open</span>
+              <span className="text-xs font-medium text-slate-400">{requests.length} open</span>
             )}
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 size-3.5 text-slate-400 pointer-events-none" />
+            <Search className="pointer-events-none absolute left-3 top-2.5 size-3.5 text-slate-400" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search…"
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-700 placeholder:text-slate-400 focus:border-violet-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-100 transition-all"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-700 placeholder:text-slate-400 transition-all focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
             />
           </div>
         </div>
@@ -122,35 +124,35 @@ export default function BADiscussionsPage() {
         {/* List */}
         <div className="flex-1 overflow-y-auto py-1">
           {loading ? (
-            <div className="flex flex-col items-center justify-center h-48 gap-2 text-slate-400">
+            <div className="flex h-48 flex-col items-center justify-center gap-2 text-slate-400">
               <Loader2 className="size-5 animate-spin" />
               <span className="text-xs">Loading…</span>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 gap-2 text-center px-6">
+            <div className="flex h-48 flex-col items-center justify-center gap-2 px-6 text-center">
               <MessageSquare className="size-8 text-slate-200" />
-              <p className="text-xs text-slate-400">{search ? "No results" : "No active assignments"}</p>
+              <p className="text-xs text-slate-400">
+                {search ? "No results" : "No channels assigned to you yet"}
+              </p>
             </div>
-          ) : filtered.map((req, i) => {
+          ) : filtered.map(req => {
             const isActive = selected?.id === req.id;
             const unread   = req.unread_count;
-            const initials = getInitials(req.stakeholder_name, req.stakeholder_email);
+            const initials = getInitials(req.ba_name, req.ba_email);
             const avatarBg = avatarPalette[req.id % avatarPalette.length];
+
             return (
               <button
                 key={req.id}
                 onClick={() => {
                   setSelected(req);
                   setRequests(prev => prev.map(r => r.id === req.id ? { ...r, unread_count: 0 } : r));
-                  const token = localStorage.getItem("authToken");
-                  // Ensure Stream channel exists for this request (idempotent)
-                  if (token) fetch(`${API}/api/stream/channels/${req.id}`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
                 }}
-                className={`w-full px-3 py-2.5 text-left transition-colors duration-150 relative group ${
-                  isActive ? "bg-violet-50" : "hover:bg-slate-50"
+                className={`relative w-full px-3 py-2.5 text-left transition-colors duration-150 ${
+                  isActive ? "bg-indigo-50" : "hover:bg-slate-50"
                 }`}
               >
-                {isActive && <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-r-full bg-violet-500" />}
+                {isActive && <div className="absolute bottom-2 left-0 top-2 w-0.5 rounded-r-full bg-indigo-500" />}
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
                   <div className={`flex size-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white ${avatarBg}`}>
@@ -158,26 +160,27 @@ export default function BADiscussionsPage() {
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-1 mb-0.5">
-                      <span className={`text-xs font-semibold truncate ${isActive ? "text-violet-800" : "text-slate-800"}`}>
-                        {req.stakeholder_name || req.stakeholder_email || "Stakeholder"}
+                    <div className="mb-0.5 flex items-center justify-between gap-1">
+                      <span className={`truncate text-xs font-semibold ${isActive ? "text-indigo-800" : "text-slate-800"}`}>
+                        {req.title}
                       </span>
-                      <span className="text-[10px] text-slate-400 shrink-0">
+                      <span className="shrink-0 text-[10px] text-slate-400">
                         {req.last_message_at ? timeAgo(req.last_message_at) : ""}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-1">
-                      <p className={`text-[11px] truncate ${unread > 0 ? "font-semibold text-slate-700" : "text-slate-400"}`}>
-                        {req.last_message || req.title}
+                      <p className={`truncate text-[11px] ${unread > 0 ? "font-semibold text-slate-700" : "text-slate-400"}`}>
+                        {req.last_message || (req.ba_name ? `BA: ${req.ba_name}` : "No messages yet")}
                       </p>
                       {unread > 0 && (
-                        <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-violet-500 text-[9px] font-bold text-white">
+                        <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[9px] font-bold text-white">
                           {unread > 9 ? "9+" : unread}
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 flex items-center gap-1">
-                      <span className={`size-1.5 rounded-full shrink-0 ${priorityDot[req.priority] ?? "bg-slate-300"}`} />
+                    <div className="mt-1 flex items-center gap-1.5">
+                      {priorityIcon[req.priority]}
+                      <span className={`size-1.5 shrink-0 rounded-full ${priorityDot[req.priority] ?? "bg-slate-300"}`} />
                       <span className="font-mono text-[10px] text-slate-400">{req.req_number}</span>
                     </div>
                   </div>
@@ -189,7 +192,7 @@ export default function BADiscussionsPage() {
       </div>
 
       {/* ── Chat area ── */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         {selected ? (
           <RequestChat
             request={selected}
@@ -198,13 +201,13 @@ export default function BADiscussionsPage() {
             onBack={() => setSelected(null)}
           />
         ) : (
-          <div className="flex h-full flex-col items-center justify-center text-center bg-slate-50/50">
-            <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-white border border-slate-200 shadow-sm">
+          <div className="flex h-full flex-col items-center justify-center bg-slate-50/50 text-center">
+            <div className="mb-4 flex size-16 items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
               <MessageSquare className="size-7 text-slate-300" />
             </div>
             <p className="text-sm font-semibold text-slate-600">No conversation selected</p>
-            <p className="mt-1 text-xs text-slate-400 max-w-[220px]">
-              Pick a discussion from the sidebar to get started
+            <p className="mt-1 max-w-[220px] text-xs text-slate-400">
+              Pick a discussion from the sidebar to join
             </p>
           </div>
         )}

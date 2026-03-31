@@ -182,6 +182,40 @@ router.get("/assigned", authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/requests/shared-with-me — requests the stakeholder was added to by a BA
+router.get("/shared-with-me", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== "stakeholder") {
+      return res.status(403).json({ message: "Only stakeholders can access this" });
+    }
+    const result = await pool.query(
+      `SELECT r.id, r.req_number, r.title, r.description, r.priority, r.category,
+              r.status, r.assignment_mode, r.created_at,
+              sh.name  AS stakeholder_name, sh.email AS stakeholder_email,
+              ba.name  AS ba_name,  ba.email  AS ba_email,
+              COALESCE(
+                json_agg(
+                  json_build_object('id', a.id, 'original_name', a.original_name, 'mimetype', a.mimetype, 'size', a.size)
+                ) FILTER (WHERE a.id IS NOT NULL),
+                '[]'
+              ) AS attachments
+       FROM requests r
+       JOIN  channel_members cm ON cm.request_id = r.id AND cm.user_id = $1
+       LEFT JOIN users sh ON sh.id = r.stakeholder_id
+       LEFT JOIN users ba ON ba.id = r.assigned_ba_id
+       LEFT JOIN request_attachments a ON a.request_id = r.id
+       WHERE r.stakeholder_id != $1
+       GROUP BY r.id, sh.name, sh.email, ba.name, ba.email
+       ORDER BY r.created_at DESC`,
+      [req.user.id]
+    );
+    res.json({ requests: result.rows });
+  } catch (error) {
+    console.error("Shared-with-me error:", error);
+    res.status(500).json({ message: "Error fetching shared requests" });
+  }
+});
+
 // GET /api/requests/attachment/:id — returns a presigned download URL (15 min expiry)
 // The client opens this URL directly — no file bytes pass through the server
 router.get("/attachment/:id", authenticateToken, async (req, res) => {

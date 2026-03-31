@@ -60,13 +60,13 @@ export default function StakeholderDiscussionsPage() {
   const [selected, setSelected]     = useState<DiscussionRequest | null>(null);
   const [loading, setLoading]       = useState(true);
   const [search, setSearch]         = useState("");
-  const [currentUser, setCurrentUser] = useState<{ id: number; email: string; name: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: number; email: string; name: string; role: string } | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (!token) return;
     const decoded = decodeToken(token);
-    if (decoded) setCurrentUser({ id: decoded.id, email: decoded.email, name: decoded.name || decoded.email });
+    if (decoded) setCurrentUser({ id: decoded.id, email: decoded.email, name: decoded.name || decoded.email, role: decoded.role || "stakeholder" });
 
     fetch(`${API}/api/discussions/requests`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())

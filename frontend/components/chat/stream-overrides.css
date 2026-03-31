@@ -1,0 +1,328 @@
+/* =============================================================
+   Stream Chat UI Overrides — portal design system
+   ============================================================= */
+
+/* ── 1. Height chain ─────────────────────────────────────────
+   .str-chat and .str-chat__channel are COLUMNS (outer wrappers)
+   .str-chat__container is a ROW  (main panel + thread side-by-side)
+   .str-chat__main-panel* and .str-chat__window are COLUMNS
+   ─────────────────────────────────────────────────────────── */
+.str-chat,
+.str-chat__channel {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Container = ROW holding main panel + optional thread */
+.str-chat__container {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+/* Main panel column */
+.str-chat__main-panel,
+.str-chat__main-panel-inner,
+.str-chat__window {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Message list grows and scrolls */
+.str-chat__list {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 12px 20px 4px !important;
+  background: #ffffff;
+}
+
+/* Input pinned at bottom */
+.str-chat__message-input {
+  flex-shrink: 0 !important;
+}
+
+/* Thread panel */
+.str-chat__thread {
+  flex: 0 0 340px !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.str-chat__thread-list {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+/* ── 2. Design tokens ── */
+.str-chat {
+  --str-chat__primary-color: #4f46e5;
+  --str-chat__active-primary-color: #4338ca;
+  --str-chat__surface-color: #ffffff;
+  --str-chat__secondary-surface-color: #f8fafc;
+  --str-chat__tertiary-surface-color: #f1f5f9;
+  --str-chat__border-color: #e2e8f0;
+  --str-chat__text-color: #0f172a;
+  --str-chat__secondary-text-color: #64748b;
+  --str-chat__disabled-color: #94a3b8;
+  --str-chat__font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --str-chat__message-bubble-border-radius: 16px 16px 16px 4px;
+  --str-chat__own-message-bubble-border-radius: 16px 16px 4px 16px;
+  --str-chat__own-message-bubble-background-color: #4f46e5;
+  --str-chat__own-message-bubble-color: #ffffff;
+  --str-chat__message-bubble-background-color: #f1f5f9;
+  --str-chat__message-bubble-color: #0f172a;
+  --str-chat__quoted-message-bubble-background-color: #e2e8f0;
+  --str-chat__message-input-background-color: #ffffff;
+  font-family: var(--str-chat__font-family);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ── 3. Hide the default channel header (we have our own) ── */
+.str-chat__channel-header {
+  display: none !important;
+}
+
+/* ── 4. Date separator ── */
+.str-chat__date-separator {
+  margin: 16px 0 10px;
+  gap: 10px;
+}
+.str-chat__date-separator-line {
+  background: #e2e8f0;
+  height: 1px;
+}
+.str-chat__date-separator-date {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #94a3b8 !important;
+  white-space: nowrap;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  padding: 0 6px !important;
+  background: transparent !important;
+}
+
+/* ── 5. Messages ── */
+.str-chat__message-simple {
+  padding: 1px 0 !important;
+  margin: 0 !important;
+}
+
+.str-chat__message-simple[data-is-group-start="true"] {
+  margin-top: 10px !important;
+}
+
+/* Avatar */
+.str-chat__avatar {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  border-radius: 50% !important;
+}
+.str-chat__avatar-fallback {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+/* Sender name */
+.str-chat__message-sender-name,
+.str-chat__message-simple__name {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  margin-bottom: 2px !important;
+}
+
+/* Bubble */
+.str-chat__message-bubble {
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+  padding: 8px 12px !important;
+  max-width: 440px !important;
+  word-break: break-word;
+}
+.str-chat__message-text p {
+  margin: 0 !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+}
+
+/* Timestamp */
+.str-chat__message-simple-timestamp,
+.str-chat__message-data {
+  font-size: 10px !important;
+  color: #94a3b8 !important;
+  margin-top: 2px !important;
+}
+.str-chat__message--me .str-chat__message-simple-timestamp {
+  color: rgba(255,255,255,0.55) !important;
+}
+
+/* Actions bar */
+.str-chat__message-actions-box {
+  border-radius: 10px !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10) !important;
+  border: 1px solid #e2e8f0 !important;
+  overflow: hidden;
+}
+.str-chat__message-actions-box button {
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+}
+
+/* Reactions */
+.str-chat__reaction-list-item {
+  font-size: 12px !important;
+  border-radius: 20px !important;
+  padding: 2px 8px !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.str-chat__reaction-selector {
+  border-radius: 14px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 6px !important;
+}
+.str-chat__reaction-selector li {
+  font-size: 18px !important;
+  border-radius: 8px !important;
+  padding: 4px !important;
+}
+
+/* ── 6. Message input ── */
+.str-chat__message-input {
+  background: #ffffff !important;
+  border-top: 1px solid #e2e8f0 !important;
+  padding: 10px 16px 12px !important;
+  box-shadow: none !important;
+}
+.str-chat__message-input-inner {
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 24px !important;
+  padding: 6px 8px 6px 14px !important;
+  align-items: center !important;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s !important;
+  min-height: 44px !important;
+}
+.str-chat__message-input-inner:focus-within {
+  border-color: #a5b4fc !important;
+  box-shadow: 0 0 0 3px #e0e7ff !important;
+  background: #ffffff !important;
+}
+.str-chat__message-textarea-container {
+  padding: 0 !important;
+  background: transparent !important;
+}
+.str-chat__message-textarea {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: #0f172a !important;
+  background: transparent !important;
+  padding: 4px 0 !important;
+  min-height: 24px !important;
+  max-height: 140px !important;
+}
+.str-chat__message-textarea::placeholder {
+  color: #94a3b8 !important;
+  font-size: 13px !important;
+}
+
+/* Send button */
+.str-chat__message-input-send-button,
+.str-chat__send-button {
+  background: #4f46e5 !important;
+  border-radius: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-left: 4px !important;
+  transition: background 0.15s !important;
+}
+.str-chat__message-input-send-button:hover,
+.str-chat__send-button:hover {
+  background: #4338ca !important;
+}
+.str-chat__message-input-send-button svg,
+.str-chat__send-button svg {
+  color: #ffffff !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* Emoji / attach icons */
+.str-chat__emoji-picker-icon,
+.str-chat__fileupload-wrapper button,
+.str-chat__attachment-button {
+  color: #94a3b8 !important;
+  border-radius: 8px !important;
+  width: 28px !important;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: color 0.15s, background 0.15s !important;
+}
+.str-chat__emoji-picker-icon:hover,
+.str-chat__fileupload-wrapper button:hover,
+.str-chat__attachment-button:hover {
+  color: #4f46e5 !important;
+  background: #eef2ff !important;
+}
+
+/* ── 7. Thread panel ── */
+.str-chat__thread {
+  border-left: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+}
+.str-chat__thread-header {
+  border-bottom: 1px solid #e2e8f0 !important;
+  background: #f8fafc !important;
+  padding: 14px 16px !important;
+  flex-shrink: 0 !important;
+}
+.str-chat__thread-header-title {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+}
+
+/* ── 8. Typing indicator ── */
+.str-chat__typing-indicator {
+  padding: 4px 20px !important;
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+  min-height: 20px !important;
+  flex-shrink: 0 !important;
+}
+.str-chat__typing-indicator__dots span {
+  width: 5px !important;
+  height: 5px !important;
+  background: #94a3b8 !important;
+}
+
+/* ── 9. Scrollbar ── */
+.str-chat__list::-webkit-scrollbar,
+.str-chat__thread-list::-webkit-scrollbar { width: 4px; }
+.str-chat__list::-webkit-scrollbar-track,
+.str-chat__thread-list::-webkit-scrollbar-track { background: transparent; }
+.str-chat__list::-webkit-scrollbar-thumb,
+.str-chat__thread-list::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+.str-chat__list::-webkit-scrollbar-thumb:hover,
+.str-chat__thread-list::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }

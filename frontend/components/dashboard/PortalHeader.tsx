@@ -3,8 +3,6 @@
 import { Bell, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { Input } from "@/components/ui/Input";
-
 const notifications = [
   "2 BRD approvals pending",
   "SIT test run starts at 4 PM",
@@ -14,72 +12,61 @@ const notifications = [
 export function PortalHeader({ userName }: { userName: string }) {
   const [open, setOpen] = useState(false);
   const initials = useMemo(
-    () =>
-      userName
-        .split(" ")
-        .map((part) => part[0])
-        .join("")
-        .toUpperCase(),
+    () => userName.split(" ").map((p) => p[0]).join("").toUpperCase(),
     [userName],
   );
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-6 py-4 backdrop-blur-lg shadow-sm animate-slide-in-down">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="relative w-full max-w-xl">
-          <Search className="pointer-events-none absolute left-4 top-3 text-slate-400" size={18} />
-          <Input
-            placeholder="Search projects, requests, documents..."
-            className="pl-11 transition-all focus:shadow-md"
-            variant="subtle"
-          />
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <button
-              onClick={() => setOpen((prev) => !prev)}
-              className="relative rounded-xl border border-slate-200 p-2.5 text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-all duration-200 hover-lift"
-            >
-              <Bell size={20} />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-            </button>
-            {open && (
-              <div className="absolute right-0 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl animate-scale-in origin-top-right">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm font-bold uppercase text-slate-700 tracking-wide">
-                    Notifications
-                  </p>
-                  <button
-                    onClick={() => setOpen(false)}
-                    className="text-slate-400 hover:text-slate-600 transition"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-                <div className="space-y-2 max-h-72 overflow-y-auto">
-                  {notifications.map((item, idx) => (
-                    <div
-                      key={item}
-                      className="rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 px-3 py-2.5 text-sm text-slate-700 hover:shadow-md transition-all duration-200 cursor-pointer hover-scale animate-slide-in-left"
-                      style={{ animationDelay: `${idx * 50}ms` }}
-                    >
-                      <p className="font-medium text-slate-800">{item}</p>
-                      <p className="text-xs text-slate-500 mt-1">Just now</p>
-                    </div>
-                  ))}
-                </div>
+    <header suppressHydrationWarning className="sticky top-0 z-50 flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-3.5">
+
+      {/* Search */}
+      <div className="relative w-full max-w-sm">
+        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+        <input
+          placeholder="Search…"
+          className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-4 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+          suppressHydrationWarning
+        />
+      </div>
+
+      <div className="flex items-center gap-3">
+        {/* Bell */}
+        <div className="relative">
+          <button
+            onClick={() => setOpen(v => !v)}
+            className="relative flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
+            suppressHydrationWarning
+          >
+            <Bell size={16} />
+            <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-rose-500" />
+          </button>
+
+          {open && (
+            <div className="absolute right-0 mt-2 w-72 rounded-xl border border-slate-200 bg-white shadow-lg animate-scale-in origin-top-right">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Notifications</p>
+                <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600">
+                  <X size={14} />
+                </button>
               </div>
-            )}
-          </div>
-          <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50 px-3 py-2 hover:shadow-md transition-all duration-200 hover-lift">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-xs font-bold text-white shadow-md">
-              {initials}
-            </span>
-            <div>
-              <p className="text-xs font-medium text-slate-500">Signed in as</p>
-              <p className="text-sm font-bold text-slate-900">{userName}</p>
+              <div className="divide-y divide-slate-100">
+                {notifications.map((item) => (
+                  <div key={item} className="px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                    <p className="text-sm text-slate-700">{item}</p>
+                    <p className="mt-0.5 text-xs text-slate-400">Just now</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+        </div>
+
+        {/* User */}
+        <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2">
+          <span className="inline-flex size-7 items-center justify-center rounded-full bg-indigo-600 text-[11px] font-semibold text-white">
+            {initials}
+          </span>
+          <p className="text-sm font-medium text-slate-800">{userName}</p>
         </div>
       </div>
     </header>

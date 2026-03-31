@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admin.js";
 import requestRoutes from "./routes/requests.js";
 import discussionRoutes from "./routes/discussions.js";
+import streamRoutes from "./routes/stream.js";
 import pool from "./config/db.js";
 import { initChat } from "./socket/chat.js";
 
@@ -35,6 +36,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/discussions", discussionRoutes);
+app.use("/api/stream", streamRoutes);
 
 // Health check
 app.get("/health", async (req, res) => {

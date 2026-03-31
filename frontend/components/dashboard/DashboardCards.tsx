@@ -12,7 +12,7 @@ type SummaryItem = {
 
 export function DashboardCards({ items }: { items: SummaryItem[] }) {
   return (
-    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {items.map((item, index) => {
         const isPositive = item.trend === "up" || (item.delta && item.delta.includes("+"));
         const isNegative = item.trend === "down" || (item.delta && item.delta.includes("-"));
@@ -20,41 +20,39 @@ export function DashboardCards({ items }: { items: SummaryItem[] }) {
         return (
           <Card
             key={item.label}
-            variant="gradient-subtle"
+            variant="default"
             hoverable
-            className="overflow-hidden group animate-rise stagger-item"
+            className="group"
             style={{ "--stagger-delay": `${60 + index * 70}ms` } as CSSProperties}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-sm font-medium text-slate-600 group-hover:text-slate-700 transition-colors">
+                <p className="text-xs font-medium uppercase tracking-widest text-slate-400">
                   {item.label}
                 </p>
-                <p className="mt-3 text-4xl font-bold text-slate-900">
+                <p className="mt-2 text-2xl font-semibold text-slate-800">
                   {item.value.toLocaleString()}
                 </p>
-                <div className="mt-3 flex items-center gap-2">
+                <div className="mt-2 flex items-center gap-1.5">
                   {isPositive && (
                     <div className="flex items-center gap-1 text-emerald-600">
-                      <TrendingUp size={16} />
-                      <span className="text-xs font-semibold">{item.delta}</span>
+                      <TrendingUp size={13} />
+                      <span className="text-xs font-medium">{item.delta}</span>
                     </div>
                   )}
                   {isNegative && (
-                    <div className="flex items-center gap-1 text-rose-600">
-                      <TrendingDown size={16} />
-                      <span className="text-xs font-semibold">{item.delta}</span>
+                    <div className="flex items-center gap-1 text-rose-500">
+                      <TrendingDown size={13} />
+                      <span className="text-xs font-medium">{item.delta}</span>
                     </div>
                   )}
                   {!isPositive && !isNegative && (
-                    <span className="text-xs font-medium text-slate-500">
-                      {item.delta}
-                    </span>
+                    <span className="text-xs text-slate-400">{item.delta}</span>
                   )}
                 </div>
               </div>
               {item.icon && (
-                <div className="rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 p-3 text-blue-600 group-hover:from-blue-100 group-hover:to-cyan-100 transition-colors">
+                <div className="rounded-lg bg-indigo-50 p-2.5 text-indigo-500">
                   {item.icon}
                 </div>
               )}

@@ -10,7 +10,6 @@ export const stakeholderNav: NavItem[] = [
   { label: "Dashboard", href: "/stakeholder/dashboard", icon: "layout-dashboard" },
   { label: "Submit Business Problem", href: "/stakeholder/submit-problem", icon: "file-input" },
   { label: "My Requests", href: "/stakeholder/my-requests", icon: "list-checks" },
-  { label: "Discussions", href: "/stakeholder/discussions", icon: "messages-square" },
   { label: "Approvals", href: "/stakeholder/approvals", icon: "badge-check" },
   { label: "UAT Testing", href: "/stakeholder/uat-testing", icon: "clipboard-check" },
   { label: "AI Assistant", href: "/stakeholder/ai-assistant", icon: "sparkles" },
@@ -19,7 +18,6 @@ export const stakeholderNav: NavItem[] = [
 export const baNav: NavItem[] = [
   { label: "Dashboard", href: "/ba/dashboard", icon: "layout-dashboard" },
   { label: "Assigned Requests", href: "/ba/assigned-problems", icon: "briefcase-business" },
-  { label: "Discussions", href: "/ba/discussions", icon: "messages-square" },
   { label: "BRD Management", href: "/ba/brd-management", icon: "file-text" },
   { label: "FRD Management", href: "/ba/frd-management", icon: "folder-cog" },
   { label: "User Stories", href: "/ba/user-stories", icon: "book-check" },

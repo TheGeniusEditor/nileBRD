@@ -9,12 +9,14 @@ import {
   FileText,
   Flame,
   Inbox,
+  MessageSquare,
   Paperclip,
   RefreshCw,
   TrendingUp,
   Zap,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { useDiscussionPanel } from "@/components/dashboard/DiscussionPanel";
 
 const API = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
@@ -63,7 +65,7 @@ function formatSize(bytes: number) {
     : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function RequestCard({ request }: { request: AssignedRequest }) {
+function RequestCard({ request, onOpenDiscussion }: { request: AssignedRequest; onOpenDiscussion: (r: AssignedRequest) => void }) {
   const [downloading, setDownloading] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
 
@@ -107,12 +109,21 @@ function RequestCard({ request }: { request: AssignedRequest }) {
             From: {request.stakeholder_name || request.stakeholder_email}
           </p>
         </div>
-        <button
-          onClick={() => setExpanded((e) => !e)}
-          className="shrink-0 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-        >
-          {expanded ? "Less" : "Details"}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setExpanded((e) => !e)}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            {expanded ? "Less" : "Details"}
+          </button>
+          <button
+            onClick={() => onOpenDiscussion(request)}
+            className="flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-100 transition-colors"
+          >
+            <MessageSquare className="size-3.5" />
+            Discussion
+          </button>
+        </div>
       </div>
 
       {/* Expanded */}
@@ -183,6 +194,19 @@ export default function AssignedRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [userId, setUserId]     = useState(0);
+  const [userName, setUserName] = useState("");
+  const { openDiscussion } = useDiscussionPanel();
+
+  useEffect(() => {
+    try {
+      const t = localStorage.getItem("authToken");
+      if (t) {
+        const d = JSON.parse(atob(t.split(".")[1]));
+        setUserId(d.id); setUserName(d.name || d.email || "BA");
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const fetchRequests = async () => {
     try {
@@ -282,7 +306,7 @@ export default function AssignedRequestsPage() {
       ) : (
         <div className="space-y-3">
           {requests.map((req) => (
-            <RequestCard key={req.id} request={req} />
+            <RequestCard key={req.id} request={req} onOpenDiscussion={r => openDiscussion(r, userId, userName)} />
           ))}
         </div>
       )}

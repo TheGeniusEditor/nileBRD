@@ -65,6 +65,30 @@ router.get("/requests", authenticateToken, async (req, res) => {
         ORDER BY COALESCE(sub.last_message_at, sub.req_created_at) DESC
       `;
       values = [userId];
+    } else if (req.user.role === "it") {
+      // IT users see requests for channels they've been explicitly added to
+      text = `
+        SELECT * FROM (
+          SELECT
+            r.id, r.req_number, r.title, r.priority, r.category, r.status,
+            ba.name  AS ba_name,
+            ba.email AS ba_email,
+            sh.name  AS stakeholder_name,
+            sh.email AS stakeholder_email,
+            (SELECT COUNT(*) FROM request_messages m WHERE m.request_id = r.id)::int AS total_messages,
+            (SELECT m2.message    FROM request_messages m2 WHERE m2.request_id = r.id ORDER BY m2.created_at DESC LIMIT 1) AS last_message,
+            (SELECT m3.created_at FROM request_messages m3 WHERE m3.request_id = r.id ORDER BY m3.created_at DESC LIMIT 1) AS last_message_at,
+            0::int AS unread_count,
+            r.created_at AS req_created_at
+          FROM requests r
+          JOIN channel_members cm ON cm.request_id = r.id AND cm.user_id = $1
+          LEFT JOIN users ba ON ba.id = r.assigned_ba_id
+          LEFT JOIN users sh ON sh.id = r.stakeholder_id
+          WHERE r.status != 'Closed'
+        ) sub
+        ORDER BY COALESCE(sub.last_message_at, sub.req_created_at) DESC
+      `;
+      values = [userId];
     } else {
       return res.json({ requests: [] });
     }

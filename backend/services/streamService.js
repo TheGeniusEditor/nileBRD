@@ -1,0 +1,44 @@
+import { StreamChat } from "stream-chat";
+
+const serverClient = StreamChat.getInstance(
+  process.env.STREAM_API_KEY,
+  process.env.STREAM_API_SECRET
+);
+
+export async function upsertStreamUser({ id, name, email, role }) {
+  await serverClient.upsertUser({
+    id: String(id),
+    name: name || email,
+    email,
+    custom_role: role,
+  });
+}
+
+export function generateStreamToken(userId) {
+  return serverClient.createToken(String(userId));
+}
+
+export async function getOrCreateRequestChannel(requestId, baUserId, reqNumber) {
+  const channelId = `request-${requestId}`;
+  const channel = serverClient.channel("messaging", channelId, {
+    name: reqNumber,
+    created_by_id: String(baUserId),
+  });
+  await channel.create();
+  await channel.addModerators([String(baUserId)]);
+  return { channelId, channelType: "messaging" };
+}
+
+export async function addMemberToChannel(requestId, userId, streamRole) {
+  const channel = serverClient.channel("messaging", `request-${requestId}`);
+  if (streamRole === "moderator") {
+    await channel.addModerators([String(userId)]);
+  } else {
+    await channel.addMembers([String(userId)]);
+  }
+}
+
+export async function removeMemberFromChannel(requestId, userId) {
+  const channel = serverClient.channel("messaging", `request-${requestId}`);
+  await channel.removeMembers([String(userId)]);
+}
