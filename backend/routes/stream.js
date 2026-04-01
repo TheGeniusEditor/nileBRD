@@ -2,6 +2,7 @@ import express from "express";
 import pool from "../config/db.js";
 import { authenticateToken } from "../middleware/auth.js";
 import { analyseKeyPoints } from "../services/brdAgent.js";
+import { generateBRD } from "../services/brdGenerator.js";
 import {
   upsertStreamUser,
   generateStreamToken,
@@ -247,11 +248,125 @@ router.post("/channels/:requestId/generate-key-points", authenticateToken, async
       [requestId]
     );
 
-    const analysis = analyseKeyPoints(msgs, reqRows[0]);
+    const analysis = await analyseKeyPoints(msgs, reqRows[0]);
     res.json(analysis);
   } catch (err) {
     console.error("BRD agent error:", err);
     res.status(500).json({ message: "Analysis failed" });
+  }
+});
+
+// POST /api/stream/channels/:requestId/generate-brd — BA-only full BRD generation
+router.post("/channels/:requestId/generate-brd", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== "ba") return res.status(403).json({ message: "BA only" });
+    const { requestId } = req.params;
+    const { analysis } = req.body; // pre-computed analysis JSON from generate-key-points
+    if (!analysis) return res.status(400).json({ message: "analysis payload required" });
+
+    const { rows: reqRows } = await pool.query(
+      `SELECT r.id, r.req_number, r.title, r.description, r.category, r.priority, r.status,
+              u.name AS stakeholder_name, u.email AS stakeholder_email
+       FROM requests r
+       LEFT JOIN users u ON u.id = r.stakeholder_id
+       WHERE r.id = $1`,
+      [requestId]
+    );
+    if (!reqRows.length) return res.status(404).json({ message: "Request not found" });
+
+    const { rows: msgs } = await pool.query(
+      `SELECT stream_message_id, message_text, sender_name, marked_at
+       FROM important_messages WHERE request_id = $1 ORDER BY marked_at ASC`,
+      [requestId]
+    );
+
+    const brd = await generateBRD(analysis, reqRows[0], msgs);
+
+    // Upsert: one draft BRD per request (replace previous draft)
+    const { rows: existing } = await pool.query(
+      "SELECT id FROM brd_documents WHERE request_id = $1 ORDER BY generated_at DESC LIMIT 1",
+      [requestId]
+    );
+
+    let brdId;
+    if (existing.length) {
+      const { rows } = await pool.query(
+        `UPDATE brd_documents SET content = $1, version = $2, status = 'Draft',
+         generated_by = $3, generated_at = NOW(), updated_at = NOW()
+         WHERE id = $4 RETURNING id`,
+        [JSON.stringify(brd), brd.meta.version, req.user.id, existing[0].id]
+      );
+      brdId = rows[0].id;
+    } else {
+      const { rows } = await pool.query(
+        `INSERT INTO brd_documents (request_id, doc_id, version, status, content, generated_by)
+         VALUES ($1, $2, $3, 'Draft', $4, $5) RETURNING id`,
+        [requestId, brd.meta.doc_id, brd.meta.version, JSON.stringify(brd), req.user.id]
+      );
+      brdId = rows[0].id;
+    }
+
+    res.json({ ...brd, _db_id: brdId });
+  } catch (err) {
+    console.error("BRD generation error:", err);
+    res.status(500).json({ message: "BRD generation failed", detail: err.message });
+  }
+});
+
+// GET /api/stream/brd-documents — list all BRDs for the authenticated BA
+router.get("/brd-documents", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== "ba") return res.status(403).json({ message: "BA only" });
+    const { rows } = await pool.query(
+      `SELECT bd.id, bd.doc_id, bd.version, bd.status, bd.generated_at, bd.updated_at,
+              r.title AS request_title, r.req_number, r.priority, r.category,
+              bd.content->'meta'->>'source_messages' AS source_messages
+       FROM brd_documents bd
+       JOIN requests r ON r.id = bd.request_id
+       WHERE bd.generated_by = $1
+       ORDER BY bd.updated_at DESC`,
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("Fetch BRD list error:", err);
+    res.status(500).json({ message: "Failed to fetch BRD documents" });
+  }
+});
+
+// GET /api/stream/brd-documents/:brdId — get a full BRD document
+router.get("/brd-documents/:brdId", authenticateToken, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT bd.*, r.title AS request_title, r.req_number
+       FROM brd_documents bd
+       JOIN requests r ON r.id = bd.request_id
+       WHERE bd.id = $1`,
+      [req.params.brdId]
+    );
+    if (!rows.length) return res.status(404).json({ message: "BRD not found" });
+    // Allow BA author or any team member to read
+    res.json({ ...rows[0].content, _db_id: rows[0].id, _status: rows[0].status });
+  } catch (err) {
+    console.error("Fetch BRD error:", err);
+    res.status(500).json({ message: "Failed to fetch BRD" });
+  }
+});
+
+// PATCH /api/stream/brd-documents/:brdId/status — update BRD status
+router.patch("/brd-documents/:brdId/status", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== "ba") return res.status(403).json({ message: "BA only" });
+    const { status } = req.body;
+    const validStatuses = ["Draft", "In Review", "Approved", "Final"];
+    if (!validStatuses.includes(status)) return res.status(400).json({ message: "Invalid status" });
+    await pool.query(
+      "UPDATE brd_documents SET status = $1, updated_at = NOW() WHERE id = $2 AND generated_by = $3",
+      [status, req.params.brdId, req.user.id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update status" });
   }
 });
 

@@ -1,14 +1,61 @@
 /**
- * BRD Agent — a self-contained NLP analysis engine.
+ * BRD Agent — Neural AI analysis engine using Transformers.js.
  *
- * No external AI API. Runs entirely on the backend using:
- *  - TF-IDF keyword extraction
- *  - Pattern-based sentence classification (requirements / concerns / actions)
- *  - Sentence importance scoring
- *  - BRD readiness heuristics
+ * Uses a real transformer neural network (DeBERTa-v3) for zero-shot classification.
+ * No API keys. Models download once (~85MB) and cache locally.
+ *
+ * Pipeline:
+ *  1. Zero-shot classification (Xenova/nli-deberta-v3-small) — classify each message
+ *  2. TF-IDF keyword extraction — fast, accurate for domain keywords
+ *  3. Pattern-based BRD readiness — deterministic domain checks
+ *  4. Executive summary — synthesised from top-scored messages per category
  */
 
-// ─── Stopwords ───────────────────────────────────────────────────────────────
+import { pipeline, env } from "@xenova/transformers";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+env.cacheDir = join(__dirname, "../../models");
+// Suppress verbose download logs in production
+env.allowLocalModels = true;
+
+const MODEL_ID = "Xenova/nli-deberta-v3-small";
+
+const CANDIDATE_LABELS = [
+  "business requirement or functional need",
+  "risk, concern, or problem",
+  "action item or next step",
+  "general discussion",
+];
+
+// Singleton model loader — loads once, reused for all requests
+let _classifier = null;
+let _loading = false;
+let _loadPromise = null;
+
+async function getClassifier() {
+  if (_classifier) return _classifier;
+  if (_loadPromise) return _loadPromise;
+
+  _loadPromise = (async () => {
+    console.log("[BRD Agent] Loading neural model (first run may take ~30s)…");
+    _classifier = await pipeline("zero-shot-classification", MODEL_ID, {
+      quantized: true, // use quantized ONNX — smaller, faster, still accurate
+    });
+    console.log("[BRD Agent] Neural model ready.");
+    return _classifier;
+  })();
+
+  return _loadPromise;
+}
+
+// Warm up the model on server start (non-blocking)
+getClassifier().catch((err) =>
+  console.warn("[BRD Agent] Model pre-load failed (will retry on demand):", err.message)
+);
+
+// ─── Stopwords ────────────────────────────────────────────────────────────────
 const STOPWORDS = new Set([
   "a","an","the","and","or","but","in","on","at","to","for","of","with",
   "by","from","is","it","its","as","be","was","are","were","been","has",
@@ -22,9 +69,9 @@ const STOPWORDS = new Set([
   "said","im","ive","id","dont","doesnt","isnt","wasnt","thats","its",
 ]);
 
-// ─── Classification patterns ──────────────────────────────────────────────────
+// ─── BRD domain patterns (used for readiness check only) ─────────────────────
 const REQUIREMENT_RE = [
-  /\b(need|needs|needed|needn['']t)\b/i,
+  /\b(need|needs|needed)\b/i,
   /\b(require[sd]?|requirement[s]?)\b/i,
   /\b(must|should|shall)\b/i,
   /\b(want[s]?|wanted)\b/i,
@@ -34,7 +81,6 @@ const REQUIREMENT_RE = [
   /\b(feature[s]?|functionality|capability|capabilities)\b/i,
   /\b(allow[s]?|enable[s]?|support[s]?|provide[s]?)\b/i,
 ];
-
 const CONCERN_RE = [
   /\b(issue[s]?|problem[s]?)\b/i,
   /\b(concern[s]?|concerned)\b/i,
@@ -43,93 +89,50 @@ const CONCERN_RE = [
   /\b(block[s]?|blocker[s]?|blocked)\b/i,
   /\b(worr(y|ied|ies)|worried)\b/i,
   /\b(unclear|uncertain|unsure|ambiguous)\b/i,
-  /\b(not sure|don['']t know|doesn['']t work)\b/i,
-  /\b(delay[s]?|delayed|late|miss(ing)?)\b/i,
+  /\b(delay[s]?|delayed|late)\b/i,
   /\b(fail[s]?|failure|error[s]?|bug[s]?)\b/i,
-  /\b(compli[a-z]+)\b/i,
-  /\b(impact[s]?|affect[s]?)\b/i,
 ];
-
-const ACTION_RE = [
-  /\b(follow[- ]?up|action[s]?|task[s]?)\b/i,
-  /\b(schedule[d]?|plan[s]?|planned)\b/i,
-  /\b(review[s]?|reviewed)\b/i,
-  /\b(confirm[s]?|confirmed|confirmation)\b/i,
-  /\b(check[s]?|verify|verified)\b/i,
-  /\b(update[s]?|updated)\b/i,
-  /\b(discuss[es]?|discussed|meeting)\b/i,
-  /\b(decide[d]?|decision[s]?)\b/i,
-  /\b(implement[s]?|implemented|build[s]?|create[s]?|develop[s]?)\b/i,
-  /\b(test[s]?|testing|validate[s]?)\b/i,
-  /\b(document[s]?|document[a-z]+)\b/i,
-  /\b(assign[s]?|assigned|owner[s]?)\b/i,
-];
-
 const TIMELINE_RE = /\b(week[s]?|month[s]?|day[s]?|deadline[s]?|due|sprint[s]?|quarter|asap|urgent|soon|by \w+day|q[1-4])\b/i;
 const STAKEHOLDER_RE = /\b(user[s]?|stakeholder[s]?|team[s]?|client[s]?|customer[s]?|manager|director|owner[s]?|department)\b/i;
 const SUCCESS_RE = /\b(success|successf[a-z]+|goal[s]?|objective[s]?|outcome[s]?|kpi[s]?|metric[s]?|measur[a-z]+|achiev[a-z]+)\b/i;
 
-// ─── Tokenizer & TF-IDF ───────────────────────────────────────────────────────
+// ─── TF-IDF keyword extraction ────────────────────────────────────────────────
 function tokenize(text) {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
     .split(/\s+/)
-    .filter(t => t.length > 2 && !STOPWORDS.has(t));
+    .filter((t) => t.length > 2 && !STOPWORDS.has(t));
 }
 
 function computeTfIdf(docs) {
   const N = docs.length;
   if (N === 0) return {};
-
-  // Term frequency per doc
-  const tfDocs = docs.map(d => {
+  const tfDocs = docs.map((d) => {
     const tokens = tokenize(d);
     const tf = {};
-    tokens.forEach(t => { tf[t] = (tf[t] || 0) + 1; });
+    tokens.forEach((t) => { tf[t] = (tf[t] || 0) + 1; });
     const max = Math.max(...Object.values(tf), 1);
-    Object.keys(tf).forEach(t => { tf[t] = tf[t] / max; });
+    Object.keys(tf).forEach((t) => { tf[t] = tf[t] / max; });
     return tf;
   });
-
-  // Document frequency
   const df = {};
-  tfDocs.forEach(tf => Object.keys(tf).forEach(t => { df[t] = (df[t] || 0) + 1; }));
-
-  // TF-IDF per term across all docs
+  tfDocs.forEach((tf) => Object.keys(tf).forEach((t) => { df[t] = (df[t] || 0) + 1; }));
   const scores = {};
-  tfDocs.forEach(tf => {
+  tfDocs.forEach((tf) => {
     Object.entries(tf).forEach(([t, freq]) => {
       const idf = Math.log((N + 1) / (df[t] + 1)) + 1;
       scores[t] = (scores[t] || 0) + freq * idf;
     });
   });
-
   return scores;
 }
 
-function topKeywords(tfidf, n = 8) {
+function topKeywords(tfidf, n = 10) {
   return Object.entries(tfidf)
     .sort((a, b) => b[1] - a[1])
     .slice(0, n)
     .map(([term]) => term);
-}
-
-// ─── Sentence classifier ──────────────────────────────────────────────────────
-function classifySentence(text) {
-  const types = [];
-  if (REQUIREMENT_RE.some(r => r.test(text))) types.push("requirement");
-  if (CONCERN_RE.some(r => r.test(text)))    types.push("concern");
-  if (ACTION_RE.some(r => r.test(text)))     types.push("action");
-  return types.length ? types : ["general"];
-}
-
-function scoreImportance(text, tfidf) {
-  const tokens = tokenize(text);
-  const base = tokens.reduce((s, t) => s + (tfidf[t] || 0), 0);
-  // Boost longer, more substantive sentences
-  const lengthBonus = Math.min(text.split(" ").length / 20, 1);
-  return base + lengthBonus;
 }
 
 // ─── Deduplication: remove near-duplicate sentences ──────────────────────────
@@ -137,9 +140,9 @@ function deduplicate(sentences) {
   const kept = [];
   for (const s of sentences) {
     const tokens = new Set(tokenize(s));
-    const isDup = kept.some(k => {
+    const isDup = kept.some((k) => {
       const kTokens = new Set(tokenize(k));
-      const intersection = [...tokens].filter(t => kTokens.has(t)).length;
+      const intersection = [...tokens].filter((t) => kTokens.has(t)).length;
       const union = new Set([...tokens, ...kTokens]).size;
       return union > 0 && intersection / union > 0.65;
     });
@@ -148,102 +151,161 @@ function deduplicate(sentences) {
   return kept;
 }
 
-// ─── Capitalise first letter ──────────────────────────────────────────────────
 function cap(str) {
   return str ? str.charAt(0).toUpperCase() + str.slice(1) : str;
 }
 
-// ─── Format a message list as bullet text ────────────────────────────────────
-function buildSection(messages, tfidf, types, maxItems = 5) {
-  const candidates = messages.filter(m => {
-    const c = classifySentence(m.message_text);
-    return types.some(t => c.includes(t));
-  });
-
-  const scored = candidates.map(m => ({
-    text: m.message_text,
-    sender: m.sender_name,
-    score: scoreImportance(m.message_text, tfidf),
-  }));
-
-  scored.sort((a, b) => b.score - a.score);
-
-  const texts = deduplicate(scored.map(s => s.text)).slice(0, maxItems);
-  return texts.map(t => cap(t.trim()));
-}
-
-// ─── BRD Readiness check ─────────────────────────────────────────────────────
-function brdReadiness(messages, keywords) {
-  const allText = messages.map(m => m.message_text).join(" ");
+// ─── BRD Readiness (pattern-based — deterministic, domain-accurate) ───────────
+function brdReadiness(messages) {
+  const allText = messages.map((m) => m.message_text).join(" ");
   const checks = [
-    { label: "Requirements defined",   pass: REQUIREMENT_RE.some(r => r.test(allText)) },
+    { label: "Requirements defined",    pass: REQUIREMENT_RE.some((r) => r.test(allText)) },
     { label: "Stakeholders identified", pass: STAKEHOLDER_RE.test(allText) },
     { label: "Timelines mentioned",     pass: TIMELINE_RE.test(allText) },
     { label: "Success criteria present",pass: SUCCESS_RE.test(allText) },
-    { label: "Risks / concerns raised", pass: CONCERN_RE.some(r => r.test(allText)) },
+    { label: "Risks / concerns raised", pass: CONCERN_RE.some((r) => r.test(allText)) },
   ];
-  const score = checks.filter(c => c.pass).length;
+  const score = checks.filter((c) => c.pass).length;
   let readinessLevel;
-  if (score >= 5) readinessLevel = "High — ready to start BRD draft";
+  if (score >= 5)      readinessLevel = "High — ready to start BRD draft";
   else if (score >= 3) readinessLevel = "Medium — a few gaps remain";
-  else readinessLevel = "Low — more discussion needed";
-
+  else                 readinessLevel = "Low — more discussion needed";
   return { checks, score, readinessLevel };
 }
 
-// ─── Executive summary: pick the top N highest-scoring sentences ──────────────
-function executiveSummary(messages, tfidf, n = 3) {
-  const scored = messages.map(m => ({
-    text: m.message_text,
-    score: scoreImportance(m.message_text, tfidf),
-  }));
-  scored.sort((a, b) => b.score - a.score);
-  const top = deduplicate(scored.map(s => s.text)).slice(0, n);
-  return top.map(t => cap(t.trim())).join(" ");
+// ─── Executive summary: synthesise from top messages per category ─────────────
+function buildExecutiveSummary(categorised, requestInfo) {
+  const parts = [];
+  if (categorised.requirements.length) {
+    parts.push(cap(categorised.requirements[0].text));
+  }
+  if (categorised.concerns.length) {
+    parts.push(`Key concern: ${categorised.concerns[0].text.toLowerCase()}`);
+  }
+  if (categorised.actions.length) {
+    parts.push(`Next step: ${categorised.actions[0].text.toLowerCase()}`);
+  }
+  if (!parts.length) {
+    return `Discussion for "${requestInfo.title}" covers the core business need. Review the marked messages for detailed context.`;
+  }
+  return parts.join(" ");
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 /**
+ * Async — uses real neural network for classification.
+ *
  * @param {Array<{message_text:string, sender_name:string, marked_at:string}>} messages
  * @param {{title:string, description:string, category:string, priority:string, status:string}} requestInfo
- * @returns {object} structured analysis
+ * @returns {Promise<object>} structured analysis
  */
-export function analyseKeyPoints(messages, requestInfo) {
+export async function analyseKeyPoints(messages, requestInfo) {
   if (!messages || messages.length === 0) {
     return { error: "No key points to analyse. Please mark at least one message first." };
   }
 
-  const docs = messages.map(m => m.message_text);
+  // ── 1. TF-IDF keywords (fast, run first) ──────────────────────────────────
+  const docs = messages.map((m) => m.message_text);
   const tfidf = computeTfIdf(docs);
   const keywords = topKeywords(tfidf, 10);
 
-  const requirements = buildSection(messages, tfidf, ["requirement"], 6);
-  const concerns     = buildSection(messages, tfidf, ["concern"], 5);
-  const actions      = buildSection(messages, tfidf, ["action"], 5);
-  const readiness    = brdReadiness(messages, keywords);
-  const summary      = executiveSummary(messages, tfidf, 3);
+  // ── 2. Neural zero-shot classification ────────────────────────────────────
+  let categorised = { requirements: [], concerns: [], actions: [], general: [] };
 
-  // Fallback: if a section is empty, surface most relevant messages
-  const generalFallback = (limit) =>
-    deduplicate(
-      messages
-        .map(m => ({ text: m.message_text, score: scoreImportance(m.message_text, tfidf) }))
-        .sort((a, b) => b.score - a.score)
-        .map(s => cap(s.text.trim()))
-    ).slice(0, limit);
+  try {
+    const classifier = await getClassifier();
+
+    // Classify all messages in parallel (model handles batching internally)
+    const results = await Promise.all(
+      messages.map((m) =>
+        classifier(m.message_text, CANDIDATE_LABELS, { multi_label: false })
+      )
+    );
+
+    results.forEach((result, i) => {
+      const msg = messages[i];
+      const topLabel = result.labels[0]; // highest-confidence label
+      const confidence = result.scores[0];
+
+      const entry = {
+        text: msg.message_text,
+        sender: msg.sender_name,
+        confidence,
+      };
+
+      if (topLabel.includes("requirement") || topLabel.includes("functional")) {
+        categorised.requirements.push(entry);
+      } else if (topLabel.includes("risk") || topLabel.includes("concern") || topLabel.includes("problem")) {
+        categorised.concerns.push(entry);
+      } else if (topLabel.includes("action") || topLabel.includes("next step")) {
+        categorised.actions.push(entry);
+      } else {
+        categorised.general.push(entry);
+      }
+    });
+
+    // Sort each category by confidence descending
+    for (const key of Object.keys(categorised)) {
+      categorised[key].sort((a, b) => b.confidence - a.confidence);
+    }
+
+    console.log(`[BRD Agent] Classified ${messages.length} messages via neural model.`);
+  } catch (err) {
+    // Graceful fallback to TF-IDF + patterns if model fails
+    console.warn("[BRD Agent] Neural classification failed, falling back to pattern matching:", err.message);
+    messages.forEach((m) => {
+      const text = m.message_text;
+      const entry = { text, sender: m.sender_name, confidence: 0.5 };
+      const isReq = REQUIREMENT_RE.some((r) => r.test(text));
+      const isCon = CONCERN_RE.some((r) => r.test(text));
+      if (isReq) categorised.requirements.push(entry);
+      else if (isCon) categorised.concerns.push(entry);
+      else categorised.actions.push(entry);
+    });
+  }
+
+  // ── 3. Deduplicate and cap each section ───────────────────────────────────
+  const pickTop = (items, n) =>
+    deduplicate(items.map((i) => i.text))
+      .slice(0, n)
+      .map((t) => cap(t.trim()));
+
+  const requirements = pickTop(categorised.requirements, 6);
+  const concerns = pickTop(categorised.concerns, 5);
+  const actions = pickTop(categorised.actions, 5);
+
+  // Fallback: pull from general if a section is empty
+  const generalTexts = deduplicate(
+    [...categorised.general, ...categorised.requirements, ...categorised.concerns, ...categorised.actions]
+      .map((i) => i.text)
+  ).map((t) => cap(t.trim()));
+
+  // ── 4. BRD readiness (deterministic pattern checks) ───────────────────────
+  const readiness = brdReadiness(messages);
+
+  // ── 5. Executive summary ──────────────────────────────────────────────────
+  const summary = buildExecutiveSummary(
+    {
+      requirements: categorised.requirements,
+      concerns: categorised.concerns,
+      actions: categorised.actions,
+    },
+    requestInfo
+  );
 
   return {
     generated_at: new Date().toISOString(),
+    ai_model: MODEL_ID,
     request: {
       title: requestInfo.title,
       category: requestInfo.category,
       priority: requestInfo.priority,
       status: requestInfo.status,
     },
-    executive_summary: summary || "Based on the marked conversation, the discussion covers the core business need for this request.",
-    key_requirements: requirements.length ? requirements : generalFallback(4),
-    stakeholder_concerns: concerns.length ? concerns : [],
-    action_items: actions.length ? actions : [],
+    executive_summary: summary,
+    key_requirements: requirements.length ? requirements : generalTexts.slice(0, 4),
+    stakeholder_concerns: concerns,
+    action_items: actions,
     keywords,
     brd_readiness: readiness,
     message_count: messages.length,

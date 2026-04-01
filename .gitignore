@@ -74,3 +74,7 @@ frontend/.env.production.local
 # IDE workspace settings
 .vscode/settings.json
 .vscode/launch.json
+
+# ML model cache (downloaded at runtime by @xenova/transformers)
+models/
+backend/models/

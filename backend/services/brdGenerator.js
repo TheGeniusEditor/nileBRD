@@ -1,0 +1,344 @@
+/**
+ * BRD Generator — Advanced AI document generation engine.
+ *
+ * Pipeline:
+ *  1. Flan-T5 (text2text-generation) — generates the executive summary paragraph
+ *     and expands each requirement into a formal business statement.
+ *  2. Pattern-based MoSCoW prioritisation — Must / Should / Could / Won't
+ *  3. NFR inference — infers non-functional requirements from requirement text
+ *  4. Risk matrix — derives impact, probability and mitigation from concern text
+ *  5. Scope inference — separates in-scope (explicit) from out-of-scope (absent patterns)
+ *  6. Structured JSON assembly — numbered sections, IDs, version metadata
+ */
+
+import { pipeline, env } from "@xenova/transformers";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+env.cacheDir = join(__dirname, "../../models");
+env.allowLocalModels = true;
+
+const GEN_MODEL = "Xenova/flan-t5-small";
+
+let _generator = null;
+let _genPromise = null;
+
+async function getGenerator() {
+  if (_generator) return _generator;
+  if (_genPromise) return _genPromise;
+  _genPromise = (async () => {
+    console.log("[BRD Generator] Loading Flan-T5 text generation model…");
+    _generator = await pipeline("text2text-generation", GEN_MODEL, { quantized: true });
+    console.log("[BRD Generator] Flan-T5 ready.");
+    return _generator;
+  })();
+  return _genPromise;
+}
+
+// Pre-warm on server start (non-blocking)
+getGenerator().catch((e) =>
+  console.warn("[BRD Generator] Flan-T5 pre-load failed:", e.message)
+);
+
+// ─── MoSCoW priority classification ──────────────────────────────────────────
+const MUST_RE   = /\b(must|critical|mandatory|required|essential|shall|has to|need to|necessary)\b/i;
+const SHOULD_RE = /\b(should|important|ideally|recommended|desired|expected)\b/i;
+const COULD_RE  = /\b(could|nice to have|optional|consider|may|might|possible)\b/i;
+const WONT_RE   = /\b(won't|will not|out of scope|future|later|phase 2|not in scope)\b/i;
+
+function moscowPriority(text) {
+  if (WONT_RE.test(text))   return "Won't Have";
+  if (MUST_RE.test(text))   return "Must Have";
+  if (SHOULD_RE.test(text)) return "Should Have";
+  if (COULD_RE.test(text))  return "Could Have";
+  return "Must Have"; // default for requirements
+}
+
+// ─── NFR inference ────────────────────────────────────────────────────────────
+const NFR_PATTERNS = [
+  { re: /\b(fast|quick|speed|response time|latency|performance|throughput|efficient)\b/i, category: "Performance",   desc: "System response times shall meet agreed SLA targets." },
+  { re: /\b(secure|security|authentication|authoris|encrypt|access control|permission|role)\b/i, category: "Security", desc: "All data access shall be authenticated and encrypted in transit." },
+  { re: /\b(uptime|availability|24.7|always on|reliable|disaster|failover|backup)\b/i, category: "Availability", desc: "System availability shall meet the agreed uptime SLA (>99.5%)." },
+  { re: /\b(scale|scalab|load|concurrent|users|traffic|grow)\b/i, category: "Scalability", desc: "System shall scale horizontally to support projected user growth." },
+  { re: /\b(audit|log|track|monitor|compliance|regulatory|gdpr|legal)\b/i, category: "Compliance & Audit", desc: "All user actions shall be logged for compliance and audit purposes." },
+  { re: /\b(mobile|responsive|device|tablet|phone|browser|cross.platform)\b/i, category: "Usability", desc: "Interface shall be responsive and accessible across modern browsers and devices." },
+  { re: /\b(integrat|api|third.party|connect|sync|interface|webhook)\b/i, category: "Interoperability", desc: "System shall provide documented APIs for third-party integrations." },
+  { re: /\b(maintain|maintain|support|update|patch|upgr|version)\b/i, category: "Maintainability", desc: "System shall be modular to enable independent updates and patching." },
+];
+
+function inferNFRs(allText) {
+  const seen = new Set();
+  const nfrs = [];
+  NFR_PATTERNS.forEach(({ re, category, desc }) => {
+    if (re.test(allText) && !seen.has(category)) {
+      seen.add(category);
+      nfrs.push({ category, description: desc });
+    }
+  });
+  return nfrs;
+}
+
+// ─── Risk matrix ──────────────────────────────────────────────────────────────
+const HIGH_IMPACT_RE = /\b(critical|severe|major|significant|high|catastrophic|fatal|block|stop)\b/i;
+const LOW_IMPACT_RE  = /\b(minor|small|low|minimal|trivial|slight)\b/i;
+
+const HIGH_PROB_RE = /\b(certain|likely|probably|common|frequent|often|expected|anticipated)\b/i;
+const LOW_PROB_RE  = /\b(unlikely|rare|seldom|infrequent|exceptional)\b/i;
+
+function assessRisk(text) {
+  const impact     = HIGH_IMPACT_RE.test(text) ? "High" : LOW_IMPACT_RE.test(text) ? "Low" : "Medium";
+  const probability = HIGH_PROB_RE.test(text) ? "High" : LOW_PROB_RE.test(text) ? "Low" : "Medium";
+  return { impact, probability };
+}
+
+const MITIGATION_MAP = {
+  "performance":    "Conduct early load testing; define performance benchmarks in sprint 1.",
+  "security":       "Engage security team for threat modelling; implement OWASP guidelines.",
+  "integration":    "Prototype integration in discovery phase; agree API contracts early.",
+  "data":           "Define data governance policy; implement validation at system boundaries.",
+  "timeline":       "Break work into milestones; flag blockers in weekly stand-ups.",
+  "requirement":    "Schedule follow-up requirement workshops to clarify ambiguities.",
+  "stakeholder":    "Establish regular stakeholder review cadence (bi-weekly check-ins).",
+  "resource":       "Identify resource gaps early; escalate to project sponsor if needed.",
+  "technical":      "Spike technical unknowns in early sprints; document architecture decisions.",
+  "compliance":     "Engage legal/compliance team for review before implementation begins.",
+};
+
+function deriveMitigation(text) {
+  const lower = text.toLowerCase();
+  for (const [keyword, mitigation] of Object.entries(MITIGATION_MAP)) {
+    if (lower.includes(keyword)) return mitigation;
+  }
+  return "Assign a risk owner; monitor at each sprint review and escalate if threshold is breached.";
+}
+
+// ─── Scope inference ──────────────────────────────────────────────────────────
+const SCOPE_EXCLUDE_RE = /\b(not included|out of scope|excluded|won't|will not|future|phase 2|next release|later|deferred)\b/i;
+const DEFAULT_OOS = [
+  "Third-party integrations beyond those explicitly listed",
+  "Data migration from legacy systems (unless specified)",
+  "Reporting and analytics dashboards (Phase 2)",
+  "Mobile native application (web responsive only in this phase)",
+];
+
+function extractOutOfScope(requirements, concerns) {
+  const oos = [];
+  [...requirements, ...concerns].forEach((item) => {
+    if (SCOPE_EXCLUDE_RE.test(item)) oos.push(item);
+  });
+  return oos.length ? oos : DEFAULT_OOS.slice(0, 2);
+}
+
+// ─── Stakeholder extraction ───────────────────────────────────────────────────
+function extractStakeholders(messages, requestInfo) {
+  const names = new Set();
+  messages.forEach((m) => { if (m.sender_name) names.add(m.sender_name); });
+  const list = [...names].map((name) => ({
+    name,
+    role: name === requestInfo.stakeholder_name ? "Primary Stakeholder / Business Owner" : "Discussion Participant",
+  }));
+  if (requestInfo.stakeholder_name && !names.has(requestInfo.stakeholder_name)) {
+    list.unshift({ name: requestInfo.stakeholder_name, role: "Primary Stakeholder / Business Owner" });
+  }
+  list.push({ name: "Business Analyst", role: "BRD Author / Requirements Owner" });
+  list.push({ name: "IT Team", role: "Technical Feasibility & Implementation" });
+  return list;
+}
+
+// ─── Sentence capitaliser ─────────────────────────────────────────────────────
+function cap(str = "") {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// ─── Flan-T5 text generation ─────────────────────────────────────────────────
+async function generateText(prompt, maxTokens = 120) {
+  try {
+    const gen = await getGenerator();
+    const [result] = await gen(prompt, {
+      max_new_tokens: maxTokens,
+      num_beams: 4,
+      early_stopping: true,
+      no_repeat_ngram_size: 3,
+    });
+    return result.generated_text?.trim() || "";
+  } catch (err) {
+    console.warn("[BRD Generator] Flan-T5 generation failed:", err.message);
+    return "";
+  }
+}
+
+// ─── Formal requirement rewriter ─────────────────────────────────────────────
+async function formaliseRequirement(text) {
+  const prompt = `Rewrite as a formal business requirement using "The system shall" language: ${text}`;
+  const out = await generateText(prompt, 60);
+  // Validate: must start with "The" or similar formal language
+  if (out.length > 10 && /^(The|System|Users|All|Data)/i.test(out)) return cap(out);
+  // Fallback: simple rule-based formalisation
+  const lower = text.toLowerCase();
+  if (lower.startsWith("the system") || lower.startsWith("system shall")) return cap(text);
+  return `The system shall ${text.charAt(0).toLowerCase() + text.slice(1)}`;
+}
+
+// ─── Executive summary generation ────────────────────────────────────────────
+async function generateExecutiveSummary(analysis, requestInfo) {
+  const reqList = analysis.key_requirements.slice(0, 3).join("; ");
+  const prompt = `Write a 2-sentence executive summary for a business requirements document. Project: ${requestInfo.title}. Category: ${requestInfo.category || "General"}. Key requirements: ${reqList}.`;
+  const out = await generateText(prompt, 100);
+  if (out.length > 30) return out;
+  // Fallback to template
+  return `This Business Requirements Document defines the functional and non-functional requirements for "${requestInfo.title}". ` +
+    `The objective is to ${analysis.executive_summary || `deliver ${requestInfo.category?.toLowerCase() || "business"} capabilities that meet stakeholder needs`}.`;
+}
+
+// ─── Business objective generation ───────────────────────────────────────────
+async function generateObjective(analysis, requestInfo) {
+  const prompt = `Write a business objective statement for a project titled "${requestInfo.title}" with priority ${requestInfo.priority}. Include the business purpose and expected outcome in 2 sentences.`;
+  const out = await generateText(prompt, 80);
+  if (out.length > 30) return out;
+  return `To deliver a solution that addresses the identified business need for "${requestInfo.title}". ` +
+    `This initiative aims to improve operational efficiency, reduce manual effort, and provide measurable business value aligned with organisational goals.`;
+}
+
+// ─── Main export ──────────────────────────────────────────────────────────────
+export async function generateBRD(analysis, requestInfo, messages = []) {
+  const now = new Date();
+  const versionNum = "0.1";
+  const docId = `BRD-${requestInfo.req_number || requestInfo.id || "DRAFT"}-v${versionNum}`;
+
+  // ── Parallel AI tasks ──────────────────────────────────────────────────────
+  const allReqText = [...(analysis.key_requirements || []), ...(analysis.action_items || [])].join(" ");
+  const allConcernText = (analysis.stakeholder_concerns || []).join(" ");
+  const allText = `${allReqText} ${allConcernText}`;
+
+  const [execSummary, objective] = await Promise.all([
+    generateExecutiveSummary(analysis, requestInfo),
+    generateObjective(analysis, requestInfo),
+  ]);
+
+  // Formalise requirements (run sequentially to avoid memory spikes)
+  const formalRequirements = [];
+  for (const [i, req] of (analysis.key_requirements || []).entries()) {
+    const formal = await formaliseRequirement(req);
+    formalRequirements.push({
+      id: `FR-${String(i + 1).padStart(3, "0")}`,
+      description: formal,
+      priority: moscowPriority(req),
+      source: "Key Conversation",
+      original: cap(req),
+    });
+  }
+
+  // ── NFRs ──────────────────────────────────────────────────────────────────
+  const nfrs = inferNFRs(allText).map((nfr, i) => ({
+    id: `NFR-${String(i + 1).padStart(3, "0")}`,
+    ...nfr,
+  }));
+
+  // ── Risk register ─────────────────────────────────────────────────────────
+  const risks = (analysis.stakeholder_concerns || []).map((concern, i) => {
+    const { impact, probability } = assessRisk(concern);
+    return {
+      id: `R-${String(i + 1).padStart(3, "0")}`,
+      description: cap(concern),
+      impact,
+      probability,
+      mitigation: deriveMitigation(concern),
+    };
+  });
+
+  // ── Scope ─────────────────────────────────────────────────────────────────
+  const inScope  = formalRequirements.map((r) => r.original);
+  const outOfScope = extractOutOfScope(analysis.key_requirements || [], analysis.stakeholder_concerns || []);
+
+  // ── Stakeholders ──────────────────────────────────────────────────────────
+  const stakeholders = extractStakeholders(messages, requestInfo);
+
+  // ── Action items ──────────────────────────────────────────────────────────
+  const actionItems = (analysis.action_items || []).map((item, i) => ({
+    id: `A-${String(i + 1).padStart(3, "0")}`,
+    description: cap(item),
+    status: "Open",
+  }));
+
+  // ── Goals (derived from requirements bucketing) ───────────────────────────
+  const goals = analysis.key_requirements
+    .slice(0, 4)
+    .map((r) => cap(r.replace(/^(the system shall|must|should|need to)\s*/i, "")));
+
+  // ── Assemble BRD ──────────────────────────────────────────────────────────
+  return {
+    meta: {
+      doc_id: docId,
+      version: versionNum,
+      status: "Draft",
+      request_id: requestInfo.id,
+      request_number: requestInfo.req_number,
+      title: requestInfo.title,
+      category: requestInfo.category || "General",
+      priority: requestInfo.priority || "Medium",
+      generated_at: now.toISOString(),
+      effective_date: now.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }),
+      ai_models: ["Xenova/nli-deberta-v3-small (zero-shot classification)", "Xenova/flan-t5-small (text generation)"],
+      source_messages: analysis.message_count,
+    },
+    sections: {
+      executive_summary: {
+        number: "1",
+        title: "Executive Summary",
+        text: execSummary,
+      },
+      objective: {
+        number: "2",
+        title: "Business Objective & Goals",
+        text: objective,
+        goals,
+      },
+      scope: {
+        number: "3",
+        title: "Scope",
+        in_scope: inScope,
+        out_of_scope: outOfScope,
+      },
+      stakeholders: {
+        number: "4",
+        title: "Stakeholder Analysis",
+        list: stakeholders,
+      },
+      functional_requirements: {
+        number: "5",
+        title: "Functional Requirements",
+        items: formalRequirements,
+      },
+      non_functional_requirements: {
+        number: "6",
+        title: "Non-Functional Requirements",
+        items: nfrs,
+      },
+      risk_register: {
+        number: "7",
+        title: "Risk Register",
+        items: risks,
+      },
+      action_items: {
+        number: "8",
+        title: "Action Items & Next Steps",
+        items: actionItems,
+      },
+      brd_readiness: {
+        number: "9",
+        title: "BRD Readiness Assessment",
+        ...analysis.brd_readiness,
+      },
+      appendix: {
+        title: "Appendix A: Key Conversation Excerpts",
+        messages: messages.map((m) => ({
+          sender: m.sender_name,
+          text: m.message_text,
+          marked_at: m.marked_at,
+        })),
+        keywords: analysis.keywords,
+      },
+    },
+  };
+}

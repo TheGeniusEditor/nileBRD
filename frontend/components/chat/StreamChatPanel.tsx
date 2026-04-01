@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, createContext, useContext } from "react";
+import { useRouter } from "next/navigation";
 import type { Channel as StreamChannel } from "stream-chat";
 import {
   Chat,
@@ -21,7 +22,7 @@ import {
   ArrowLeft, Video, Users, Loader2, MessageSquare, AlertCircle,
   Bookmark, BookmarkCheck, Sparkles, X, ChevronRight,
   CheckCircle2, XCircle, ClipboardList, ShieldAlert, Zap,
-  Tag, BarChart3, Copy, Check,
+  Tag, BarChart3, Copy, Check, FileText, ExternalLink,
 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
@@ -60,6 +61,7 @@ interface BrdReadiness { checks: ReadinessCheck[]; score: number; readinessLevel
 
 interface Analysis {
   generated_at: string;
+  ai_model?: string;
   request: { title: string; category: string; priority: string; status: string };
   executive_summary: string;
   key_requirements: string[];
@@ -129,9 +131,17 @@ function CustomMessage() {
 function AnalysisModal({
   analysis,
   onClose,
+  onGenerateBrd,
+  generatingBrd,
+  brdSuccess,
+  isBA,
 }: {
   analysis: Analysis;
   onClose: () => void;
+  onGenerateBrd?: () => void;
+  generatingBrd?: boolean;
+  brdSuccess?: boolean;
+  isBA?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -192,6 +202,11 @@ function AnalysisModal({
             <p className="text-[11px] text-slate-400">
               Based on {analysis.message_count} marked message{analysis.message_count !== 1 ? "s" : ""} ·{" "}
               {new Date(analysis.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {analysis.ai_model && (
+                <span className="ml-2 rounded-full bg-violet-50 border border-violet-200 px-1.5 py-0.5 text-[10px] font-medium text-violet-600">
+                  AI: {analysis.ai_model.replace("Xenova/", "")}
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -329,6 +344,50 @@ function AnalysisModal({
           </div>
         </div>
       </div>
+
+      {/* Footer — Generate BRD */}
+      {isBA && (
+        <div className="shrink-0 border-t border-slate-100 px-6 py-4 bg-slate-50/60">
+          {brdSuccess ? (
+            <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="size-4 text-emerald-600" />
+                <span className="text-sm font-medium text-emerald-700">BRD Draft created successfully!</span>
+              </div>
+              <a
+                href="/ba/brd-management"
+                className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
+              >
+                View BRD <ExternalLink className="size-3" />
+              </a>
+            </div>
+          ) : (
+            <button
+              onClick={onGenerateBrd}
+              disabled={generatingBrd}
+              className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-200 transition-all hover:shadow-lg hover:shadow-indigo-300 hover:from-violet-500 hover:via-indigo-500 hover:to-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {generatingBrd ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Building BRD with AI…
+                </>
+              ) : (
+                <>
+                  <FileText className="size-4" />
+                  Generate Draft BRD Document
+                  <ChevronRight className="size-4 opacity-70" />
+                </>
+              )}
+            </button>
+          )}
+          {!brdSuccess && (
+            <p className="mt-2 text-center text-[10px] text-slate-400">
+              AI will generate a full structured BRD from these key points
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -439,6 +498,7 @@ function KeyPointsPanel({
 
 // ── Main component ─────────────────────────────────────────────────────────────
 export function StreamChatPanel({ request, currentUser, onBack }: Props) {
+  const router = useRouter();
   const [channel, setChannel] = useState<StreamChannel | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -449,6 +509,8 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
   const [importantMessages, setImportantMessages] = useState<ImportantMessage[]>([]);
   const [generating, setGenerating] = useState(false);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [generatingBrd, setGeneratingBrd] = useState(false);
+  const [brdSuccess, setBrdSuccess] = useState(false);
 
   const isBA = currentUser.role === "ba";
   const importantIds = new Set(importantMessages.map((m) => m.stream_message_id));
@@ -509,6 +571,28 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
       setGenerating(false);
     }
   }, [request.id, isBA]);
+
+  const generateDraftBRD = useCallback(async () => {
+    if (!isBA || !analysis) return;
+    setGeneratingBrd(true);
+    setBrdSuccess(false);
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(`${API}/api/stream/channels/${request.id}/generate-brd`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ analysis }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(`BRD generation failed: ${err.message || "Unknown error"}`);
+        return;
+      }
+      setBrdSuccess(true);
+    } finally {
+      setGeneratingBrd(false);
+    }
+  }, [request.id, isBA, analysis]);
 
   useEffect(() => {
     let cancelled = false;
@@ -670,7 +754,14 @@ export function StreamChatPanel({ request, currentUser, onBack }: Props) {
 
           {/* Analysis result — full overlay */}
           {analysis && (
-            <AnalysisModal analysis={analysis} onClose={() => setAnalysis(null)} />
+            <AnalysisModal
+              analysis={analysis}
+              onClose={() => { setAnalysis(null); setBrdSuccess(false); }}
+              onGenerateBrd={generateDraftBRD}
+              generatingBrd={generatingBrd}
+              brdSuccess={brdSuccess}
+              isBA={isBA}
+            />
           )}
 
           {/* Key Points panel */}

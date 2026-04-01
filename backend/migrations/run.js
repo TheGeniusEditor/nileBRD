@@ -121,6 +121,22 @@ CREATE TABLE IF NOT EXISTS important_messages (
 );
 
 CREATE INDEX IF NOT EXISTS idx_important_messages_request ON important_messages(request_id);
+
+-- Generated BRD documents
+CREATE TABLE IF NOT EXISTS brd_documents (
+  id SERIAL PRIMARY KEY,
+  request_id INTEGER REFERENCES requests(id) ON DELETE CASCADE,
+  doc_id VARCHAR(100) NOT NULL,
+  version VARCHAR(10) DEFAULT '0.1',
+  status VARCHAR(50) DEFAULT 'Draft',
+  content JSONB NOT NULL,
+  generated_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_brd_docs_request ON brd_documents(request_id);
+CREATE INDEX IF NOT EXISTS idx_brd_docs_author ON brd_documents(generated_by);
 `;
 
 async function migrate() {

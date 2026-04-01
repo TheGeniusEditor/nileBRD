@@ -248,6 +248,7 @@ export default function AssignedRequestsPage() {
         </div>
         <button
           onClick={handleRefresh}
+          suppressHydrationWarning
           className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50 transition-colors"
         >
           <RefreshCw className={`size-3.5 ${refreshing ? "animate-spin" : ""}`} />

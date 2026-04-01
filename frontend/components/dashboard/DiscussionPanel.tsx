@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useRef, useState, useEffect, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { RequestChat } from "@/components/chat/RequestChat";
 
 type ReqInfo = {
@@ -26,7 +27,17 @@ export function DiscussionPanelProvider({ children }: { children: ReactNode }) {
   const [chatOpen, setChatOpen] = useState(false);
   const [userId, setUserId]     = useState(0);
   const [userName, setUserName] = useState("");
-  const closeTimer              = useRef<ReturnType<typeof setTimeout>>();
+  const closeTimer              = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const pathname                = usePathname();
+
+  // Close discussion panel whenever the user navigates to a different page
+  useEffect(() => {
+    if (chatOpen) {
+      setChatOpen(false);
+      closeTimer.current = setTimeout(() => setChatReq(null), 380);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const openDiscussion = (req: ReqInfo, uid: number, uname: string) => {
     clearTimeout(closeTimer.current);
