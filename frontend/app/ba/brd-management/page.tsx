@@ -505,12 +505,26 @@ export default function BRDManagementPage() {
   }, []);
 
   const openPdfDirect = useCallback(async (id: number) => {
+    // Open window synchronously within the click event to avoid popup blockers in prod.
+    const win = window.open("", "_blank");
+    if (!win) { alert("Allow popups for this site to open the BRD PDF."); return; }
+    win.document.write(
+      "<html><body style='font-family:sans-serif;padding:40px;color:#64748b'>Loading BRD…</body></html>"
+    );
     setLoadingId(id);
     try {
       const token = localStorage.getItem("authToken");
       const res = await fetch(`${API}/api/stream/brd-documents/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) { const doc = await res.json(); openPdf(doc); }
-    } finally { setLoadingId(null); }
+      if (res.ok) {
+        const doc = await res.json();
+        win.document.open();
+        win.document.write(buildPdfHtml(doc));
+        win.document.close();
+      } else {
+        win.close();
+      }
+    } catch { win.close(); }
+    finally { setLoadingId(null); }
   }, []);
 
   const updateStatus = useCallback(async (id: number, status: string) => {

@@ -6,7 +6,7 @@ import {
   ThumbsUp, AlertCircle, Loader2, ChevronRight, Sparkles,
   ExternalLink, RefreshCw, Printer,
 } from "lucide-react";
-import { openPdf, type BrdDoc } from "@/lib/brdPdf";
+import { buildPdfHtml, type BrdDoc } from "@/lib/brdPdf";
 
 const API = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
@@ -92,15 +92,27 @@ export function BrdReviewCard({ attachment, currentUser }: Props) {
   };
 
   const handleOpenPdf = async () => {
+    // Open window synchronously inside the click event so popup blockers don't fire.
+    // Browsers only allow window.open() within a direct user-gesture call stack.
+    const win = window.open("", "_blank");
+    if (!win) { alert("Allow popups for this site to open the BRD PDF."); return; }
+    win.document.write(
+      "<html><body style='font-family:sans-serif;padding:40px;color:#64748b'>Loading BRD…</body></html>"
+    );
+
     setOpeningPdf(true);
     try {
       const token = localStorage.getItem("authToken");
       const res = await fetch(`${API}/api/stream/brd-documents/${attachment.brd_id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) { alert("Could not load BRD document."); return; }
+      if (!res.ok) { win.close(); alert("Could not load BRD document."); return; }
       const doc: BrdDoc = await res.json();
-      openPdf(doc);
+      win.document.open();
+      win.document.write(buildPdfHtml(doc));
+      win.document.close();
+    } catch {
+      win.close();
     } finally {
       setOpeningPdf(false);
     }
