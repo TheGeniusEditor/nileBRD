@@ -50,10 +50,7 @@ async function getClassifier() {
   return _loadPromise;
 }
 
-// Warm up the model on server start (non-blocking)
-getClassifier().catch((err) =>
-  console.warn("[BRD Agent] Model pre-load failed (will retry on demand):", err.message)
-);
+// Model loads lazily on first classification request — not on server start.
 
 // ─── Stopwords ────────────────────────────────────────────────────────────────
 const STOPWORDS = new Set([
