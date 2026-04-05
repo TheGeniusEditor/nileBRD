@@ -825,16 +825,14 @@ router.get("/test-case-documents", authenticateToken, async (req, res) => {
 
     const { rows } = await pool.query(
       `SELECT tc.id, tc.doc_id, tc.version, tc.status, tc.generated_at, tc.updated_at,
-              tc.content->'meta'->>'title'                    AS title,
-              tc.content->'meta'->>'total_cases'              AS total_cases,
-              tc.content->'meta'->'summary'->>'system'        AS system_cases,
-              tc.content->'meta'->'summary'->>'integration'   AS integration_cases,
-              tc.content->'meta'->'summary'->>'uat'           AS uat_cases,
-              tc.content->'meta'->'summary'->>'critical'      AS critical_cases,
-              tc.content->'meta'->'summary'->>'high'          AS high_cases,
+              tc.content->'meta'->>'title'                              AS title,
+              (tc.content->'meta'->>'total_cases')::int                 AS total_cases,
+              tc.content->'meta'->'summary'                             AS summary,
+              tc.content->'meta'->>'frd_doc_id'                         AS frd_doc_id_meta,
+              tc.content->'meta'->>'brd_doc_id'                         AS brd_doc_id,
               r.id AS request_id, r.title AS request_title, r.req_number,
               fd.doc_id AS frd_doc_id, fd.id AS frd_id,
-              u.name AS author_name, u.email AS author_email
+              u.name AS generated_by_name, u.email AS generated_by_email
        FROM test_case_documents tc
        JOIN frd_documents fd ON fd.id = tc.frd_document_id
        JOIN requests      r  ON r.id  = tc.request_id
