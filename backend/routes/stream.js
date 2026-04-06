@@ -634,6 +634,114 @@ router.post("/brd-documents/:brdId/send-to-it-manager", authenticateToken, async
   }
 });
 
+// GET /api/stream/it-dashboard-stats — aggregated stats for IT dashboard
+router.get("/it-dashboard-stats", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== "it") return res.status(403).json({ message: "IT only" });
+
+    const [
+      brdStats,
+      frdStats,
+      tcStats,
+      recentBrds,
+      recentFrds,
+      trend,
+    ] = await Promise.all([
+      // BRDs submitted to IT
+      pool.query(`
+        SELECT
+          COUNT(*)::int                                                    AS total_received,
+          COUNT(fd.id)::int                                                AS with_frd,
+          COUNT(*) FILTER (WHERE fd.id IS NULL)::int                       AS pending_frd
+        FROM brd_it_submissions s
+        JOIN brd_documents bd ON bd.id = s.brd_document_id
+        LEFT JOIN frd_documents fd ON fd.brd_document_id = bd.id
+      `),
+
+      // FRD stats
+      pool.query(`
+        SELECT
+          COUNT(*)::int                                             AS total,
+          COUNT(*) FILTER (WHERE status = 'Draft')::int            AS draft,
+          COUNT(*) FILTER (WHERE status = 'In Review')::int        AS in_review,
+          COUNT(*) FILTER (WHERE status = 'Approved')::int         AS approved,
+          COUNT(tc.id)::int                                        AS with_test_cases
+        FROM frd_documents fd
+        LEFT JOIN test_case_documents tc ON tc.frd_document_id = fd.id
+      `),
+
+      // Test case stats
+      pool.query(`
+        SELECT
+          COUNT(*)::int                                                         AS total_suites,
+          COALESCE(SUM((content->'meta'->>'total_cases')::int), 0)::int        AS total_cases,
+          COALESCE(SUM((content->'meta'->'summary'->>'critical')::int), 0)::int AS critical,
+          COALESCE(SUM((content->'meta'->'summary'->>'system')::int), 0)::int   AS system_cases,
+          COALESCE(SUM((content->'meta'->'summary'->>'uat')::int), 0)::int      AS uat_cases
+        FROM test_case_documents
+      `),
+
+      // Recent BRDs received (last 5)
+      pool.query(`
+        SELECT bd.id, bd.doc_id, bd.content->'meta'->>'title' AS title,
+               bd.content->'meta'->>'category' AS category,
+               bd.content->'meta'->>'priority' AS priority,
+               s.submitted_at,
+               u.name AS submitted_by_name,
+               CASE WHEN fd.id IS NOT NULL THEN true ELSE false END AS has_frd
+        FROM brd_it_submissions s
+        JOIN brd_documents bd ON bd.id = s.brd_document_id
+        JOIN users u ON u.id = s.submitted_by
+        LEFT JOIN frd_documents fd ON fd.brd_document_id = bd.id
+        ORDER BY s.submitted_at DESC
+        LIMIT 5
+      `),
+
+      // Recent FRDs generated (last 5)
+      pool.query(`
+        SELECT fd.id, fd.doc_id, fd.status, fd.generated_at,
+               fd.content->'meta'->>'title' AS title,
+               r.title AS request_title, r.req_number,
+               CASE WHEN tc.id IS NOT NULL THEN true ELSE false END AS has_test_cases
+        FROM frd_documents fd
+        JOIN requests r ON r.id = fd.request_id
+        LEFT JOIN test_case_documents tc ON tc.frd_document_id = fd.id
+        ORDER BY fd.generated_at DESC
+        LIMIT 5
+      `),
+
+      // 14-day activity trend (BRD submissions + FRD generations combined)
+      pool.query(`
+        SELECT TO_CHAR(d.day, 'Mon DD') AS label,
+               COALESCE(sub.brd_count, 0)::int AS brds,
+               COALESCE(frd.frd_count, 0)::int AS frds
+        FROM generate_series(NOW()::date - 13, NOW()::date, '1 day'::interval) AS d(day)
+        LEFT JOIN (
+          SELECT submitted_at::date AS day, COUNT(*)::int AS brd_count
+          FROM brd_it_submissions GROUP BY submitted_at::date
+        ) sub ON sub.day = d.day
+        LEFT JOIN (
+          SELECT generated_at::date AS day, COUNT(*)::int AS frd_count
+          FROM frd_documents GROUP BY generated_at::date
+        ) frd ON frd.day = d.day
+        ORDER BY d.day
+      `),
+    ]);
+
+    res.json({
+      brd_stats:   brdStats.rows[0],
+      frd_stats:   frdStats.rows[0],
+      tc_stats:    tcStats.rows[0],
+      recent_brds: recentBrds.rows,
+      recent_frds: recentFrds.rows,
+      trend:       trend.rows,
+    });
+  } catch (err) {
+    console.error("IT dashboard stats error:", err);
+    res.status(500).json({ message: "Failed to fetch IT dashboard stats", detail: err.message });
+  }
+});
+
 // GET /api/stream/approved-brds — IT users see all Approved/Final BRDs submitted to them
 router.get("/approved-brds", authenticateToken, async (req, res) => {
   try {

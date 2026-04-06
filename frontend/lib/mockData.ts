@@ -18,7 +18,6 @@ export const baNav: NavItem[] = [
   { label: "Dashboard", href: "/ba/dashboard", icon: "layout-dashboard" },
   { label: "Assigned Requests", href: "/ba/assigned-problems", icon: "briefcase-business" },
   { label: "BRD Management", href: "/ba/brd-management", icon: "file-text" },
-  { label: "FRD Management", href: "/ba/frd-management", icon: "folder-cog" },
   { label: "User Stories", href: "/ba/user-stories", icon: "book-check" },
   { label: "AI Generator Tools", href: "/ba/ai-tools", icon: "bot" },
 ];
