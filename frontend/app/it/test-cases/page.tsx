@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import {
   FlaskConical, ChevronDown, ChevronRight, Search,
   CheckCircle2, XCircle, Clock, Ban, AlertTriangle,
-  ShieldCheck, Layers, Users, Zap, Shield, Activity, Filter,
+  ShieldCheck, Layers, Users, Zap, Shield, Activity, Filter, FileDown,
 } from "lucide-react";
+import { downloadTestCasesAsPDF } from "@/lib/pdfExport";
 
 const API = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5001";
 
@@ -144,7 +145,7 @@ function CaseDetail({ tc }: { tc: TestCase }) {
   );
 }
 
-function ExpandedRow({ docId }: { docId: number }) {
+function ExpandedRow({ docId, doc }: { docId: number; doc: TcListItem }) {
   const [detail, setDetail]   = useState<TcDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [statuses, setStatuses] = useState<Record<string, string>>({});
@@ -205,6 +206,17 @@ function ExpandedRow({ docId }: { docId: number }) {
       <tr className="bg-violet-50/40">
         <td colSpan={7} className="px-6 py-4">
           <div className="flex flex-wrap items-center gap-6">
+            {/* Download PDF */}
+            <button
+              onClick={() => downloadTestCasesAsPDF(
+                { ...detail.meta, doc_id: doc.doc_id, frd_doc_id: doc.frd_doc_id, brd_doc_id: doc.brd_doc_id, title: doc.request_title, version: "1.0", request_number: doc.req_number },
+                detail.test_cases
+              )}
+              className="flex shrink-0 items-center gap-1.5 rounded-xl border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-50 transition-colors shadow-sm"
+            >
+              <FileDown className="w-3.5 h-3.5" />
+              Download PDF
+            </button>
             {/* Progress bar */}
             <div className="flex-1 min-w-48">
               <div className="flex justify-between text-[11px] text-slate-500 mb-1">
@@ -456,7 +468,7 @@ export default function TestCasesPage() {
                       <td className="px-4 py-4 text-xs text-slate-500">{doc.generated_by_name ?? "—"}</td>
                     </tr>
                   );
-                  return isOpen ? [row, <ExpandedRow key={`${doc.id}-expanded`} docId={doc.id} />] : [row];
+                  return isOpen ? [row, <ExpandedRow key={`${doc.id}-expanded`} docId={doc.id} doc={doc} />] : [row];
                 })}
               </tbody>
             </table>

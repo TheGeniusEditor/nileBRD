@@ -5,8 +5,9 @@ import {
   FolderOpen, RefreshCw, Loader2, ChevronDown, ChevronUp,
   FileText, CheckCircle2, XCircle, ClipboardList, BookOpen,
   Shield, Database, Monitor, GitBranch, Search, Filter,
-  Wand2, ArrowRight, Tag, Zap, AlertTriangle, Users,
+  Wand2, ArrowRight, Tag, Zap, AlertTriangle, Users, FileDown,
 } from "lucide-react";
+import { downloadFRDAsPDF } from "@/lib/pdfExport";
 
 const API = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
@@ -104,10 +105,19 @@ function FrdDetail({ doc }: { doc: FrdDoc }) {
   return (
     <div className="border-t border-slate-100 bg-gradient-to-b from-slate-50/60 to-white px-6 pb-8 pt-6 space-y-4">
 
-      {/* AI note */}
-      <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-        <AlertTriangle className="size-4 shrink-0 text-amber-500 mt-0.5" />
-        <p className="text-xs text-amber-700">{doc.meta.ai_note}</p>
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-start gap-2 flex-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <AlertTriangle className="size-4 shrink-0 text-amber-500 mt-0.5" />
+          <p className="text-xs text-amber-700">{doc.meta.ai_note}</p>
+        </div>
+        <button
+          onClick={() => downloadFRDAsPDF(doc)}
+          className="flex shrink-0 items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2.5 text-xs font-semibold text-violet-700 hover:bg-violet-100 transition-colors"
+        >
+          <FileDown className="size-3.5" />
+          Download PDF
+        </button>
       </div>
 
       {/* Overview */}
